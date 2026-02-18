@@ -6,13 +6,8 @@ class ClientController {
             const [rows] = await db.query('SELECT * FROM clientes ORDER BY nombre');
             res.json(rows);
         } catch (error) {
-            console.warn('DB Error in ClientController.getAll, returning Mock Data');
-            const mockClients = [
-                { id: 1, nombre: 'Frigorífico Concepción', ruc: '80012345-0', telefono: '021-123456', tipo: 'FRIGORIFICO' },
-                { id: 2, nombre: 'Juan Pérez (Particular)', ruc: '1234567-8', telefono: '0981-000111', tipo: 'PARTICULAR' },
-                { id: 3, nombre: 'Feria Los Amigos', ruc: '80055566-1', telefono: '0331-444555', tipo: 'FERIA' }
-            ];
-            res.json(mockClients);
+            console.error('Error in ClientController.getAll:', error.message);
+            res.json([]);
         }
     }
 
@@ -23,7 +18,8 @@ class ClientController {
             if (rows.length === 0) return res.status(404).json({ error: 'Cliente no encontrado' });
             res.json(rows[0]);
         } catch (error) {
-            res.json({ id, nombre: 'Cliente Mock', ruc: '000-0', tipo: 'PARTICULAR' });
+            console.error(`Error in ClientController.getById(${id}):`, error.message);
+            res.status(500).json({ error: 'Error al obtener cliente' });
         }
     }
 

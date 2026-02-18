@@ -14,13 +14,9 @@ const Dashboard = ({ potreros }) => {
         return { totalAnimales, totalHectareas, cargaPromedio, alertasCarga };
     }, [potreros]);
 
-    // Datos para Gráfico (Mock Distribution)
-    const dataDistribution = [
-        { name: 'Novillos', value: 450, color: '#3b82f6' },
-        { name: 'Vaquillas', value: 300, color: '#ec4899' },
-        { name: 'Terneros', value: 200, color: '#f59e0b' },
-        { name: 'Toros', value: 20, color: '#ef4444' },
-    ];
+    // Datos para Gráfico (calculados desde potreros reales)
+    // TODO: Implementar distribución real por categoría desde API
+    const dataDistribution = [];
 
     return (
         <div className="space-y-8 pb-20">
@@ -38,26 +34,24 @@ const Dashboard = ({ potreros }) => {
                 </div>
             </div>
 
-            {/* Alertas de Oportunidad de Venta */}
-            <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden">
-                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div className="flex items-center gap-4">
-                        <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
-                            <DollarSign size={32} />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-xl">Oportunidad de Venta Detectada</h3>
-                            <p className="text-emerald-50 opacity-90">Detectamos <span className="font-black text-white">45 Novillos</span> con peso de faena (+450kg).</p>
+            {/* Banner informativo solo si hay animales con peso de faena */}
+            {stats.totalAnimales > 0 && (
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden">
+                    <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
+                                <DollarSign size={32} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-xl">Resumen del Establecimiento</h3>
+                                <p className="text-emerald-50 opacity-90">Total de <span className="font-black text-white">{stats.totalAnimales} cabezas</span> en {potreros.length} potreros.</p>
+                            </div>
                         </div>
                     </div>
-                    <button className="px-6 py-3 bg-white text-emerald-700 font-bold rounded-xl hover:bg-emerald-50 transition-colors shadow-sm">
-                        Simular Venta
-                    </button>
+                    <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
+                    <div className="absolute left-20 bottom-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
                 </div>
-                {/* Decorative circles */}
-                <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-                <div className="absolute left-20 bottom-0 w-20 h-20 bg-white/10 rounded-full blur-xl"></div>
-            </div>
+            )}
 
             {/* Tarjetas de Resumen (KPIs) */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -66,8 +60,8 @@ const Dashboard = ({ potreros }) => {
                     value={stats.totalAnimales}
                     unit="Cabezas"
                     icon={<Users size={24} className="text-blue-600" />}
-                    trend="+12% vs mes anterior"
-                    trendColor="text-emerald-500"
+                    trend={stats.totalAnimales > 0 ? '' : 'Sin datos aún'}
+                    trendColor="text-slate-400"
                 />
                 <KpiCard
                     title="Carga Media"
@@ -118,15 +112,20 @@ const Dashboard = ({ potreros }) => {
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 w-full mt-4">
-                        {dataDistribution.map((d) => (
-                            <div key={d.name} className="flex items-center gap-2 text-sm">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
-                                <span className="text-slate-600">{d.name}</span>
-                                <span className="font-bold ml-auto">{d.value}</span>
-                            </div>
-                        ))}
-                    </div>
+                    {dataDistribution.length === 0 && (
+                        <p className="text-sm text-slate-400 text-center mt-4">Sin datos de distribución aún. Registrá animales para ver el gráfico.</p>
+                    )}
+                    {dataDistribution.length > 0 && (
+                        <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                            {dataDistribution.map((d) => (
+                                <div key={d.name} className="flex items-center gap-2 text-sm">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
+                                    <span className="text-slate-600">{d.name}</span>
+                                    <span className="font-bold ml-auto">{d.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Lista de Potreros (Estado de Carga) */}

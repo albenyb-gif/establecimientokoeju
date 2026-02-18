@@ -283,14 +283,8 @@ class AnimalController {
             const [rows] = await db.query(query);
             res.json(rows);
         } catch (error) {
-            console.warn('DB Error in getDashboardStats, returning Mock Data:', error.message);
-            // Mock Data Fallback
-            const mockData = [
-                { id: 1, nombre: 'Potrero Norte (Mock)', superficie_ha: 100, animales_total: 250 },
-                { id: 2, nombre: 'Bajo Río (Mock)', superficie_ha: 150, animales_total: 100 },
-                { id: 3, nombre: 'Monte Alto (Mock)', superficie_ha: 80, animales_total: 300 }
-            ];
-            res.json(mockData);
+            console.error('Error in getDashboardStats:', error.message);
+            res.json([]);
         }
     }
     /**
@@ -333,21 +327,8 @@ class AnimalController {
             const [rows] = await db.query(query, params);
             res.json(rows);
         } catch (error) {
-            console.warn('DB Error in getAnimals, returning Mock Data:', error.message);
-
-            // Generate some mock animals
-            const mockAnimals = Array.from({ length: 15 }, (_, i) => ({
-                id: i + 1,
-                caravana_visual: `V${4000 + i}`,
-                categoria: ['NOVILLO', 'VAQUILLA', 'TORO'][i % 3],
-                rodeo: ['Potrero Norte', 'Bajo Río', 'Monte Alto'][i % 3],
-                peso_actual: 350 + (i * 10),
-                negocio: ['ENGORDE', 'CRIA'][i % 2],
-                estado_sanitario: i % 5 === 0 ? 'BLOQUEADO' : 'ACTIVO',
-                fecha_liberacion_carencia: i % 5 === 0 ? new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0] : '2023-01-01'
-            }));
-
-            res.json(mockAnimals);
+            console.error('Error in getAnimals:', error.message);
+            res.json([]);
         }
     }
     /**
@@ -371,24 +352,8 @@ class AnimalController {
             if (rows.length === 0) return res.status(404).json({ error: 'Animal no encontrado' });
             res.json(rows[0]);
         } catch (error) {
-            console.warn(`DB Error in getAnimalById(${id}), returning Mock Data`);
-
-            // Mock Single Animal
-            const mockAnimal = {
-                id: parseInt(id),
-                caravana_visual: `V${4000 + parseInt(id)}`,
-                categoria: ['NOVILLO', 'VAQUILLA', 'TORO'][id % 3],
-                rodeo: ['Potrero Norte', 'Bajo Río', 'Monte Alto'][id % 3],
-                peso_actual: 350 + (parseInt(id) * 10),
-                negocio: ['ENGORDE', 'CRIA'][id % 2],
-                estado_sanitario: id % 5 === 0 ? 'BLOQUEADO' : 'ACTIVO',
-                fecha_liberacion_carencia: id % 5 === 0 ? new Date(Date.now() + 86400000 * 5).toISOString().split('T')[0] : '2023-01-01',
-                fecha_nacimiento: '2022-05-15',
-                campana_aftosa_vigente: false,
-                vacunado_aftosa: true
-            };
-
-            res.json(mockAnimal);
+            console.error(`Error in getAnimalById(${id}):`, error.message);
+            res.status(500).json({ error: 'Error al obtener animal' });
         }
     }
     /**
@@ -406,12 +371,8 @@ class AnimalController {
             );
             res.json({ message: 'Animal actualizado correctamente', id });
         } catch (error) {
-            console.warn(`DB Error in updateAnimal(${id}), returning Mock Success`);
-            res.json({
-                message: 'Animal actualizado correctamente (Mock)',
-                id,
-                updatedFields: req.body
-            });
+            console.error(`Error in updateAnimal(${id}):`, error.message);
+            res.status(500).json({ error: 'Error al actualizar animal' });
         }
     }
     /**
@@ -673,14 +634,8 @@ class AnimalController {
 
             res.json(history);
         } catch (error) {
-            console.warn('DB Error in getAnimalHistory, returning Mock Data');
-            const mockHistory = [
-                { type: 'INGRESO', date: '2023-10-01', origen: 'Feria Los Amigos', nro_cot: 'COT-778' },
-                { type: 'PESAJE', date: '2023-11-15', peso_kg: 350, gdp_calculado: 0.850 },
-                { type: 'SANIDAD', date: '2023-12-01', tipo_evento: 'TRATAMIENTO', producto: 'Ivermectina 1%', nro_acta: 'Lote 44' },
-                { type: 'TRASLADO', date: '2024-01-10', motivo: 'ROTACION', origen: 'Potrero 5', destino: 'Bajo Río' }
-            ];
-            res.json(mockHistory);
+            console.error('Error in getAnimalHistory:', error.message);
+            res.json([]);
         }
     }
 
@@ -692,14 +647,8 @@ class AnimalController {
             const [rows] = await db.query('SELECT * FROM rodeos ORDER BY nombre');
             res.json(rows);
         } catch (error) {
-            console.warn('DB Error in getRodeos, returning Mock Data');
-            const mockRodeos = [
-                { id: 1, nombre: 'Potrero Norte' },
-                { id: 2, nombre: 'Bajo Río' },
-                { id: 3, nombre: 'Monte Alto' },
-                { id: 4, nombre: 'Corral de Enfermería' }
-            ];
-            res.json(mockRodeos);
+            console.error('Error in getRodeos:', error.message);
+            res.json([]);
         }
     }
 
@@ -731,8 +680,8 @@ class AnimalController {
             res.json({ message: 'Movimiento registrado correctamente' });
         } catch (error) {
             if (connection) await connection.rollback();
-            console.warn('DB Error in registerMovement, returning Mock Success');
-            res.json({ message: 'Movimiento registrado correctamente (Mock)' });
+            console.error('Error in registerMovement:', error.message);
+            res.status(500).json({ error: 'Error al registrar movimiento' });
         } finally {
             if (connection) connection.release();
         }
