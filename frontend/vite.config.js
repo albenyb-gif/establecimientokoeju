@@ -4,6 +4,10 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+    build: {
+        outDir: '../backend/public',
+        emptyOutDir: true,
+    },
     plugins: [
         react(),
         VitePWA({

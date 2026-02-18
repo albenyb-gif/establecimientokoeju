@@ -22,8 +22,7 @@ desktop.ini
 *.log
 npm-debug.log*
 
-# Compiled frontend (se genera con npm run build)
-backend/public/
+
 
 # Gemini/Agent files
 .gemini/
