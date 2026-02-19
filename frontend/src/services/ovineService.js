@@ -19,6 +19,20 @@ const OvineService = {
     getWoolHistory: async () => {
         const response = await api.get('/ovinos/historial-lana');
         return response.data;
+    },
+
+    registerParicion: async (data) => {
+        if (!navigator.onLine) {
+            await queueOfflineAction('POST', '/ovinos/paricion', data);
+            return { message: 'Parición guardada localmente' };
+        }
+        const response = await api.post('/ovinos/paricion', data);
+        return response.data;
+    },
+
+    getPariciones: async () => {
+        const response = await api.get('/ovinos/pariciones');
+        return response.data;
     }
 };
 
