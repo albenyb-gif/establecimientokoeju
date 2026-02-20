@@ -27,6 +27,7 @@ app.use('/api/sanidad', require('./routes/healthRoutes'));
 app.use('/api/ovinos', require('./routes/ovineRoutes'));
 app.use('/api/gastos', require('./routes/expenseRoutes'));
 app.use('/api/calendar', require('./routes/calendarRoutes'));
+app.use('/api/agenda', require('./routes/agendaRoutes'));
 
 // Database connection check (Optional - removed to prevent crash on offline mode)
 /*
