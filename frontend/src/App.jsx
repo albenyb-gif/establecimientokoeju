@@ -120,12 +120,14 @@ const MenuLink = ({ to, icon: Icon, label, onClick }) => (
     </Link>
 );
 
+import Sidebar from './components/Sidebar';
 import Login from './components/Login';
 
 function App() {
     const [potreros, setPotreros] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -145,9 +147,13 @@ function App() {
     };
 
     const handleLogout = () => {
-        setIsAuthenticated(false);
-        localStorage.removeItem('isAuthenticated');
+        if (window.confirm('¿Deseas cerrar la sesión?')) {
+            setIsAuthenticated(false);
+            localStorage.removeItem('isAuthenticated');
+        }
     };
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
     if (!isAuthenticated) {
         return <Login onLogin={setIsAuthenticated} />;
@@ -155,80 +161,80 @@ function App() {
 
     return (
         <Router>
-            <div className="min-h-screen font-sans pb-20 md:pb-0">
+            <div className="flex h-screen bg-[#f8fafc] overflow-hidden">
                 <SyncManager />
-                {/* Desktop Navbar */}
-                <nav className="bg-slate-900/95 backdrop-blur-md text-white shadow-lg sticky top-0 z-50 border-b border-slate-700 hidden md:block">
-                    <div className="container mx-auto px-4">
-                        <div className="flex items-center justify-between h-16">
-                            <Link to="/" className="text-xl font-black tracking-tight text-yellow-400 hover:opacity-80 transition-opacity flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg border-2 border-slate-700/50 overflow-hidden shrink-0">
-                                    <img src="/logo.png" alt="Ko'eju" className="w-full h-full object-cover" />
-                                </div>
-                                <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
-                            </Link>
 
-                            <div className="flex gap-4 items-center">
-                                <div className="flex gap-1 items-center">
-                                    <NavLinks />
-                                </div>
-                                <button
-                                    onClick={handleLogout}
-                                    className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"
-                                    title="Cerrar Sesión"
-                                >
-                                    <X size={18} />
-                                </button>
-                            </div>
+                {/* Desktop Sidebar */}
+                <aside className="hidden md:block shrink-0 h-full">
+                    <Sidebar onLogout={handleLogout} />
+                </aside>
+
+                {/* Mobile Sidebar Overlay */}
+                {isSidebarOpen && (
+                    <div
+                        className="md:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 transition-opacity"
+                        onClick={toggleSidebar}
+                    >
+                        <div
+                            className="w-64 h-full animate-in slide-in-from-left duration-300"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <Sidebar onLogout={handleLogout} onClose={toggleSidebar} />
                         </div>
                     </div>
-                </nav>
+                )}
 
-                {/* Mobile Header (Brand Only) */}
-                <div className="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-40 shadow-md flex justify-between items-center border-b border-slate-800">
-                    <div /> {/* Spacer */}
-                    <Link to="/" className="font-black tracking-tight text-yellow-400 flex items-center gap-3">
-                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden border border-slate-700/50">
-                            <img src="/logo.png" alt="Ko'eju" className="w-full h-full object-cover" />
-                        </div>
-                        <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
-                    </Link>
-                    <button
-                        onClick={handleLogout}
-                        className="p-2 text-red-400"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <div className="container mx-auto p-4 max-w-7xl">
-                    <Routes>
-                        <Route path="/" element={
-                            loading ? <div className="text-center mt-20 text-slate-400">Cargando datos...</div> : <Dashboard potreros={potreros} />
-                        } />
-
-                        <Route path="/lista" element={<AnimalList />} />
-                        <Route path="/ingreso" element={<IngresoForm />} />
-                        <Route path="/compras" element={<PurchaseSheet />} />
-                        <Route path="/ventas" element={<SalesSheet />} />
-                        <Route path="/clientes" element={<ClientManager />} />
-                        <Route path="/ovinos" element={<OvineDashboard />} />
-                        <Route path="/sanidad" element={<HealthManager />} />
-                        <Route path="/gastos" element={<ExpenseManager />} />
-                        <Route path="/siap" element={<SiapAssignmentView />} />
-                        <Route path="/animales/:id" element={<AnimalDetail />} />
-                        <Route path="/pesaje/:id" element={<WeighingView />} />
-                        <Route path="/costos" element={<CostDashboard />} />
-                        <Route path="/simulador" element={<SalesSimulator />} />
-                        <Route path="/importar" element={<ImportView />} />
-                        <Route path="/configuracion" element={<SettingsView />} />
-                        <Route path="/calendario" element={<CalendarManager />} />
-                        <Route path="/animal" element={
-                            <div className="flex justify-center mt-10">
-                                <AnimalCard animal={mockAnimal} />
+                {/* Main Content Area */}
+                <div className="flex-1 flex flex-col min-w-0 bg-[#f8fafc] relative">
+                    {/* Mobile Header */}
+                    <header className="md:hidden bg-white border-b border-slate-200 px-4 py-3 h-16 flex items-center justify-between sticky top-0 z-40 bg-white/80 backdrop-blur-md">
+                        <button
+                            onClick={toggleSidebar}
+                            className="p-2 text-slate-600 hover:bg-slate-50 rounded-xl"
+                        >
+                            <Menu size={24} />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg overflow-hidden border border-slate-100 shadow-sm">
+                                <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
                             </div>
-                        } />
-                    </Routes>
+                            <span className="font-black text-slate-800 tracking-tight italic">KO'ẼJU</span>
+                        </div>
+                        <div className="w-10"></div> {/* Placeholder for symmetry */}
+                    </header>
+
+                    {/* Scrollable Content Container */}
+                    <main className="flex-1 overflow-y-auto px-4 md:px-8 py-6 md:py-8 pb-32 md:pb-12">
+                        <div className="max-w-7xl mx-auto w-full">
+                            <Routes>
+                                <Route path="/" element={
+                                    loading ? <div className="text-center mt-20 text-slate-400">Cargando datos del establecimiento...</div> : <Dashboard potreros={potreros} />
+                                } />
+
+                                <Route path="/lista" element={<AnimalList />} />
+                                <Route path="/ingreso" element={<IngresoForm />} />
+                                <Route path="/compras" element={<PurchaseSheet />} />
+                                <Route path="/ventas" element={<SalesSheet />} />
+                                <Route path="/clientes" element={<ClientManager />} />
+                                <Route path="/ovinos" element={<OvineDashboard />} />
+                                <Route path="/sanidad" element={<HealthManager />} />
+                                <Route path="/gastos" element={<ExpenseManager />} />
+                                <Route path="/siap" element={<SiapAssignmentView />} />
+                                <Route path="/animales/:id" element={<AnimalDetail />} />
+                                <Route path="/pesaje/:id" element={<WeighingView />} />
+                                <Route path="/costos" element={<CostDashboard />} />
+                                <Route path="/simulador" element={<SalesSimulator />} />
+                                <Route path="/importar" element={<ImportView />} />
+                                <Route path="/configuracion" element={<SettingsView />} />
+                                <Route path="/calendario" element={<CalendarManager />} />
+                                <Route path="/animal" element={
+                                    <div className="flex justify-center mt-10">
+                                        <AnimalCard animal={mockAnimal} />
+                                    </div>
+                                } />
+                            </Routes>
+                        </div>
+                    </main>
                 </div>
 
                 <MobileBottomNav />
