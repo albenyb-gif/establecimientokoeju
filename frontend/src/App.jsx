@@ -161,8 +161,10 @@ function App() {
                 <nav className="bg-slate-900/95 backdrop-blur-md text-white shadow-lg sticky top-0 z-50 border-b border-slate-700 hidden md:block">
                     <div className="container mx-auto px-4">
                         <div className="flex items-center justify-between h-16">
-                            <Link to="/" className="text-xl font-black tracking-tight text-yellow-400 hover:opacity-80 transition-opacity flex items-center gap-2">
-                                <span className="text-2xl">🌅</span>
+                            <Link to="/" className="text-xl font-black tracking-tight text-yellow-400 hover:opacity-80 transition-opacity flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg border-2 border-slate-700/50 overflow-hidden shrink-0">
+                                    <img src="/logo.png" alt="Ko'eju" className="w-full h-full object-cover" />
+                                </div>
                                 <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
                             </Link>
 
@@ -185,8 +187,10 @@ function App() {
                 {/* Mobile Header (Brand Only) */}
                 <div className="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-40 shadow-md flex justify-between items-center border-b border-slate-800">
                     <div /> {/* Spacer */}
-                    <Link to="/" className="font-black tracking-tight text-yellow-400 flex items-center gap-2">
-                        <span className="text-xl">🌅</span>
+                    <Link to="/" className="font-black tracking-tight text-yellow-400 flex items-center gap-3">
+                        <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-md overflow-hidden border border-slate-700/50">
+                            <img src="/logo.png" alt="Ko'eju" className="w-full h-full object-cover" />
+                        </div>
                         <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
                     </Link>
                     <button
