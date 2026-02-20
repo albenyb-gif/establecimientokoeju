@@ -16,10 +16,11 @@ import SiapAssignmentView from './components/SiapAssignmentView';
 import ClientManager from './components/ClientManager';
 import OvineDashboard from './components/OvineDashboard';
 import HealthManager from './components/HealthManager';
+import CalendarManager from './components/CalendarManager';
 import SyncManager from './components/SyncManager';
 import ExpenseManager from './components/ExpenseManager';
 import AnimalService from './services/animalService';
-import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar } from 'lucide-react';
 
 // Mock data for initial view (keep animal mock for Demo)
 const mockAnimal = {
@@ -187,6 +188,7 @@ function App() {
                         <Route path="/simulador" element={<SalesSimulator />} />
                         <Route path="/importar" element={<ImportView />} />
                         <Route path="/configuracion" element={<SettingsView />} />
+                        <Route path="/calendario" element={<CalendarManager />} />
                         <Route path="/animal" element={
                             <div className="flex justify-center mt-10">
                                 <AnimalCard animal={mockAnimal} />
@@ -207,6 +209,7 @@ const NavLinks = ({ onClick }) => (
         <NavLink to="/lista" icon={List} label="Hacienda" onClick={onClick} />
         <NavLink to="/compras" icon={FileSpreadsheet} label="Compras" onClick={onClick} />
         <NavLink to="/ventas" icon={DollarSign} label="Ventas" onClick={onClick} />
+        <NavLink to="/calendario" icon={Calendar} label="Agenda" onClick={onClick} />
         <NavLink to="/clientes" icon={Users} label="Contactos" onClick={onClick} />
         <NavLink to="/siap" icon={Tag} label="SIAP" onClick={onClick} />
         <NavLink to="/ingreso" icon={PlusCircle} label="Ingreso" onClick={onClick} />
