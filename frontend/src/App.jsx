@@ -120,13 +120,18 @@ const MenuLink = ({ to, icon: Icon, label, onClick }) => (
     </Link>
 );
 
+import Login from './components/Login';
+
 function App() {
     const [potreros, setPotreros] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isAuthenticated, setIsAuthenticated] = useState(localStorage.getItem('isAuthenticated') === 'true');
 
     useEffect(() => {
-        fetchDashboard();
-    }, []);
+        if (isAuthenticated) {
+            fetchDashboard();
+        }
+    }, [isAuthenticated]);
 
     const fetchDashboard = async () => {
         try {
@@ -138,6 +143,15 @@ function App() {
             setLoading(false);
         }
     };
+
+    const handleLogout = () => {
+        setIsAuthenticated(false);
+        localStorage.removeItem('isAuthenticated');
+    };
+
+    if (!isAuthenticated) {
+        return <Login onLogin={setIsAuthenticated} />;
+    }
 
     return (
         <Router>
@@ -152,19 +166,35 @@ function App() {
                                 <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
                             </Link>
 
-                            <div className="flex gap-1 items-center">
-                                <NavLinks />
+                            <div className="flex gap-4 items-center">
+                                <div className="flex gap-1 items-center">
+                                    <NavLinks />
+                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    className="p-2 bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white rounded-lg transition-all"
+                                    title="Cerrar Sesión"
+                                >
+                                    <X size={18} />
+                                </button>
                             </div>
                         </div>
                     </div>
                 </nav>
 
                 {/* Mobile Header (Brand Only) */}
-                <div className="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-40 shadow-md flex justify-center border-b border-slate-800">
+                <div className="md:hidden bg-slate-900 text-white p-4 sticky top-0 z-40 shadow-md flex justify-between items-center border-b border-slate-800">
+                    <div /> {/* Spacer */}
                     <Link to="/" className="font-black tracking-tight text-yellow-400 flex items-center gap-2">
                         <span className="text-xl">🌅</span>
                         <span>Establecimiento <span className="text-white">ko'ẽju</span></span>
                     </Link>
+                    <button
+                        onClick={handleLogout}
+                        className="p-2 text-red-400"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <div className="container mx-auto p-4 max-w-7xl">
