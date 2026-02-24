@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
-import { Save, DollarSign, Truck, Filter, CheckSquare, Square, Search } from 'lucide-react';
+import PageHeader from './common/PageHeader';
+import { Save, DollarSign, Truck, Filter, CheckSquare, Search, Users } from 'lucide-react';
 
 const SalesSheet = () => {
     const [formData, setFormData] = useState({
@@ -11,7 +12,6 @@ const SalesSheet = () => {
         precio_promedio: '',
         descuentos: 0,
         observaciones: '',
-        // Calculated
         total_bruto: 0,
         total_neto: 0,
         peso_total: 0
@@ -23,7 +23,6 @@ const SalesSheet = () => {
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
 
-    // Load Available Animals and Clients
     useEffect(() => {
         loadData();
     }, []);
@@ -41,7 +40,6 @@ const SalesSheet = () => {
         }
     };
 
-    // Toggle Selection
     const toggleSelect = (id) => {
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
@@ -56,7 +54,6 @@ const SalesSheet = () => {
         }
     };
 
-    // Calculate Totals
     useEffect(() => {
         const selectedAnimals = animals.filter(a => selectedIds.includes(a.id));
         const totalWeight = selectedAnimals.reduce((sum, a) => sum + parseFloat(a.peso_actual || 0), 0);
@@ -102,7 +99,7 @@ const SalesSheet = () => {
                 peso_total: 0
             });
             setSelectedIds([]);
-            loadAnimals(); // Refresh list
+            loadData();
         } catch (error) {
             console.error(error);
             setStatus({ type: 'error', message: 'Error al registrar la venta.' });
@@ -112,155 +109,114 @@ const SalesSheet = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto bg-white/90 backdrop-blur-md p-8 rounded-2xl shadow-xl border border-slate-200">
-            <h2 className="text-3xl font-black text-slate-800 mb-8 flex items-center gap-3 border-b pb-4">
-                <DollarSign className="text-emerald-600" size={32} />
-                Planilla de Venta (Salida)
-            </h2>
+        <div className="max-w-7xl mx-auto pb-20">
+            <PageHeader
+                title="Planilla de Venta"
+                subtitle="Registro de salida de animales y liquidación comercial."
+                icon={DollarSign}
+            />
 
             {status.message && (
-                <div className={`p-4 mb-6 rounded-xl font-medium ${status.type === 'success' ? 'bg-emerald-100 text-emerald-800' : 'bg-red-50 text-red-700'}`}>
-                    {status.message}
+                <div className={`p-4 mb-6 rounded-2xl font-medium flex items-center gap-2 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                    <span className="font-bold">{status.message}</span>
                 </div>
             )}
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column: Data Entry */}
+                <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-50 pb-2">Información de Liquidación</h3>
 
-                {/* Left Column: Sales Data */}
-                <div className="lg:col-span-1 space-y-4">
-                    <h3 className="font-bold text-slate-700 uppercase tracking-wider text-sm border-b pb-2">Datos de la Venta</h3>
-
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Fecha</label>
-                        <input type="date" required
-                            className="w-full p-3 border border-slate-200 rounded-xl"
-                            value={formData.fecha}
-                            onChange={e => setFormData({ ...formData, fecha: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Cliente / Comprador</label>
-                        <select
-                            required
-                            className="w-full p-3 border border-slate-200 rounded-xl bg-white"
-                            value={formData.cliente}
-                            onChange={e => setFormData({ ...formData, cliente: e.target.value })}
-                        >
-                            <option value="">Seleccione un cliente...</option>
-                            {clients.map(c => (
-                                <option key={c.id} value={c.nombre}>{c.nombre} (RUC: {c.ruc})</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Destino</label>
-                        <input type="text" placeholder="Planta Indust. / Feria"
-                            className="w-full p-3 border border-slate-200 rounded-xl"
-                            value={formData.destino}
-                            onChange={e => setFormData({ ...formData, destino: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Precio Promedio (Gs/Kg)</label>
-                        <input type="number" required step="100"
-                            className="w-full p-3 border border-slate-200 rounded-xl font-mono"
-                            value={formData.precio_promedio}
-                            onChange={e => setFormData({ ...formData, precio_promedio: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Descuentos Totales (Gs)</label>
-                        <input type="number" step="1000" placeholder="Fletes, Comisiones..."
-                            className="w-full p-3 border border-slate-200 rounded-xl font-mono text-red-600"
-                            value={formData.descuentos}
-                            onChange={e => setFormData({ ...formData, descuentos: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Observaciones</label>
-                        <textarea rows="3"
-                            className="w-full p-3 border border-slate-200 rounded-xl"
-                            value={formData.observaciones}
-                            onChange={e => setFormData({ ...formData, observaciones: e.target.value })}
-                        />
-                    </div>
-
-                    {/* Summary Card */}
-                    <div className="bg-emerald-50 p-6 rounded-2xl border border-emerald-100 mt-6">
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-emerald-700 uppercase">Animales</span>
-                            <span className="text-lg font-black text-emerald-900">{selectedIds.length}</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fecha</label>
+                            <input type="date" required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.fecha} onChange={e => setFormData({ ...formData, fecha: e.target.value })} />
                         </div>
-                        <div className="flex justify-between items-center mb-2">
-                            <span className="text-xs font-bold text-emerald-700 uppercase">Peso Total</span>
-                            <span className="text-lg font-black text-emerald-900">{formData.peso_total.toLocaleString()} kg</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Cliente / Destino</label>
+                            <select required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white appearance-none cursor-pointer" value={formData.cliente} onChange={e => setFormData({ ...formData, cliente: e.target.value })}>
+                                <option value="">Seleccione Comprador...</option>
+                                {clients.map(c => (
+                                    <option key={c.id} value={c.nombre}>{c.nombre} (RUC: {c.ruc})</option>
+                                ))}
+                            </select>
                         </div>
-                        <div className="border-t border-emerald-200 my-2 pt-2 flex justify-between items-center">
-                            <span className="text-sm font-bold text-emerald-700 uppercase">A Cobrar (Neto)</span>
-                            <span className="text-2xl font-black text-emerald-800">₲ {formData.total_neto.toLocaleString()}</span>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lugar de Entrega</label>
+                            <input type="text" placeholder="Ej. Frigorífico Concepción" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.destino} onChange={e => setFormData({ ...formData, destino: e.target.value })} />
                         </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Precio (Gs/Kg)</label>
+                                <input type="number" required step="100" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-emerald-700" value={formData.precio_promedio} onChange={e => setFormData({ ...formData, precio_promedio: e.target.value })} />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Dctos./Gastos</label>
+                                <input type="number" step="1000" placeholder="₲" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-red-600" value={formData.descuentos} onChange={e => setFormData({ ...formData, descuentos: e.target.value })} />
+                            </div>
+                        </div>
+                    </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full mt-4 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-lg"
-                        >
-                            {loading ? 'Procesando...' : 'CONFIRMAR VENTA'}
+                    <div className="bg-slate-900 p-6 rounded-[2rem] shadow-xl text-white space-y-6">
+                        <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Animales</span>
+                            <span className="text-2xl font-black text-white">{selectedIds.length}</span>
+                        </div>
+                        <div className="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/5">
+                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Peso Total</span>
+                            <span className="text-2xl font-black text-white">{formData.peso_total.toLocaleString()} kg</span>
+                        </div>
+                        <div className="pt-2 px-1">
+                            <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Cierre Neto</p>
+                            <p className="text-4xl font-black text-emerald-400 tracking-tight leading-none">₲ {formData.total_neto.toLocaleString()}</p>
+                        </div>
+                        <button type="submit" disabled={loading} className="w-full py-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-lg transition-all shadow-xl shadow-emerald-900/40 uppercase tracking-widest active:scale-95 disabled:opacity-50">
+                            {loading ? 'Procesando...' : 'Confirmar Venta'}
                         </button>
                     </div>
                 </div>
 
                 {/* Right Column: Animal Selection */}
-                <div className="lg:col-span-2 flex flex-col h-[800px]">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-slate-700 uppercase tracking-wider text-sm">Selección de Animales ({selectedIds.length})</h3>
-                        <button type="button" onClick={toggleSelectAll} className="text-sm font-bold text-emerald-600 hover:underline">
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="flex justify-between items-end px-2">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Seleccionar Animales Disponibles</h3>
+                        <button type="button" onClick={toggleSelectAll} className="text-xs font-black text-emerald-600 uppercase tracking-tighter hover:bg-emerald-50 px-3 py-1.5 rounded-full transition-colors">
                             {selectedIds.length === animals.length ? 'Deseleccionar Todos' : 'Seleccionar Todos'}
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-2">
-                        {animals.length === 0 ? (
-                            <div className="h-full flex flex-col items-center justify-center text-slate-400">
-                                <Filter size={48} className="mb-2 opacity-50" />
-                                <p>No hay animales disponibles para venta.</p>
-                            </div>
-                        ) : (
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-500 uppercase bg-slate-100 sticky top-0 z-10">
+                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                        <div className="overflow-y-auto max-h-[700px] custom-scrollbar">
+                            <table className="w-full text-left">
+                                <thead className="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] sticky top-0 z-10 border-b border-slate-100">
                                     <tr>
-                                        <th className="p-3 rounded-tl-lg">
-                                            <div className="w-5 h-5 border-2 border-slate-300 rounded flex items-center justify-center cursor-pointer bg-white" onClick={toggleSelectAll}>
-                                                {selectedIds.length === animals.length && <div className="w-3 h-3 bg-emerald-500 rounded-sm" />}
-                                            </div>
-                                        </th>
-                                        <th className="p-3">Caravana</th>
-                                        <th className="p-3">Categoría</th>
-                                        <th className="p-3">Rodeo</th>
-                                        <th className="p-3 text-right rounded-tr-lg">Peso (kg)</th>
+                                        <th className="p-4 w-12"></th>
+                                        <th className="p-4">Caravana</th>
+                                        <th className="p-4">Categoría</th>
+                                        <th className="p-4">Rodeo</th>
+                                        <th className="p-4 text-right">Peso Actual</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-200">
+                                <tbody className="divide-y divide-slate-50">
                                     {animals.map((animal) => (
-                                        <tr
-                                            key={animal.id}
-                                            className={`hover:bg-emerald-50 cursor-pointer transition-colors ${selectedIds.includes(animal.id) ? 'bg-emerald-50/60' : 'bg-white'}`}
-                                            onClick={() => toggleSelect(animal.id)}
-                                        >
-                                            <td className="p-3">
-                                                <div className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${selectedIds.includes(animal.id) ? 'border-emerald-500 bg-emerald-500' : 'border-slate-300 bg-white'}`}>
-                                                    {selectedIds.includes(animal.id) && <CheckSquare size={14} className="text-white" />}
+                                        <tr key={animal.id} onClick={() => toggleSelect(animal.id)} className={`hover:bg-emerald-50/30 cursor-pointer transition-colors group ${selectedIds.includes(animal.id) ? 'bg-emerald-50/50' : ''}`}>
+                                            <td className="p-4">
+                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIds.includes(animal.id) ? 'bg-emerald-500 border-emerald-500 rotate-0' : 'border-slate-200 -rotate-12 group-hover:rotate-0'}`}>
+                                                    {selectedIds.includes(animal.id) && <CheckSquare size={16} className="text-white" />}
                                                 </div>
                                             </td>
-                                            <td className="p-3 font-mono font-bold text-slate-700">{animal.caravana_visual}</td>
-                                            <td className="p-3 text-slate-600">{animal.categoria}</td>
-                                            <td className="p-3 text-slate-500">{animal.rodeo}</td>
-                                            <td className="p-3 text-right font-mono font-medium">{animal.peso_actual}</td>
+                                            <td className="p-4 font-black text-slate-700 tracking-tight">{animal.caravana_visual}</td>
+                                            <td className="p-4 text-xs font-bold text-slate-500 uppercase">{animal.categoria}</td>
+                                            <td className="p-4 text-xs font-bold text-slate-400">{animal.rodeo}</td>
+                                            <td className="p-4 text-right font-mono font-bold text-slate-800">{animal.peso_actual} <span className="text-[10px] text-slate-400 uppercase">kg</span></td>
                                         </tr>
                                     ))}
+                                    {animals.length === 0 && (
+                                        <tr><td colSpan="5" className="p-10 text-center text-slate-300 font-bold uppercase tracking-widest">No hay animales activos disponibles</td></tr>
+                                    )}
                                 </tbody>
                             </table>
-                        )}
+                        </div>
                     </div>
                 </div>
             </form>

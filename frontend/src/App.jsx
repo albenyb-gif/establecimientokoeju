@@ -246,10 +246,10 @@ function App() {
 const NavLinks = ({ onClick }) => (
     <>
         <NavLink to="/" icon={LayoutDashboard} label="Dashboard" onClick={onClick} />
+        <NavLink to="/calendario" icon={Calendar} label="Agenda" onClick={onClick} />
         <NavLink to="/lista" icon={List} label="Hacienda" onClick={onClick} />
         <NavLink to="/compras" icon={FileSpreadsheet} label="Compras" onClick={onClick} />
         <NavLink to="/ventas" icon={DollarSign} label="Ventas" onClick={onClick} />
-        <NavLink to="/calendario" icon={Calendar} label="Agenda" onClick={onClick} />
         <NavLink to="/clientes" icon={Users} label="Contactos" onClick={onClick} />
         <NavLink to="/siap" icon={Tag} label="SIAP" onClick={onClick} />
         <NavLink to="/ingreso" icon={PlusCircle} label="Ingreso" onClick={onClick} />

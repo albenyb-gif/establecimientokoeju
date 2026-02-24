@@ -23,11 +23,11 @@ const Sidebar = ({ onLogout, onClose }) => {
 
     const menuItems = [
         { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+        { to: "/calendario", icon: Calendar, label: "Agenda Interna" },
         { to: "/lista", icon: List, label: "Hacienda" },
         { to: "/ingreso", icon: PlusCircle, label: "Ingreso Hacienda" },
         { to: "/compras", icon: FileSpreadsheet, label: "Registro Compras" },
         { to: "/ventas", icon: DollarSign, label: "Planilla Ventas" },
-        { to: "/calendario", icon: Calendar, label: "Agenda Interna" },
         { to: "/clientes", icon: Users, label: "Contactos/Clientes" },
         { to: "/siap", icon: Tag, label: "Etiquetas SIAP" },
         { to: "/ovinos", icon: Scissors, label: "Módulo Ovino" },

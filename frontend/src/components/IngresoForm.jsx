@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AnimalService from '../services/animalService';
-import { Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import PageHeader from './common/PageHeader';
+import { Download, CheckCircle, AlertCircle, PlusCircle } from 'lucide-react';
 
 const IngresoForm = () => {
     const [formData, setFormData] = useState({
@@ -22,10 +23,6 @@ const IngresoForm = () => {
     useEffect(() => {
         AnimalService.getCategories().then(setCategories).catch(console.error);
     }, []);
-
-    const checkCot = (e) => {
-        // Here we could implement debounced validation check if needed
-    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -64,163 +61,166 @@ const IngresoForm = () => {
     };
 
     return (
-        <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-xl">
-            <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                📥 Registrar Ingreso de Animales
-            </h2>
+        <div className="max-w-4xl mx-auto">
+            <PageHeader
+                title="Ingreso de Hacienda"
+                subtitle="Registro oficial de entrada de animales al establecimiento."
+                icon={PlusCircle}
+            />
 
-            {status.message && (
-                <div className={`p-4 mb-6 rounded-lg flex items-center gap-2 ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    {status.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-                    {status.message}
-                </div>
-            )}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                {status.message && (
+                    <div className={`p-4 mb-6 rounded-2xl flex items-center gap-2 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                        {status.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+                        <span className="font-medium">{status.message}</span>
+                    </div>
+                )}
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Nro. COT (SENACSA)</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.nro_cot}
-                            onChange={(e) => setFormData({ ...formData, nro_cot: e.target.value })}
-                            placeholder="Ej. COT-12345"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Guía de Traslado</label>
-                        <input
-                            type="text"
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.nro_guia}
-                            onChange={(e) => setFormData({ ...formData, nro_guia: e.target.value })}
-                            placeholder="Ej. GT-9876"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Fecha de Ingreso</label>
-                        <input
-                            type="date"
-                            required
-                            max={new Date().toISOString().split('T')[0]}
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.fecha}
-                            onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Origen (Establecimiento)</label>
-                        <input
-                            type="text"
-                            required
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.origen}
-                            onChange={(e) => setFormData({ ...formData, origen: e.target.value })}
-                            placeholder="Ej. Estancia La Tranquera"
-                        />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Especie</label>
-                        <select
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                            value={formData.especie}
-                            onChange={(e) => setFormData({ ...formData, especie: e.target.value })}
-                        >
-                            <option value="BOVINO">Bovino (Vacas/Novillos)</option>
-                            <option value="OVINO">Ovino (Ovejas/Corderos)</option>
-                            <option value="EQUINO">Equino (Caballos)</option>
-                            <option value="CAPRINO">Caprino (Cabras)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Tipo de Ingreso</label>
-                        <select
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                            value={formData.tipo_ingreso}
-                            onChange={(e) => setFormData({ ...formData, tipo_ingreso: e.target.value })}
-                        >
-                            <option value="COMPRA">Compra</option>
-                            <option value="TRASLADO">Traslado</option>
-                            <option value="CAPITALIZACION">Capitalización</option>
-                            <option value="INVENTARIO_INICIAL">Inventario Inicial (Ya en hacienda)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Categoría</label>
-                        <select
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                            value={formData.categoria_id}
-                            onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })}
-                        >
-                            <option value="">-- Seleccionar --</option>
-                            {categories.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Cant. Cabezas</label>
-                        <input
-                            type="number"
-                            min="1"
-                            required
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.cantidad}
-                            onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-                            placeholder="0"
-                        />
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                    <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">Transporte / Chofer</label>
-                        <input
-                            type="text"
-                            className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                            value={formData.transporte}
-                            onChange={(e) => setFormData({ ...formData, transporte: e.target.value })}
-                            placeholder="Opcional"
-                        />
-                    </div>
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Foto de Marca (Opcional)</label>
-                    <div className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center hover:bg-slate-50 transition-colors cursor-pointer relative">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            onChange={(e) => setFile(e.target.files[0])}
-                        />
-                        <div className="flex flex-col items-center gap-2 text-slate-400">
-                            <Upload size={32} />
-                            <span className="text-sm font-medium">
-                                {file ? file.name : 'Haz clic o arrastra una imagen aquí'}
-                            </span>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Nro. COT (SENACSA)</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                value={formData.nro_cot}
+                                onChange={(e) => setFormData({ ...formData, nro_cot: e.target.value })}
+                                placeholder="Ej. COT-12345"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Guía de Traslado</label>
+                            <input
+                                type="text"
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                value={formData.nro_guia}
+                                onChange={(e) => setFormData({ ...formData, nro_guia: e.target.value })}
+                                placeholder="Ej. GT-9876"
+                            />
                         </div>
                     </div>
-                </div>
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-blue-500/30 disabled:opacity-50"
-                >
-                    {loading ? 'Registrando...' : 'Registrar Movimiento'}
-                </button>
-            </form >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Fecha de Ingreso</label>
+                            <input
+                                type="date"
+                                required
+                                max={new Date().toISOString().split('T')[0]}
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                value={formData.fecha}
+                                onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Origen (Establecimiento)</label>
+                            <input
+                                type="text"
+                                required
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                value={formData.origen}
+                                onChange={(e) => setFormData({ ...formData, origen: e.target.value })}
+                                placeholder="Ej. Estancia La Tranquera"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Especie</label>
+                            <select
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all bg-white appearance-none cursor-pointer"
+                                value={formData.especie}
+                                onChange={(e) => setFormData({ ...formData, especie: e.target.value })}
+                            >
+                                <option value="BOVINO">Bovino (Vacas/Novillos)</option>
+                                <option value="OVINO">Ovino (Ovejas/Corderos)</option>
+                                <option value="EQUINO">Equino (Caballos)</option>
+                                <option value="CAPRINO">Caprino (Cabras)</option>
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tipo de Ingreso</label>
+                            <select
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all bg-white appearance-none cursor-pointer"
+                                value={formData.tipo_ingreso}
+                                onChange={(e) => setFormData({ ...formData, tipo_ingreso: e.target.value })}
+                            >
+                                <option value="COMPRA">Compra</option>
+                                <option value="TRASLADO">Traslado</option>
+                                <option value="CAPITALIZACION">Capitalización</option>
+                                <option value="INVENTARIO_INICIAL">Inventario Inicial</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Categoría</label>
+                            <select
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all bg-white appearance-none cursor-pointer"
+                                value={formData.categoria_id}
+                                onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })}
+                            >
+                                <option value="">-- Seleccionar --</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Cant. Cabezas</label>
+                            <input
+                                type="number"
+                                min="1"
+                                required
+                                className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-bold text-lg"
+                                value={formData.cantidad}
+                                onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Transporte / Chofer</label>
+                        <input
+                            type="text"
+                            className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                            value={formData.transporte}
+                            onChange={(e) => setFormData({ ...formData, transporte: e.target.value })}
+                            placeholder="Nombre del chofer o transporte (Opcional)"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Foto de Marca (Opcional)</label>
+                        <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:bg-slate-50 transition-all cursor-pointer relative group">
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                onChange={(e) => setFile(e.target.files[0])}
+                            />
+                            <div className="flex flex-col items-center gap-3 text-slate-400 group-hover:text-emerald-500">
+                                <PlusCircle size={40} className="transition-colors" />
+                                <span className="text-sm font-bold uppercase tracking-widest">
+                                    {file ? file.name : 'Subir imagen de marca'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-slate-900 hover:bg-emerald-600 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-slate-900/10 hover:shadow-emerald-900/20 disabled:opacity-50 text-lg uppercase tracking-widest"
+                    >
+                        {loading ? 'Registrando...' : 'Confirmar Ingreso'}
+                    </button>
+                </form >
+            </div>
         </div >
     );
 };

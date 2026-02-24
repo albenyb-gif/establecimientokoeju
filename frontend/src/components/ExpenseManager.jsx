@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { DollarSign, TrendingDown, Calendar, PlusCircle, Trash2, Filter, Receipt, Wallet } from 'lucide-react';
+import { DollarSign, TrendingDown, Calendar, PlusCircle, Trash2, Filter, Receipt, Wallet, ArrowUpRight, ArrowDownRight, PieChart } from 'lucide-react';
+import PageHeader from './common/PageHeader';
 import ExpenseService from '../services/expenseService';
 
 const CATEGORIAS = [
@@ -16,10 +17,10 @@ const CATEGORIAS = [
 ];
 
 const formatCurrency = (value) =>
-    new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value || 0);
+    new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 }).format(value || 0).replace('PYG', '₲');
 
 const ExpenseManager = () => {
-    const [tab, setTab] = useState('dashboard'); // dashboard | registrar | historial
+    const [tab, setTab] = useState('dashboard');
     const [summary, setSummary] = useState(null);
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -62,7 +63,7 @@ const ExpenseManager = () => {
         }
         try {
             await ExpenseService.create({ ...form, monto: parseFloat(form.monto) });
-            setStatus({ type: 'success', message: 'Gasto registrado exitosamente' });
+            setStatus({ type: 'success', message: 'Gasto registrado correctamente' });
             setForm({
                 fecha: new Date().toISOString().split('T')[0],
                 categoria: '',
@@ -74,7 +75,7 @@ const ExpenseManager = () => {
             loadData();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.error || 'Error al registrar gasto' });
+            setStatus({ type: 'error', message: error.response?.data?.error || 'Error al registrar' });
         }
     };
 
@@ -88,7 +89,7 @@ const ExpenseManager = () => {
     };
 
     const handleDelete = async (id) => {
-        if (!confirm('¿Eliminar este gasto?')) return;
+        if (!confirm('¿Desea eliminar este registro de gasto?')) return;
         try {
             await ExpenseService.remove(id);
             loadData();
@@ -97,310 +98,249 @@ const ExpenseManager = () => {
         }
     };
 
-    if (loading) return <div className="text-center mt-20 text-slate-400">Cargando módulo de gastos...</div>;
+    if (loading) return (
+        <div className="flex flex-col items-center justify-center py-24 text-slate-300 space-y-4">
+            <div className="w-12 h-12 border-4 border-slate-100 border-t-red-500 rounded-full animate-spin"></div>
+            <p className="font-black uppercase tracking-[0.2em] text-xs">Cargando Gestión de Egresos</p>
+        </div>
+    );
 
     return (
-        <div className="space-y-6 pb-20">
-            {/* Header */}
-            <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                    <Receipt size={32} className="text-red-500" /> Gastos del Establecimiento
-                </h1>
-                <p className="text-slate-500 mt-1">Control administrativo de egresos operativos.</p>
-            </div>
+        <div className="space-y-6 pb-20 animate-in fade-in duration-500">
+            <PageHeader
+                title="Gastos Operativos"
+                subtitle="Control administrativo y financiero del establecimiento."
+                icon={Receipt}
+                actions={
+                    <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-1 border border-slate-200/50 shadow-inner">
+                        <button
+                            onClick={() => setTab('dashboard')}
+                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === 'dashboard' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            📊 Resumen
+                        </button>
+                        <button
+                            onClick={() => setTab('registrar')}
+                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === 'registrar' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            ➕ Registrar
+                        </button>
+                        <button
+                            onClick={() => setTab('historial')}
+                            className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${tab === 'historial' ? 'bg-white text-slate-900 shadow-xl' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                            📋 Historial
+                        </button>
+                    </div>
+                }
+            />
 
-            {/* Tabs */}
-            <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
-                {[
-                    { id: 'dashboard', label: '📊 Resumen', icon: null },
-                    { id: 'registrar', label: '➕ Registrar', icon: null },
-                    { id: 'historial', label: '📋 Historial', icon: null },
-                ].map(t => (
-                    <button
-                        key={t.id}
-                        onClick={() => setTab(t.id)}
-                        className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-bold transition-all ${tab === t.id
-                                ? 'bg-white text-slate-800 shadow-sm'
-                                : 'text-slate-500 hover:text-slate-700'
-                            }`}
-                    >
-                        {t.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Dashboard Tab */}
             {tab === 'dashboard' && summary && (
                 <div className="space-y-8">
                     {/* KPIs */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         <KpiCard
-                            title="Gasto del Mes"
+                            title="Operativo este Mes"
                             value={formatCurrency(summary.kpis.gasto_mes)}
-                            icon={<Calendar size={22} className="text-blue-600" />}
-                            color="text-blue-700"
-                            bg="bg-blue-50"
+                            icon={<ArrowDownRight size={22} />}
+                            trend="Gasto Mensual"
+                            color="text-red-500"
+                            bg="bg-white"
                         />
                         <KpiCard
-                            title="Gasto Anual"
+                            title="Total Gestión 2024"
                             value={formatCurrency(summary.kpis.gasto_anual)}
-                            icon={<TrendingDown size={22} className="text-red-600" />}
-                            color="text-red-700"
-                            bg="bg-red-50"
+                            icon={<TrendingDown size={22} />}
+                            trend="Consolidado Anual"
+                            color="text-slate-800"
+                            bg="bg-white"
                         />
                         <KpiCard
-                            title="Promedio Mensual"
+                            title="Promedio Estimado"
                             value={formatCurrency(summary.kpis.promedio_mensual)}
-                            icon={<Wallet size={22} className="text-amber-600" />}
-                            color="text-amber-700"
-                            bg="bg-amber-50"
+                            icon={<Wallet size={22} />}
+                            trend="Carga Mensual"
+                            color="text-blue-500"
+                            bg="bg-white"
                         />
                         <KpiCard
-                            title={`Top: ${summary.kpis.top_categoria.nombre}`}
+                            title={summary.kpis.top_categoria.nombre}
                             value={formatCurrency(summary.kpis.top_categoria.total)}
-                            icon={<DollarSign size={22} className="text-purple-600" />}
-                            color="text-purple-700"
-                            bg="bg-purple-50"
+                            icon={<PieChart size={22} />}
+                            trend="Categoría Principal"
+                            color="text-amber-600"
+                            bg="bg-white"
                         />
                     </div>
 
                     {/* Charts */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {/* Por Categoría */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-slate-800 mb-4">Distribución por Categoría</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8 border-b border-slate-50 pb-4">Inversión por Categoría</h3>
                             {summary.por_categoria.length > 0 ? (
-                                <div className="h-72">
+                                <div className="h-80">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <BarChart data={summary.por_categoria} layout="vertical" margin={{ left: 10, right: 30 }}>
-                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                            <XAxis type="number" tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                                            <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
-                                            <Tooltip formatter={(v) => formatCurrency(v)} />
-                                            <Bar dataKey="value" fill="#ef4444" radius={[0, 6, 6, 0]} barSize={18} />
+                                        <BarChart data={summary.por_categoria} layout="vertical" margin={{ left: 20, right: 30 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                                            <XAxis type="number" hide />
+                                            <YAxis dataKey="name" type="category" width={140} tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                            <Tooltip cursor={{ fill: '#f8fafc' }} contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} formatter={(v) => formatCurrency(v)} />
+                                            <Bar dataKey="value" fill="#0f172a" radius={[0, 12, 12, 0]} barSize={24} />
                                         </BarChart>
                                     </ResponsiveContainer>
                                 </div>
                             ) : (
-                                <p className="text-slate-400 text-center py-12">Sin datos aún</p>
+                                <div className="h-80 flex flex-col items-center justify-center text-slate-200">
+                                    <BarChart size={48} className="opacity-20 mb-4" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest">Sin datos consolidados</p>
+                                </div>
                             )}
                         </div>
 
-                        {/* Tendencia */}
-                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-slate-800 mb-4">Tendencia Mensual</h3>
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 group">
+                            <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-8 border-b border-slate-50 pb-4">Curva de Gastos Mensual</h3>
                             {summary.tendencia_mensual.length > 0 ? (
-                                <div className="h-72">
+                                <div className="h-80">
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <LineChart data={summary.tendencia_mensual}>
-                                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                            <XAxis dataKey="mes" />
-                                            <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} />
-                                            <Tooltip formatter={(v) => formatCurrency(v)} />
-                                            <Line type="monotone" dataKey="total" stroke="#ef4444" strokeWidth={3} dot={{ r: 5, fill: '#ef4444' }} />
+                                        <LineChart data={summary.tendencia_mensual} margin={{ top: 10, right: 10, left: 20, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="5 5" vertical={false} stroke="#f1f5f9" />
+                                            <XAxis dataKey="mes" tick={{ fontSize: 10, fontWeight: 900, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                                            <YAxis hide />
+                                            <Tooltip contentStyle={{ borderRadius: '1rem', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} formatter={(v) => formatCurrency(v)} />
+                                            <Line type="monotone" dataKey="total" stroke="#ef4444" strokeWidth={5} dot={{ r: 6, fill: '#ef4444', strokeWidth: 4, stroke: '#fff' }} activeDot={{ r: 8, strokeWidth: 0 }} />
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </div>
                             ) : (
-                                <p className="text-slate-400 text-center py-12">Sin datos aún</p>
+                                <div className="h-80 flex flex-col items-center justify-center text-slate-200">
+                                    <LineChart size={48} className="opacity-20 mb-4" />
+                                    <p className="text-[10px] font-black uppercase tracking-widest">A la espera de registros</p>
+                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Registrar Tab */}
             {tab === 'registrar' && (
-                <div className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                    <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <PlusCircle size={22} className="text-red-500" /> Nuevo Gasto
+                <div className="max-w-3xl mx-auto bg-white p-10 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <h2 className="text-2xl font-black text-slate-800 mb-8 flex items-center gap-3">
+                        <PlusCircle size={24} className="text-red-500" /> Registro de nuevo Egreso
                     </h2>
 
                     {status.message && (
-                        <div className={`p-3 mb-4 rounded-lg text-sm font-medium ${status.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                            }`}>
+                        <div className={`p-4 mb-8 rounded-2xl flex items-center gap-2 border font-bold text-xs uppercase tracking-widest ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
                             {status.message}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Fecha</label>
-                                <input
-                                    type="date"
-                                    required
-                                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                                    value={form.fecha}
-                                    onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-                                />
+                    <form onSubmit={handleSubmit} className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha del Comprobante</label>
+                                <input type="date" required className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-bold text-slate-800 transition-all" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Monto (Gs)</label>
-                                <input
-                                    type="number"
-                                    required
-                                    min="0"
-                                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                                    value={form.monto}
-                                    onChange={(e) => setForm({ ...form, monto: e.target.value })}
-                                    placeholder="Ej. 500000"
-                                />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto Total (Gs)</label>
+                                <input type="number" required min="0" className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-black text-red-600 text-2xl transition-all" value={form.monto} onChange={(e) => setForm({ ...form, monto: e.target.value })} placeholder="0" />
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Categoría</label>
-                            <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Clasificación de Gasto</label>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                                 {CATEGORIAS.map(cat => (
                                     <button
                                         key={cat.value}
                                         type="button"
                                         onClick={() => setForm({ ...form, categoria: cat.value })}
-                                        className={`p-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-1.5 ${form.categoria === cat.value
-                                                ? 'bg-red-50 border-red-300 text-red-700 ring-2 ring-red-200'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                                        className={`p-4 rounded-2xl text-[10px] font-black uppercase tracking-tighter border-2 transition-all flex flex-col items-center gap-2 ${form.categoria === cat.value
+                                            ? 'bg-red-600 border-red-600 text-white shadow-xl shadow-red-900/20 scale-105'
+                                            : 'bg-white border-slate-50 text-slate-400 hover:border-slate-200'
                                             }`}
                                     >
-                                        <span>{cat.emoji}</span>
-                                        <span className="truncate">{cat.label}</span>
+                                        <span className="text-2xl">{cat.emoji}</span>
+                                        <span className="truncate w-full text-center">{cat.label}</span>
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
-                            <input
-                                type="text"
-                                className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                                value={form.descripcion}
-                                onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-                                placeholder="Ej. Compra de 20 bolsas de ración"
-                            />
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Descripción / Notas</label>
+                            <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-bold text-slate-800" value={form.descripcion} onChange={(e) => setForm({ ...form, descripcion: e.target.value })} placeholder="Ej. Detalle de la compra o servicio..." />
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Proveedor</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                                    value={form.proveedor}
-                                    onChange={(e) => setForm({ ...form, proveedor: e.target.value })}
-                                    placeholder="Opcional"
-                                />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Proveedor</label>
+                                <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-bold" value={form.proveedor} onChange={(e) => setForm({ ...form, proveedor: e.target.value })} />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Nro. Comprobante</label>
-                                <input
-                                    type="text"
-                                    className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-red-500 outline-none"
-                                    value={form.comprobante_nro}
-                                    onChange={(e) => setForm({ ...form, comprobante_nro: e.target.value })}
-                                    placeholder="Opcional"
-                                />
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nro. de Comprobante</label>
+                                <input type="text" className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-mono font-bold" value={form.comprobante_nro} onChange={(e) => setForm({ ...form, comprobante_nro: e.target.value })} />
                             </div>
                         </div>
 
-                        <button
-                            type="submit"
-                            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg hover:shadow-red-500/30"
-                        >
-                            Registrar Gasto
+                        <button type="submit" className="w-full bg-slate-900 hover:bg-red-600 text-white font-black py-5 rounded-2xl transition-all shadow-xl shadow-slate-900/10 uppercase tracking-widest text-sm flex items-center justify-center gap-3">
+                            <Save size={24} /> Confirmar Gasto
                         </button>
                     </form>
                 </div>
             )}
 
-            {/* Historial Tab */}
             {tab === 'historial' && (
-                <div className="space-y-4">
-                    {/* Filters */}
-                    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-                        <div className="flex flex-wrap gap-3 items-end">
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Desde</label>
-                                <input
-                                    type="date"
-                                    className="p-2 border border-slate-200 rounded-lg text-sm"
-                                    value={filters.desde}
-                                    onChange={(e) => setFilters({ ...filters, desde: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Hasta</label>
-                                <input
-                                    type="date"
-                                    className="p-2 border border-slate-200 rounded-lg text-sm"
-                                    value={filters.hasta}
-                                    onChange={(e) => setFilters({ ...filters, hasta: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1">Categoría</label>
-                                <select
-                                    className="p-2 border border-slate-200 rounded-lg text-sm bg-white"
-                                    value={filters.categoria}
-                                    onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}
-                                >
-                                    <option value="">Todas</option>
-                                    {CATEGORIAS.map(c => (
-                                        <option key={c.value} value={c.value}>{c.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                onClick={handleFilter}
-                                className="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-slate-700"
-                            >
-                                <Filter size={14} /> Filtrar
-                            </button>
-                            <button
-                                onClick={() => { setFilters({ desde: '', hasta: '', categoria: '' }); loadData(); }}
-                                className="text-slate-500 px-3 py-2 text-sm hover:text-slate-700"
-                            >
-                                Limpiar
-                            </button>
+                <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-wrap gap-4 items-end">
+                        <div className="flex-1 min-w-[200px] space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Desde</label>
+                            <input type="date" className="w-full p-3 bg-slate-50 border-none rounded-xl text-sm font-bold" value={filters.desde} onChange={(e) => setFilters({ ...filters, desde: e.target.value })} />
                         </div>
+                        <div className="flex-1 min-w-[200px] space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hasta</label>
+                            <input type="date" className="w-full p-3 bg-slate-50 border-none rounded-xl text-sm font-bold" value={filters.hasta} onChange={(e) => setFilters({ ...filters, hasta: e.target.value })} />
+                        </div>
+                        <div className="flex-1 min-w-[200px] space-y-1">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Categoría</label>
+                            <select className="w-full p-3 bg-slate-50 border-none rounded-xl text-sm font-bold bg-white" value={filters.categoria} onChange={(e) => setFilters({ ...filters, categoria: e.target.value })}>
+                                <option value="">Todas las categorías</option>
+                                {CATEGORIAS.map(c => (<option key={c.value} value={c.value}>{c.emoji} {c.label}</option>))}
+                            </select>
+                        </div>
+                        <button onClick={handleFilter} className="bg-slate-900 text-white h-[44px] px-8 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-red-600 transition-colors shadow-lg shadow-slate-900/10"><Filter size={14} /> Filtrar</button>
                     </div>
 
-                    {/* Expense List */}
-                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                         {expenses.length === 0 ? (
-                            <div className="p-12 text-center text-slate-400">
-                                <Receipt size={40} className="mx-auto mb-3 opacity-40" />
-                                <p>No hay gastos registrados</p>
+                            <div className="p-20 text-center text-slate-200">
+                                <Receipt size={64} className="mx-auto mb-4 opacity-5" />
+                                <p className="font-black uppercase tracking-widest text-xs">Sin registros que mostrar</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-slate-100">
+                            <div className="divide-y divide-slate-50">
                                 {expenses.map(exp => {
                                     const cat = CATEGORIAS.find(c => c.value === exp.categoria);
                                     return (
-                                        <div key={exp.id} className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{cat?.emoji || '📦'}</span>
+                                        <div key={exp.id} className="flex items-center justify-between p-6 hover:bg-slate-50 transition-colors group">
+                                            <div className="flex items-center gap-6">
+                                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-slate-100 group-hover:bg-white group-hover:rotate-6 transition-all">{cat?.emoji || '📦'}</div>
                                                 <div>
-                                                    <p className="font-semibold text-slate-800 text-sm">
-                                                        {exp.descripcion || cat?.label || exp.categoria}
+                                                    <p className="font-black text-slate-800 text-lg leading-none tracking-tight group-hover:text-red-600 transition-colors">
+                                                        {exp.descripcion || cat?.label}
                                                     </p>
-                                                    <p className="text-xs text-slate-400">
-                                                        {new Date(exp.fecha).toLocaleDateString('es-PY')}
-                                                        {exp.proveedor && ` · ${exp.proveedor}`}
-                                                        {exp.comprobante_nro && ` · #${exp.comprobante_nro}`}
-                                                    </p>
+                                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-100">{new Date(exp.fecha).toLocaleDateString('es-PY')}</span>
+                                                        {exp.proveedor && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Proveedor: {exp.proveedor}</span>}
+                                                        {exp.comprobante_nro && <span className="text-[10px] font-bold text-slate-300">#{exp.comprobante_nro}</span>}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="font-black text-red-600 text-sm">
-                                                    {formatCurrency(exp.monto)}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleDelete(exp.id)}
-                                                    className="p-1.5 rounded-lg hover:bg-red-50 text-slate-300 hover:text-red-500 transition-colors"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                            <div className="flex items-center gap-8">
+                                                <div className="text-right">
+                                                    <p className="font-black text-red-600 text-xl tracking-tighter">{formatCurrency(exp.monto)}</p>
+                                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">{cat?.label}</p>
+                                                </div>
+                                                <button onClick={() => handleDelete(exp.id)} className="p-3 rounded-xl bg-slate-50 text-slate-300 hover:text-white hover:bg-red-500 transition-all shadow-sm"><Trash2 size={16} /></button>
                                             </div>
                                         </div>
                                     );
@@ -408,26 +348,25 @@ const ExpenseManager = () => {
                             </div>
                         )}
                     </div>
-
-                    {expenses.length > 0 && (
-                        <div className="text-right text-sm text-slate-500">
-                            Total filtrado: <span className="font-bold text-red-600">{formatCurrency(expenses.reduce((s, e) => s + Number(e.monto), 0))}</span>
-                            {' · '}{expenses.length} registro(s)
-                        </div>
-                    )}
                 </div>
             )}
         </div>
     );
 };
 
-const KpiCard = ({ title, value, icon, color, bg }) => (
-    <div className={`${bg} p-5 rounded-2xl border border-white/50`}>
-        <div className="flex items-center gap-3 mb-2">
-            {icon}
-            <span className="text-sm font-medium text-slate-600">{title}</span>
+const KpiCard = ({ title, value, icon, trend, color, bg }) => (
+    <div className={`${bg} p-8 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group hover:shadow-xl hover:shadow-slate-200/50 transition-all`}>
+        <div className="absolute -top-4 -right-4 p-8 opacity-5 text-slate-900 group-hover:scale-110 transition-transform">{icon}</div>
+        <div className="space-y-4">
+            <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl ${color.replace('text', 'bg')}/10 ${color}`}>{icon}</div>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">{title}</span>
+            </div>
+            <div>
+                <p className={`text-3xl font-black tracking-tighter leading-none ${color}`}>{value}</p>
+                <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest mt-2">{trend}</p>
+            </div>
         </div>
-        <p className={`text-xl font-black tracking-tight ${color}`}>{value}</p>
     </div>
 );
 

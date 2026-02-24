@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Upload, FileSpreadsheet, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Upload, FileSpreadsheet, CheckCircle, AlertTriangle, Cloud, Download, Server } from 'lucide-react';
+import PageHeader from './common/PageHeader';
 import AnimalService from '../services/animalService';
 
 const ImportView = () => {
@@ -21,77 +22,122 @@ const ImportView = () => {
         formData.append('file', file);
 
         try {
-            // Mock call or real call if backend supported file parsing
-            // For now, assume backend returns statistics of import
             const response = await AnimalService.importMasiva(formData);
             setStatus({ type: 'success', data: response });
         } catch (error) {
             console.error("Error importing:", error);
-            setStatus({ type: 'error', message: "Error al procesar el archivo." });
+            setStatus({ type: 'error', message: "Error al procesar el archivo. Verifique el formato XSLX/CSV." });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="max-w-3xl mx-auto space-y-8 pb-20">
-            <div>
-                <h1 className="text-3xl font-black text-slate-800 tracking-tight flex items-center gap-3">
-                    <FileSpreadsheet className="text-green-600" size={32} />
-                    Importación Masiva
-                </h1>
-                <p className="text-slate-500 mt-2">Carga de planillas Excel/CSV para actualización de stock.</p>
-            </div>
+        <div className="max-w-4xl mx-auto space-y-6 pb-20 animate-in fade-in duration-500">
+            <PageHeader
+                title="Sincronización Masiva"
+                subtitle="Carga avanzada de inventarios mediante planillas estructuradas (Excel/CSV)."
+                icon={FileSpreadsheet}
+            />
 
-            <div className="bg-white p-10 rounded-3xl shadow-sm border border-slate-100 text-center">
-                <div className="border-2 border-dashed border-slate-300 rounded-3xl p-12 hover:bg-slate-50 transition-colors cursor-pointer relative flex flex-col items-center justify-center gap-4">
-                    <input
-                        type="file"
-                        accept=".csv, .xlsx"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={handleFileChange}
-                    />
-                    <div className="h-20 w-20 bg-green-50 rounded-full flex items-center justify-center text-green-600 mb-2">
-                        <Upload size={32} />
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Information Panel */}
+                <div className="lg:col-span-4 space-y-6">
+                    <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-5 text-white group-hover:scale-110 transition-transform">
+                            <Server size={120} />
+                        </div>
+                        <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+                            Protocolo de Carga
+                        </h3>
+                        <div className="space-y-4 relative z-10">
+                            <div className="flex gap-3">
+                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                                <p className="text-xs text-slate-300 leading-relaxed font-medium">Use el formato oficial de columnas del sistema para evitar errores de mapeo.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                                <p className="text-xs text-slate-300 leading-relaxed font-medium">Asegúrese de que las caravanas visuales no estén duplicadas en el archivo.</p>
+                            </div>
+                            <div className="flex gap-3">
+                                <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center text-[10px] font-black shrink-0">3</div>
+                                <p className="text-xs text-slate-300 leading-relaxed font-medium">Los pesos deben estar expresados en Kilogramos (formato numérico).</p>
+                            </div>
+                        </div>
+
+                        <button className="w-full mt-8 py-4 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 transition-all flex items-center justify-center gap-2 group/btn">
+                            <Download size={14} className="group-hover/btn:translate-y-0.5 transition-transform" /> Descargar Plantilla Modelo
+                        </button>
                     </div>
 
-                    {file ? (
-                        <div>
-                            <p className="font-bold text-slate-800 text-lg">{file.name}</p>
-                            <p className="text-slate-400 text-sm">{(file.size / 1024).toFixed(2)} KB</p>
-                        </div>
-                    ) : (
-                        <div>
-                            <p className="font-bold text-slate-700 text-lg">Arrastra tu archivo aquí</p>
-                            <p className="text-slate-400">o haz clic para seleccionar</p>
+                    {status && status.type === 'success' && (
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-[2rem] p-8 animate-in slide-in-from-bottom-4 duration-500">
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="p-2 bg-emerald-500 rounded-xl text-white">
+                                    <CheckCircle size={20} />
+                                </div>
+                                <p className="text-xs font-black text-emerald-800 uppercase tracking-widest">Carga Finalizada</p>
+                            </div>
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-center py-2 border-b border-emerald-100">
+                                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Nuevos Registros</span>
+                                    <span className="font-black text-emerald-900 text-lg">{status.data?.creados || 0}</span>
+                                </div>
+                                <div className="flex justify-between items-center py-2 border-b border-emerald-100">
+                                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Actualizados</span>
+                                    <span className="font-black text-emerald-900 text-lg">{status.data?.actualizados || 0}</span>
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
 
-                <div className="mt-8 flex justify-center">
-                    <button
-                        onClick={handleImport}
-                        disabled={!file || loading}
-                        className="px-8 py-3 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg flex items-center gap-2"
-                    >
-                        {loading ? 'Procesando...' : 'Iniciar Importación'}
-                    </button>
-                </div>
-            </div>
+                {/* Dropzone Area */}
+                <div className="lg:col-span-8 bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100">
+                    <div className={`border-2 border-dashed ${file ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-100 bg-slate-50/50'} rounded-[2rem] p-16 transition-all relative flex flex-col items-center justify-center gap-6 group`}>
+                        <input
+                            type="file"
+                            accept=".csv, .xlsx"
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+                            onChange={handleFileChange}
+                        />
 
-            {status && status.type === 'success' && (
-                <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex gap-4 items-start">
-                    <CheckCircle className="text-green-600 shrink-0" size={24} />
-                    <div>
-                        <h3 className="font-bold text-green-800">Importación Exitosa</h3>
-                        <p className="text-green-700 text-sm mt-1">Se han procesado los registros correctamente.</p>
-                        <div className="mt-3 flex gap-4 text-sm font-medium text-green-800">
-                            <span>Nuevos: {status.data?.creados || 15}</span>
-                            <span>Actualizados: {status.data?.actualizados || 42}</span>
+                        <div className={`h-24 w-24 ${file ? 'bg-emerald-500 text-white shadow-xl shadow-emerald-200' : 'bg-white text-slate-300 shadow-sm'} rounded-[1.8rem] flex items-center justify-center transition-all group-hover:scale-105 duration-500 z-10`}>
+                            {file ? <CheckCircle size={40} /> : <Cloud size={40} />}
                         </div>
+
+                        {file ? (
+                            <div className="text-center z-10">
+                                <p className="font-black text-slate-800 text-xl tracking-tight mb-1">{file.name}</p>
+                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em]">{(file.size / 1024).toFixed(2)} KB · Listo para procesar</p>
+                            </div>
+                        ) : (
+                            <div className="text-center z-10">
+                                <p className="font-black text-slate-400 text-lg tracking-tight mb-1">Seleccionar planilla de datos</p>
+                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Formatos compatibles: .xlsx, .csv</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="mt-8 flex flex-col items-center gap-4">
+                        <button
+                            onClick={handleImport}
+                            disabled={!file || loading}
+                            className="w-full max-w-sm py-5 bg-slate-900 text-white rounded-2xl font-black shadow-2xl shadow-slate-900/10 hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 uppercase tracking-widest text-xs"
+                        >
+                            {loading ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                    Analizando Datos...
+                                </div>
+                            ) : (
+                                <><Upload size={18} /> Iniciar Sincronización</>
+                            )}
+                        </button>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Al iniciar, el sistema validará la integridad de cada registro antes de persistirlos.</p>
                     </div>
                 </div>
-            )}
+            </div>
         </div>
     );
 };

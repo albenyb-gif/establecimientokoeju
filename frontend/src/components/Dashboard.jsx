@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { TrendingUp, Users, Activity, AlertTriangle, DollarSign } from 'lucide-react';
+import PageHeader from './common/PageHeader';
+import { LayoutDashboard, TrendingUp, Users, Activity, AlertTriangle, DollarSign } from 'lucide-react';
 import RankingReport from './RankingReport';
 
 const Dashboard = ({ potreros }) => {
@@ -15,24 +16,21 @@ const Dashboard = ({ potreros }) => {
     }, [potreros]);
 
     // Datos para Gráfico (calculados desde potreros reales)
-    // TODO: Implementar distribución real por categoría desde API
     const dataDistribution = [];
 
     return (
         <div className="space-y-8 pb-20">
-            {/* Header de Bienvenida */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                        Panel General
-                    </h1>
-                    <p className="text-slate-500">Resumen de actividad y estado del establecimiento.</p>
-                </div>
-                <div className="flex gap-2 text-sm font-medium bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
-                    <span className="text-slate-400">Última actualización:</span>
-                    <span className="text-emerald-600">Hace 5 minutos</span>
-                </div>
-            </div>
+            <PageHeader
+                title="Panel General"
+                subtitle="Resumen de actividad y estado del establecimiento."
+                icon={LayoutDashboard}
+                actions={
+                    <div className="flex gap-2 text-sm font-medium bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                        <span className="text-slate-400">Última actualización:</span>
+                        <span className="text-emerald-600">Hace 5 minutos</span>
+                    </div>
+                }
+            />
 
             {/* Banner informativo solo si hay animales con peso de faena */}
             {stats.totalAnimales > 0 && (
