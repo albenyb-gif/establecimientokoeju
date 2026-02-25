@@ -60,7 +60,12 @@ class AnimalController {
      * Registra un lote de compra y genera automáticamente los animales.
      */
     static async registrarCompraLote(req, res) {
-        const { fecha, cantidad, pelaje, kilos_compra, vendedor, lugar, documento, observaciones, costo_unitario, peso_total, ganancia_estimada, nro_cot, nro_guia } = req.body;
+        const {
+            fecha, cantidad, pelaje, kilos_compra, vendedor, lugar,
+            documento, observaciones, costo_unitario, peso_total,
+            ganancia_estimada, nro_cot, nro_guia,
+            comision_feria, flete, tasas, porcentaje_ganancia
+        } = req.body;
 
         let foto_marca_path = null;
         if (req.file) {
@@ -82,15 +87,57 @@ class AnimalController {
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
                 `INSERT INTO compras_lotes 
-                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, cantidad, pelaje, kilos_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar, documento, observaciones]
+                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [fecha, cantidad, pelaje, kilos_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar, documento, observaciones, nro_cot]
             );
             const loteId = loteResult.insertId;
 
+            // 1.1 Insertar Gastos Automáticos si existen
+            const baseCost = parseFloat(cantidad) * parseFloat(costo_unitario);
+
+            // Gasto por la Hacienda (Animales)
+            await connection.query(
+                'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "OTROS", ?, ?, ?)',
+                [fecha, baseCost, `Compra de Lote #${loteId} (${cantidad} animales)`, vendedor]
+            );
+
+            // Gasto por Comisión (si aplica)
+            if (parseFloat(comision_feria) > 0) {
+                await connection.query(
+                    'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "SERVICIOS", ?, ?, ?)',
+                    [fecha, parseFloat(comision_feria) * 1.10, `Comisión Compra Lote #${loteId}`, 'Feria/Intermediario']
+                );
+            }
+
+            // Gasto por Flete (si aplica)
+            if (parseFloat(flete) > 0) {
+                await connection.query(
+                    'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "TRANSPORTE", ?, ?, ?)',
+                    [fecha, parseFloat(flete) * 1.10, `Flete Lote #${loteId}`, 'Transportista']
+                );
+            }
+
+            // Gasto por Tasas (si aplica)
+            if (parseFloat(tasas) > 0) {
+                await connection.query(
+                    'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "IMPUESTOS", ?, ?, ?)',
+                    [fecha, tasas, `Tasas Municipales/SENACSA Lote #${loteId}`, 'Estado']
+                );
+            }
+
             // 2. Generar Animales Individuales
             const qty = parseInt(cantidad);
-            const animals = [];
+            const tipoIngreso = req.body.tipo_ingreso || 'masivo';
+            let animalesDetalle = [];
+
+            if (tipoIngreso === 'detallado' && req.body.animales) {
+                try {
+                    animalesDetalle = JSON.parse(req.body.animales);
+                } catch (e) {
+                    console.error('Error parsing animals detail:', e);
+                }
+            }
 
             // Buscar Categoria ID
             let categoriaId = req.body.categoria_id ? parseInt(req.body.categoria_id) : null;
@@ -105,23 +152,24 @@ class AnimalController {
                 categoriaId = catResult.length > 0 ? catResult[0].id : null;
             }
 
-            // Encontrar último ID para generar caravana (Simulado/Simple)
-            // En producción real, usaríamos una secuencia o UUID, o el usuario ingresaría rangos.
-            // Aquí generaremos caravanas virtuales: C-{LoteID}-{Index}
+            for (let i = 0; i < qty; i++) {
+                let caravana = `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
+                let rfid = null;
 
-            for (let i = 1; i <= qty; i++) {
-                const caravana = `L${loteId}-${i.toString().padStart(3, '0')}`; // L12-001
+                if (tipoIngreso === 'detallado' && animalesDetalle[i]) {
+                    caravana = animalesDetalle[i].caravana_visual || caravana;
+                    rfid = animalesDetalle[i].caravana_rfid || null;
+                }
 
                 // Insert Animal
                 const [animResult] = await connection.query(
-                    `INSERT INTO animales (caravana_visual, peso_actual, categoria_id, negocio_destino, estado_sanitario)
-                    VALUES (?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                    [caravana, kilos_compra, categoriaId]
+                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, categoria_id, negocio_destino, estado_sanitario)
+                    VALUES (?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
+                    [caravana, rfid, kilos_compra, categoriaId]
                 );
                 const animalId = animResult.insertId;
 
                 // 3. Registrar Movimiento de Ingreso vinculado al Lote
-                // Ahora usamos los datos reales de SENACSA si existen
                 const cotReal = nro_cot || `LOTE-${loteId}`;
                 await connection.query(
                     `INSERT INTO movimientos_ingreso (compra_lote_id, fecha_ingreso, origen, animal_id, nro_cot, nro_guia_traslado, foto_marca_path)
@@ -139,6 +187,33 @@ class AnimalController {
             res.status(500).json({ error: 'Error al procesar la compra' });
         } finally {
             connection.release();
+        }
+    }
+
+    /**
+     * Listar Historial de Compras
+     */
+    static async getPurchaseHistory(req, res) {
+        try {
+            const [rows] = await db.query('SELECT * FROM compras_lotes ORDER BY fecha DESC');
+            res.json(rows);
+        } catch (error) {
+            console.error('Error fetching purchase history:', error);
+            res.status(500).json({ error: 'Error al obtener historial de compras' });
+        }
+    }
+
+    /**
+     * Eliminar Lote de Compra
+     */
+    static async deletePurchaseLote(req, res) {
+        const { id } = req.params;
+        try {
+            await db.query('DELETE FROM compras_lotes WHERE id = ?', [id]);
+            res.json({ message: 'Registro de lote eliminado' });
+        } catch (error) {
+            console.error('Error deleting purchase lote:', error);
+            res.status(500).json({ error: 'Error al eliminar lote' });
         }
     }
     static async registrarIngreso(req, res) {
@@ -772,6 +847,18 @@ class AnimalController {
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: error.message });
+        }
+    }
+
+    static async createCategory(req, res) {
+        const { descripcion } = req.body;
+        if (!descripcion) return res.status(400).json({ error: 'Descripción requerida' });
+        try {
+            const [result] = await db.query('INSERT INTO categorias (descripcion) VALUES (?)', [descripcion.toUpperCase()]);
+            res.status(201).json({ id: result.insertId, descripcion: descripcion.toUpperCase() });
+        } catch (error) {
+            console.error('Error creating category:', error);
+            res.status(500).json({ error: 'Error al crear categoría' });
         }
     }
 }

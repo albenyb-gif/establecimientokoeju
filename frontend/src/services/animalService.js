@@ -73,6 +73,14 @@ const AnimalService = {
         const response = await api.post('/animales/compras', data);
         return response.data;
     },
+    getPurchaseHistory: async () => {
+        const response = await api.get('/animales/compras');
+        return response.data;
+    },
+    deletePurchaseLote: async (id) => {
+        const response = await api.delete(`/animales/compras/${id}`);
+        return response.data;
+    },
 
     batchUpdateIds: async (updates) => {
         const response = await api.post('/animales/batch-update', { updates });
@@ -86,6 +94,10 @@ const AnimalService = {
 
     getCategories: async () => {
         const response = await api.get('/animales/categorias');
+        return response.data;
+    },
+    createCategory: async (descripcion) => {
+        const response = await api.post('/animales/categorias', { descripcion });
         return response.data;
     },
     getHistory: async (id) => {

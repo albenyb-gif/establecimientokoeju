@@ -8,11 +8,14 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 router.post('/ingreso', upload.single('file'), AnimalController.registrarIngreso);
+router.get('/compras', AnimalController.getPurchaseHistory);
 router.post('/compras', upload.single('file'), AnimalController.registrarCompraLote);
+router.delete('/compras/:id', AnimalController.deletePurchaseLote);
 router.post('/ventas', AnimalController.registrarVenta);
 router.post('/batch-update', AnimalController.batchUpdateIds);
 router.post('/import', AnimalController.importMasiva);
 router.get('/categorias', AnimalController.getCategories);
+router.post('/categorias', AnimalController.createCategory);
 router.post('/migrate-categories', AnimalController.migrateCategories);
 router.get('/dashboard', AnimalController.getDashboardStats);
 router.get('/ranking', AnimalController.getGDPRanking);
