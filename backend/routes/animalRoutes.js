@@ -9,7 +9,7 @@ const upload = multer({ storage: storage });
 
 router.post('/ingreso', upload.single('file'), AnimalController.registrarIngreso);
 router.get('/compras', AnimalController.getPurchaseHistory);
-router.post('/compras', upload.single('file'), AnimalController.registrarCompraLote);
+router.post('/compras', upload.any(), AnimalController.registrarCompraLote);
 router.delete('/compras/:id', AnimalController.deletePurchaseLote);
 router.post('/ventas', AnimalController.registrarVenta);
 router.post('/batch-update', AnimalController.batchUpdateIds);

@@ -26,7 +26,7 @@ const PurchaseSheet = () => {
         ganancia_estimada: 0,
         porcentaje_ganancia: 35,
         tipo_ingreso: 'masivo', // 'masivo' o 'detallado'
-        animales: [] // Array of { caravana_visual, caravana_rfid }
+        animales: [] // Array of { caravana_visual, caravana_rfid, peso, categoria_id, marcas: [] }
     });
     const [tab, setTab] = useState('registrar'); // 'registrar' or 'historial'
 
@@ -88,14 +88,20 @@ const PurchaseSheet = () => {
             const currentAnimals = [...formData.animales];
             if (currentAnimals.length < qty) {
                 for (let i = currentAnimals.length; i < qty; i++) {
-                    currentAnimals.push({ caravana_visual: '', caravana_rfid: '' });
+                    currentAnimals.push({
+                        caravana_visual: '',
+                        caravana_rfid: '',
+                        peso: formData.kilos_compra || '',
+                        categoria_id: formData.categoria_id || '',
+                        marcas: [] // Local preview/file info
+                    });
                 }
             } else if (currentAnimals.length > qty) {
                 currentAnimals.splice(qty);
             }
             setFormData(prev => ({ ...prev, animales: currentAnimals }));
         }
-    }, [formData.cantidad, formData.tipo_ingreso]);
+    }, [formData.cantidad, formData.tipo_ingreso, formData.kilos_compra, formData.categoria_id]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -105,13 +111,29 @@ const PurchaseSheet = () => {
         const submitData = new FormData();
         Object.keys(formData).forEach(key => {
             if (key === 'animales') {
-                submitData.append(key, JSON.stringify(formData[key]));
+                // Prepare a version of 'animales' without the file objects for JSON stringification
+                const animalsClean = formData.animales.map(a => ({
+                    caravana_visual: a.caravana_visual,
+                    caravana_rfid: a.caravana_rfid,
+                    peso: a.peso,
+                    categoria_id: a.categoria_id
+                }));
+                submitData.append(key, JSON.stringify(animalsClean));
+
+                // Append files for each animal
+                formData.animales.forEach((anim, idx) => {
+                    if (anim.marcas && anim.marcas.length > 0) {
+                        anim.marcas.forEach(fileObj => {
+                            submitData.append(`marcas_animal_${idx}`, fileObj);
+                        });
+                    }
+                });
             } else {
                 submitData.append(key, formData[key]);
             }
         });
         if (file) {
-            submitData.append('file', file);
+            submitData.append('file', file); // Global document photo
         }
 
         try {
@@ -335,20 +357,23 @@ const PurchaseSheet = () => {
                                         <thead>
                                             <tr>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4 pl-2">#</th>
-                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Caravana Visual (Obligatorio)</th>
-                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">RFID / Dispositivo</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Caravana Visual</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">RFID</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Peso (kg)</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Categoría</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Marcas</th>
                                             </tr>
                                         </thead>
                                         <tbody className="space-y-4">
                                             {formData.animales.map((anim, idx) => (
                                                 <tr key={idx}>
                                                     <td className="py-2 text-xs font-black text-slate-300">{(idx + 1).toString().padStart(2, '0')}</td>
-                                                    <td className="py-2 pr-4">
+                                                    <td className="py-2 pr-2">
                                                         <input
                                                             type="text"
                                                             required
-                                                            placeholder="Ej. V-200"
-                                                            className="w-full p-3 bg-white border border-slate-100 rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                                            placeholder="Caravana"
+                                                            className="w-full p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                                                             value={anim.caravana_visual}
                                                             onChange={e => {
                                                                 const newAnims = [...formData.animales];
@@ -357,11 +382,11 @@ const PurchaseSheet = () => {
                                                             }}
                                                         />
                                                     </td>
-                                                    <td className="py-2">
+                                                    <td className="py-2 pr-2">
                                                         <input
                                                             type="text"
-                                                            placeholder="Opcional"
-                                                            className="w-full p-3 bg-white border border-slate-100 rounded-xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                                            placeholder="RFID"
+                                                            className="w-full p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                                                             value={anim.caravana_rfid}
                                                             onChange={e => {
                                                                 const newAnims = [...formData.animales];
@@ -369,6 +394,52 @@ const PurchaseSheet = () => {
                                                                 setFormData({ ...formData, animales: newAnims });
                                                             }}
                                                         />
+                                                    </td>
+                                                    <td className="py-2 pr-2">
+                                                        <input
+                                                            type="number"
+                                                            placeholder="kg"
+                                                            className="w-24 p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                                            value={anim.peso}
+                                                            onChange={e => {
+                                                                const newAnims = [...formData.animales];
+                                                                newAnims[idx].peso = e.target.value;
+                                                                setFormData({ ...formData, animales: newAnims });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td className="py-2 pr-2">
+                                                        <select
+                                                            className="w-full p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                                            value={anim.categoria_id}
+                                                            onChange={e => {
+                                                                const newAnims = [...formData.animales];
+                                                                newAnims[idx].categoria_id = e.target.value;
+                                                                setFormData({ ...formData, animales: newAnims });
+                                                            }}
+                                                        >
+                                                            <option value="">Auto</option>
+                                                            {categories.map(c => <option key={c.id} value={c.id}>{c.descripcion}</option>)}
+                                                        </select>
+                                                    </td>
+                                                    <td className="py-2">
+                                                        <div className="relative group">
+                                                            <input
+                                                                type="file"
+                                                                multiple
+                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                onChange={e => {
+                                                                    const files = Array.from(e.target.files);
+                                                                    const newAnims = [...formData.animales];
+                                                                    newAnims[idx].marcas = files;
+                                                                    setFormData({ ...formData, animales: newAnims });
+                                                                }}
+                                                            />
+                                                            <div className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-all ${anim.marcas?.length > 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                                                <Upload size={14} />
+                                                                <span className="text-[10px] font-black">{anim.marcas?.length || 0}</span>
+                                                            </div>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

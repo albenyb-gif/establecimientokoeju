@@ -67,15 +67,18 @@ class AnimalController {
             comision_feria, flete, tasas, porcentaje_ganancia
         } = req.body;
 
+        // 1. Procesar Imagen Global/Documento
         let foto_marca_path = null;
-        if (req.file) {
+        const globalFile = req.files?.find(f => f.fieldname === 'file');
+
+        if (globalFile) {
             const fileName = `marca_${Date.now()}.webp`;
             const filePath = path.join(uploadsDir, fileName);
             try {
-                await sharp(req.file.buffer).resize(800).webp({ quality: 80 }).toFile(filePath);
+                await sharp(globalFile.buffer).resize(800).webp({ quality: 80 }).toFile(filePath);
                 foto_marca_path = `/uploads/marcas/${fileName}`;
             } catch (err) {
-                console.error("Error processing image:", err);
+                console.error("Error processing document image:", err);
             }
         }
 
@@ -93,16 +96,13 @@ class AnimalController {
             );
             const loteId = loteResult.insertId;
 
-            // 1.1 Insertar Gastos Automáticos si existen
+            // 1.1 Insertar Gastos Automáticos
             const baseCost = parseFloat(cantidad) * parseFloat(costo_unitario);
-
-            // Gasto por la Hacienda (Animales)
             await connection.query(
                 'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "OTROS", ?, ?, ?)',
                 [fecha, baseCost, `Compra de Lote #${loteId} (${cantidad} animales)`, vendedor]
             );
 
-            // Gasto por Comisión (si aplica)
             if (parseFloat(comision_feria) > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "SERVICIOS", ?, ?, ?)',
@@ -110,7 +110,6 @@ class AnimalController {
                 );
             }
 
-            // Gasto por Flete (si aplica)
             if (parseFloat(flete) > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "TRANSPORTE", ?, ?, ?)',
@@ -118,7 +117,6 @@ class AnimalController {
                 );
             }
 
-            // Gasto por Tasas (si aplica)
             if (parseFloat(tasas) > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "IMPUESTOS", ?, ?, ?)',
@@ -126,7 +124,7 @@ class AnimalController {
                 );
             }
 
-            // 2. Generar Animales Individuales
+            // 2. Procesar Animales Individuales
             const qty = parseInt(cantidad);
             const tipoIngreso = req.body.tipo_ingreso || 'masivo';
             let animalesDetalle = [];
@@ -139,37 +137,57 @@ class AnimalController {
                 }
             }
 
-            // Buscar Categoria ID
-            let categoriaId = req.body.categoria_id ? parseInt(req.body.categoria_id) : null;
-
-            if (!categoriaId) {
-                // Auto-calculation logic if not provided
+            // Categoria ID por defecto
+            let defaultCatId = req.body.categoria_id ? parseInt(req.body.categoria_id) : null;
+            if (!defaultCatId) {
                 let categoriaDefecto = 'NOVILLO_1_2';
                 if (kilos_compra < 180) categoriaDefecto = 'TERNERO';
                 else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE_M';
-
                 const [catResult] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
-                categoriaId = catResult.length > 0 ? catResult[0].id : null;
+                defaultCatId = catResult.length > 0 ? catResult[0].id : null;
             }
 
             for (let i = 0; i < qty; i++) {
-                let caravana = `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
-                let rfid = null;
-
-                if (tipoIngreso === 'detallado' && animalesDetalle[i]) {
-                    caravana = animalesDetalle[i].caravana_visual || caravana;
-                    rfid = animalesDetalle[i].caravana_rfid || null;
-                }
+                const det = animalesDetalle[i] || {};
+                let caravana = det.caravana_visual || `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
+                let rfid = det.caravana_rfid || null;
+                let pesoIndividual = det.peso || kilos_compra;
+                let catIndividual = det.categoria_id || defaultCatId;
 
                 // Insert Animal
                 const [animResult] = await connection.query(
                     `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, categoria_id, negocio_destino, estado_sanitario)
                     VALUES (?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                    [caravana, rfid, kilos_compra, categoriaId]
+                    [caravana, rfid, pesoIndividual, catIndividual]
                 );
                 const animalId = animResult.insertId;
 
-                // 3. Registrar Movimiento de Ingreso vinculado al Lote
+                // 2.1 Registrar Pesaje Inicial para GDP
+                await connection.query(
+                    'INSERT INTO pesajes (animal_id, peso_kg, fecha) VALUES (?, ?, ?)',
+                    [animalId, pesoIndividual, fecha]
+                );
+
+                // 2.2 Procesar Múltiples Marcas/Fotos para este animal
+                const animalFiles = req.files?.filter(f => f.fieldname === `marcas_animal_${i}`);
+                if (animalFiles && animalFiles.length > 0) {
+                    for (const fileObj of animalFiles) {
+                        const mFileName = `marca_anim_${animalId}_${Date.now()}_${Math.floor(Math.random() * 1000)}.webp`;
+                        const mFilePath = path.join(uploadsDir, mFileName);
+                        try {
+                            await sharp(fileObj.buffer).resize(800).webp({ quality: 80 }).toFile(mFilePath);
+                            const fotoPath = `/uploads/marcas/${mFileName}`;
+                            await connection.query(
+                                'INSERT INTO animales_marcas (animal_id, foto_path, tipo_marca) VALUES (?, ?, ?)',
+                                [animalId, fotoPath, 'VENDEDOR']
+                            );
+                        } catch (imgErr) {
+                            console.error(`Error processing image for animal ${animalId}:`, imgErr);
+                        }
+                    }
+                }
+
+                // 3. Registrar Movimiento de Ingreso
                 const cotReal = nro_cot || `LOTE-${loteId}`;
                 await connection.query(
                     `INSERT INTO movimientos_ingreso (compra_lote_id, fecha_ingreso, origen, animal_id, nro_cot, nro_guia_traslado, foto_marca_path)
@@ -425,7 +443,13 @@ class AnimalController {
             `;
             const [rows] = await db.query(query, [id]);
             if (rows.length === 0) return res.status(404).json({ error: 'Animal no encontrado' });
-            res.json(rows[0]);
+
+            const animal = rows[0];
+            // Fetch multiple brands
+            const [brands] = await db.query('SELECT foto_path, tipo_marca FROM animales_marcas WHERE animal_id = ?', [id]);
+            animal.marcas = brands || [];
+
+            res.json(animal);
         } catch (error) {
             console.error(`Error in getAnimalById(${id}):`, error.message);
             res.status(500).json({ error: 'Error al obtener animal' });

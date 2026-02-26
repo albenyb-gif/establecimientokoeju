@@ -217,10 +217,32 @@ const AnimalDetail = () => {
                                     <p className="font-mono font-black text-2xl text-indigo-600 tracking-tighter">
                                         {animal.caravana_rfid || 'O-98200XXXXX'}
                                     </p>
-                                    {!animal.caravana_rfid && <p className="text-[9px] font-bold text-indigo-300 mt-2 uppercase tracking-widest">Pendiente de Vinculación</p>}
                                 </div>
                             </div>
                         </div>
+
+                        {/* Galería de Marcas (Double Brand support) */}
+                        {animal.marcas && animal.marcas.length > 0 && (
+                            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 mt-6">
+                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-4 mb-6">
+                                    <FileText size={14} className="text-emerald-400" /> Galería de Marcas
+                                </h4>
+                                <div className="grid grid-cols-2 gap-4">
+                                    {animal.marcas.map((m, idx) => (
+                                        <div key={idx} className="aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 group/img relative">
+                                            <img
+                                                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${m.foto_path}`}
+                                                alt={`Marca ${idx + 1}`}
+                                                className="w-full h-full object-cover transition-transform group-hover/img:scale-110"
+                                            />
+                                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-[8px] font-black uppercase rounded-lg">
+                                                {m.tipo_marca}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
