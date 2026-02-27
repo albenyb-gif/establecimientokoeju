@@ -3,7 +3,7 @@ import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
 import PurchaseList from './PurchaseList';
-import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List } from 'lucide-react';
+import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus } from 'lucide-react';
 
 const PurchaseSheet = () => {
     const [formData, setFormData] = useState({
@@ -455,21 +455,45 @@ const PurchaseSheet = () => {
                                                         />
                                                     </td>
                                                     <td className="py-2">
-                                                        <div className="relative group">
-                                                            <input
-                                                                type="file"
-                                                                multiple
-                                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                                                onChange={e => {
-                                                                    const files = Array.from(e.target.files);
-                                                                    const newAnims = [...formData.animales];
-                                                                    newAnims[idx].marcas = files;
-                                                                    setFormData({ ...formData, animales: newAnims });
-                                                                }}
-                                                            />
-                                                            <div className={`p-2 rounded-xl border flex items-center justify-center gap-2 transition-all ${anim.marcas?.length > 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-600' : 'bg-white border-slate-100 text-slate-400'}`}>
-                                                                <Upload size={14} />
-                                                                <span className="text-[10px] font-black">{anim.marcas?.length || 0}</span>
+                                                        <div className="flex flex-wrap gap-2 items-center">
+                                                            {/* Miniaturas de Marcas Actuales (Preview) */}
+                                                            {anim.marcas?.map((file, fIdx) => (
+                                                                <div key={fIdx} className="relative w-12 h-12 rounded-xl overflow-hidden border-2 border-emerald-100 group/img shadow-sm animate-in zoom-in-50 duration-200">
+                                                                    <img
+                                                                        src={URL.createObjectURL(file)}
+                                                                        className="w-full h-full object-cover"
+                                                                        alt="Preview"
+                                                                    />
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newAnims = [...formData.animales];
+                                                                            newAnims[idx].marcas = anim.marcas.filter((_, im) => im !== fIdx);
+                                                                            setFormData({ ...formData, animales: newAnims });
+                                                                        }}
+                                                                        className="absolute top-0.5 right-0.5 bg-rose-500/90 text-white rounded-lg p-1 shadow-lg flex items-center justify-center hover:bg-rose-600 transition-colors z-20"
+                                                                    >
+                                                                        <X size={10} strokeWidth={3} />
+                                                                    </button>
+                                                                </div>
+                                                            ))}
+
+                                                            {/* Botón de Agregar */}
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="file"
+                                                                    multiple
+                                                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                    onChange={e => {
+                                                                        const newFiles = Array.from(e.target.files);
+                                                                        const newAnims = [...formData.animales];
+                                                                        newAnims[idx].marcas = [...(anim.marcas || []), ...newFiles];
+                                                                        setFormData({ ...formData, animales: newAnims });
+                                                                    }}
+                                                                />
+                                                                <div className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center transition-all ${anim.marcas?.length > 0 ? 'bg-white border-dashed border-emerald-300 text-emerald-500' : 'bg-white border-slate-100 text-slate-400'}`}>
+                                                                    {anim.marcas?.length > 0 ? <Plus size={20} /> : <Upload size={20} />}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </td>
