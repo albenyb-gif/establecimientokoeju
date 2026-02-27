@@ -55,7 +55,39 @@ const PurchaseSheet = () => {
             }
         };
         loadInitialData();
+
+        // Cargar borrador de localStorage
+        const draft = localStorage.getItem('purchase_draft');
+        if (draft) {
+            try {
+                const parsedDraft = JSON.parse(draft);
+                // Restaurar animales, pero asegurar que 'marcas' sea un array vacío
+                // ya que los objetos File no se pueden persistir en localStorage
+                if (parsedDraft.animales) {
+                    parsedDraft.animales = parsedDraft.animales.map(a => ({
+                        ...a,
+                        marcas: []
+                    }));
+                }
+                setFormData(prev => ({ ...prev, ...parsedDraft }));
+            } catch (err) {
+                console.error('Error al cargar el borrador:', err);
+            }
+        }
     }, []);
+
+    // Guardar borrador automáticamente al cambiar formData
+    useEffect(() => {
+        // No guardar File objects ni miniaturas temporales
+        const dataToSave = { ...formData };
+        if (dataToSave.animales) {
+            dataToSave.animales = dataToSave.animales.map(a => {
+                const { marcas, ...rest } = a;
+                return rest;
+            });
+        }
+        localStorage.setItem('purchase_draft', JSON.stringify(dataToSave));
+    }, [formData]);
 
     useEffect(() => {
         const qty = parseFloat(formData.cantidad) || 0;
@@ -187,6 +219,7 @@ const PurchaseSheet = () => {
                 tasas: 0
             }));
             setFile(null);
+            localStorage.removeItem('purchase_draft');
         } catch (error) {
             console.error(error);
             setStatus({ type: 'error', message: 'Error al guardar la planilla.' });
