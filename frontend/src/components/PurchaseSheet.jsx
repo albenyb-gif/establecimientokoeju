@@ -3,7 +3,7 @@ import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
 import PurchaseList from './PurchaseList';
-import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus } from 'lucide-react';
+import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown } from 'lucide-react';
 
 const PurchaseSheet = () => {
     const [formData, setFormData] = useState({
@@ -294,44 +294,6 @@ const PurchaseSheet = () => {
                                     <label className="text-xs font-bold text-emerald-600 uppercase tracking-widest ml-1 bg-emerald-50 px-2 py-0.5 rounded-md">Cantidad</label>
                                     <input type="number" required min="1" placeholder="Ej. 50" className="w-full p-4 bg-emerald-50/30 border-2 border-emerald-100 rounded-2xl font-black text-2xl text-center focus:border-emerald-500 outline-none text-emerald-900" value={formData.cantidad} onChange={e => setFormData({ ...formData, cantidad: e.target.value })} />
                                 </div>
-                                <div className="md:col-span-5 space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Categoría / Clasificación</label>
-                                    {isNewCategory ? (
-                                        <div className="flex gap-2">
-                                            <input type="text" placeholder="Nueva Categoría (Ej. NOVILLO PESADO)" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} autoFocus />
-                                            <button type="button" onClick={async () => {
-                                                if (newCategoryName.trim()) {
-                                                    try {
-                                                        const newCat = await AnimalService.createCategory(newCategoryName);
-                                                        setCategories([...categories, newCat]);
-                                                        setFormData({ ...formData, categoria_id: newCat.id });
-                                                        setIsNewCategory(false);
-                                                    } catch (e) { console.error(e); }
-                                                }
-                                            }} className="bg-emerald-500 text-white px-4 rounded-2xl hover:bg-emerald-600 transition-colors flex items-center justify-center shrink-0"><CheckCircle size={20} /></button>
-                                            <button type="button" onClick={() => { setIsNewCategory(false); setNewCategoryName(''); }} className="bg-slate-200 text-slate-700 px-4 rounded-2xl hover:bg-slate-300 transition-colors font-bold shrink-0">X</button>
-                                        </div>
-                                    ) : (
-                                        <select className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white appearance-none cursor-pointer" value={formData.categoria_id} onChange={e => {
-                                            if (e.target.value === 'NEW') {
-                                                setIsNewCategory(true);
-                                                setFormData({ ...formData, categoria_id: '' });
-                                            } else {
-                                                setFormData({ ...formData, categoria_id: e.target.value });
-                                            }
-                                        }}>
-                                            <option value="">-- Automático (según peso) --</option>
-                                            {categories.map(cat => (
-                                                <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
-                                            ))}
-                                            <option value="NEW" className="font-bold text-emerald-600">➕ Agregar Nueva Categoría...</option>
-                                        </select>
-                                    )}
-                                </div>
-                                <div className="md:col-span-4 space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Pelaje / Descripción</label>
-                                    <input type="text" placeholder="Ej. MARRON OSCURO, MIXTO..." className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.pelaje} onChange={e => setFormData({ ...formData, pelaje: e.target.value })} />
-                                </div>
                                 <div className="md:col-span-3 space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Peso Promedio (Kg)</label>
                                     <input type="number" required step="0.1" placeholder="Kg/Animal" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-slate-700" value={formData.kilos_compra} onChange={e => setFormData({ ...formData, kilos_compra: e.target.value })} />
@@ -340,7 +302,7 @@ const PurchaseSheet = () => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Costo Unit. (Gs)</label>
                                     <input type="number" required step="1000" placeholder="Gs/Animal" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-emerald-700" value={formData.costo_unitario} onChange={e => setFormData({ ...formData, costo_unitario: e.target.value })} />
                                 </div>
-                                <div className="md:col-span-6 space-y-2">
+                                <div className="md:col-span-3 space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lugar de Procedencia</label>
                                     <input type="text" placeholder="Ej. Santa Rosa" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.lugar} onChange={e => setFormData({ ...formData, lugar: e.target.value })} />
                                 </div>

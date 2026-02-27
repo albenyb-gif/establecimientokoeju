@@ -1,12 +1,27 @@
-import React, { useState } from 'react';
-import { X, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Save, ChevronDown } from 'lucide-react';
+import AnimalService from '../services/animalService';
 
 const EditAnimalModal = ({ animal, onClose, onSave }) => {
     const [formData, setFormData] = useState({
         peso_actual: animal.peso_actual,
-        rodeo: animal.rodeo, // For Mock, we just edit string. ideally ID.
-        estado_sanitario: animal.estado_sanitario
+        rodeo: animal.rodeo,
+        estado_sanitario: animal.estado_sanitario,
+        categoria_id: animal.categoria_id
     });
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        const loadCategories = async () => {
+            try {
+                const data = await AnimalService.getCategories();
+                setCategories(data);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        loadCategories();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -37,6 +52,26 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                             onChange={handleChange}
                             className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Categoría</label>
+                        <div className="relative">
+                            <select
+                                name="categoria_id"
+                                value={formData.categoria_id}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer pr-10"
+                            >
+                                <option value="">Sin Categoría</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <ChevronDown size={14} />
+                            </div>
+                        </div>
                     </div>
 
                     <div>

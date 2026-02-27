@@ -7,13 +7,25 @@ import ReportGenerator from './ReportGenerator';
 
 const AnimalList = () => {
     const [animals, setAnimals] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchAnimals();
+        fetchCategories();
     }, []);
+
+    const fetchCategories = async () => {
+        try {
+            const data = await AnimalService.getCategories();
+            setCategories(data);
+        } catch (e) {
+            console.error('Error fetching categories:', e);
+        }
+    };
 
     const fetchAnimals = async () => {
         try {
@@ -30,11 +42,13 @@ const AnimalList = () => {
         ReportGenerator.generateStockReport(animals);
     };
 
-    const filteredAnimals = animals.filter(a =>
-        a.caravana_visual.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.rodeo.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredAnimals = animals.filter(a => {
+        const matchesSearch = a.caravana_visual.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.rodeo.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = selectedCategory === '' || a.categoria === selectedCategory;
+        return matchesSearch && matchesCategory;
+    });
 
     const getStatusStyle = (status) => {
         switch (status) {
@@ -62,6 +76,20 @@ const AnimalList = () => {
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
+                        </div>
+                        <div className="relative flex-1 lg:w-48">
+                            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <select
+                                className="w-full pl-10 pr-10 py-3 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none text-[13px] font-bold text-slate-800 bg-white shadow-sm transition-all appearance-none cursor-pointer"
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                            >
+                                <option value="">Todas las Categorías</option>
+                                {categories.map(cat => (
+                                    <option key={cat.id} value={cat.descripcion}>{cat.descripcion}</option>
+                                ))}
+                            </select>
+                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 rotate-90" size={16} />
                         </div>
                         <button
                             onClick={handleExport}
