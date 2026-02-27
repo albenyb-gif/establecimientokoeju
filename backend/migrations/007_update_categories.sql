@@ -1,16 +1,18 @@
--- Migración 007: Actualización de nombres de categorías
+-- Migración 007 (V2): Reajuste estricto a las 6 categorías solicitadas
 -- Establecimiento ko'ẽju
 
--- Actualizar nombres existentes a formatos más amigables
-UPDATE categorias SET descripcion = 'TERNERO MACHO' WHERE descripcion = 'TERNERO';
-UPDATE categorias SET descripcion = 'DESMAMANTE MACHO' WHERE descripcion = 'DESMAMANTE_M';
-UPDATE categorias SET descripcion = 'DESMAMANTE HEMBRA' WHERE descripcion = 'DESMAMANTE_H';
-UPDATE categorias SET descripcion = 'VAQUILLA' WHERE descripcion = 'VAQUILLONA';
+SET FOREIGN_KEY_CHECKS = 0;
 
--- Insertar nuevas si no existen
-INSERT IGNORE INTO categorias (descripcion) VALUES ('TERNERA HEMBRA');
+-- 1. Eliminar categorías que ya no se usarán (Opcional, pero recomendado para limpiar)
+TRUNCATE TABLE categorias;
 
--- Limpiar/Estandarizar el resto
-UPDATE categorias SET descripcion = 'NOVILLO 1 a 2' WHERE descripcion = 'NOVILLO_1_2';
-UPDATE categorias SET descripcion = 'NOVILLO 2 a 3' WHERE descripcion = 'NOVILLO_2_3';
-UPDATE categorias SET descripcion = 'NOVILLO 3+' WHERE descripcion = 'NOVILLO_3_MAS';
+-- 2. Insertar las 6 categorías exactas
+INSERT INTO categorias (descripcion) VALUES 
+('DESMAMANTE MACHO'),
+('DESMAMANTE HEMBRA'),
+('TERNERO MACHO'),
+('TERNERO HEMBRA'),
+('VAQUILLA'),
+('TORO');
+
+SET FOREIGN_KEY_CHECKS = 1;
