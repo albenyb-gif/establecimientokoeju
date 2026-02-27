@@ -17,7 +17,21 @@ const AnimalCard = ({ animal }) => {
             </div>
 
             <div className="p-6">
-                {/* Info Principal */}
+                <div className="flex justify-between items-center mb-4">
+                    <div>
+                        <p className="text-3xl font-black text-slate-800">{animal.peso_actual} <span className="text-sm">kg</span></p>
+                        <p className="text-[10px] text-gray-400 uppercase tracking-widest">Peso Actual</p>
+                    </div>
+                    {animal.pelaje && (
+                        <div className="text-right">
+                            <p className="text-xs font-black text-indigo-600 uppercase tracking-tighter">{animal.pelaje}</p>
+                            <p className="text-[10px] text-gray-400 uppercase">Pelaje</p>
+                        </div>
+                    )}
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 italic text-[11px] text-slate-500 text-center">
+                    {animal.categoria}
+                </div>
             </div>
 
             {/* Ubicación y Negocio */}

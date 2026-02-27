@@ -285,11 +285,10 @@ const AnimalDetail = () => {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <DetailItem icon={<Calendar />} label="Fecha de Nacimiento" value={animal.fecha_nacimiento || 'Registro Desconocido'} />
-                            <DetailItem icon={<Activity />} label="Raza / Biotipo" value="Brangus Seleccionado" />
-                            <DetailItem icon={<HeartPulse />} label="Estado Reproductivo" value="Invernada / Macho" />
+                            <DetailItem icon={<Activity />} label="Pelaje" value={animal.pelaje || 'SIN ESPECIFICAR'} />
                             <DetailItem icon={<LayoutDashboard />} label="Potrero / Lote" value={animal.ubicacion || 'Potrero Nro 04'} />
                             <DetailItem icon={<TrendingUp />} label="Precio de Compra" value="-- Gs/Kg" />
-                            <DetailItem icon={<Scale />} label="Peso de Ingreso" value="180 kg" />
+                            <DetailItem icon={<Scale />} label="Peso de Ingreso" value={`${animal.peso_inicial || 0} kg`} />
                         </div>
                     </div>
 

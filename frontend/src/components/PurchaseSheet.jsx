@@ -26,7 +26,7 @@ const PurchaseSheet = () => {
         ganancia_estimada: 0,
         porcentaje_ganancia: 35,
         tipo_ingreso: 'masivo', // 'masivo' o 'detallado'
-        animales: [] // Array of { caravana_visual, caravana_rfid, peso, categoria_id, marcas: [] }
+        animales: [] // Array of { caravana_visual, caravana_rfid, peso, categoria_id, pelaje, marcas: [] }
     });
     const [tab, setTab] = useState('registrar'); // 'registrar' or 'historial'
 
@@ -93,6 +93,7 @@ const PurchaseSheet = () => {
                         caravana_rfid: '',
                         peso: formData.kilos_compra || '',
                         categoria_id: formData.categoria_id || '',
+                        pelaje: formData.pelaje || '',
                         marcas: [] // Local preview/file info
                     });
                 }
@@ -101,7 +102,23 @@ const PurchaseSheet = () => {
             }
             setFormData(prev => ({ ...prev, animales: currentAnimals }));
         }
-    }, [formData.cantidad, formData.tipo_ingreso, formData.kilos_compra, formData.categoria_id]);
+    }, [formData.cantidad, formData.tipo_ingreso]);
+
+    // Calcular peso promedio automático desde la tabla
+    useEffect(() => {
+        if (formData.tipo_ingreso === 'detallado' && formData.animales.length > 0) {
+            const weights = formData.animales.map(a => parseFloat(a.peso)).filter(p => !isNaN(p));
+            if (weights.length > 0) {
+                const sum = weights.reduce((acc, curr) => acc + curr, 0);
+                const avg = (sum / weights.length).toFixed(1);
+
+                // Solo actualizar si es diferente para evitar loops infinitos
+                if (parseFloat(formData.kilos_compra) !== parseFloat(avg)) {
+                    setFormData(prev => ({ ...prev, kilos_compra: avg }));
+                }
+            }
+        }
+    }, [formData.animales, formData.tipo_ingreso]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -116,7 +133,8 @@ const PurchaseSheet = () => {
                     caravana_visual: a.caravana_visual,
                     caravana_rfid: a.caravana_rfid,
                     peso: a.peso,
-                    categoria_id: a.categoria_id
+                    categoria_id: a.categoria_id,
+                    pelaje: a.pelaje
                 }));
                 submitData.append(key, JSON.stringify(animalsClean));
 
@@ -361,6 +379,7 @@ const PurchaseSheet = () => {
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">RFID</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Peso (kg)</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Categoría</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Pelaje</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Marcas</th>
                                             </tr>
                                         </thead>
@@ -421,6 +440,19 @@ const PurchaseSheet = () => {
                                                             <option value="">Auto</option>
                                                             {categories.map(c => <option key={c.id} value={c.id}>{c.descripcion}</option>)}
                                                         </select>
+                                                    </td>
+                                                    <td className="py-2 pr-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Pelaje"
+                                                            className="w-full p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
+                                                            value={anim.pelaje}
+                                                            onChange={e => {
+                                                                const newAnims = [...formData.animales];
+                                                                newAnims[idx].pelaje = e.target.value.toUpperCase();
+                                                                setFormData({ ...formData, animales: newAnims });
+                                                            }}
+                                                        />
                                                     </td>
                                                     <td className="py-2">
                                                         <div className="relative group">

@@ -153,12 +153,13 @@ class AnimalController {
                 let rfid = det.caravana_rfid || null;
                 let pesoIndividual = det.peso || kilos_compra;
                 let catIndividual = det.categoria_id || defaultCatId;
+                let pelajeIndividual = det.pelaje || req.body.pelaje || 'SIN ESPECIFICAR';
 
                 // Insert Animal
                 const [animResult] = await connection.query(
-                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, categoria_id, negocio_destino, estado_sanitario)
-                    VALUES (?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                    [caravana, rfid, pesoIndividual, catIndividual]
+                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, peso_inicial, categoria_id, pelaje, negocio_destino, estado_sanitario)
+                    VALUES (?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
+                    [caravana, rfid, pesoIndividual, pesoIndividual, catIndividual, pelajeIndividual]
                 );
                 const animalId = animResult.insertId;
 
