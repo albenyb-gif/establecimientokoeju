@@ -143,8 +143,12 @@ class AnimalController {
                 let categoriaDefecto = 'VAQUILLA';
                 if (kilos_compra < 180) categoriaDefecto = 'TERNERO MACHO';
                 else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE MACHO';
-                const [catResult] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
-                defaultCatId = catResult.length > 0 ? catResult[0].id : null;
+                try {
+                    const [catResult] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
+                    defaultCatId = catResult.length > 0 ? catResult[0].id : null;
+                } catch (catErr) {
+                    console.error('Error auto-selecting category:', catErr);
+                }
             }
 
             for (let i = 0; i < qty; i++) {
@@ -204,7 +208,7 @@ class AnimalController {
         } catch (error) {
             await connection.rollback();
             console.error('Error registrarCompraLote:', error);
-            res.status(500).json({ error: 'Error al procesar la compra' });
+            res.status(500).json({ error: 'Error al procesar la compra', details: error.message });
         } finally {
             connection.release();
         }
@@ -857,7 +861,7 @@ class AnimalController {
             res.json(rows);
         } catch (error) {
             console.error('Error fetching categories:', error);
-            res.status(500).json({ error: 'Error al obtener categorías' });
+            res.status(500).json({ error: 'Error al obtener categorías', details: error.message });
         }
     }
 
