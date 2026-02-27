@@ -152,14 +152,15 @@ class AnimalController {
                 let caravana = det.caravana_visual || `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
                 let rfid = det.caravana_rfid || null;
                 let pesoIndividual = det.peso || kilos_compra;
+                let costoIndividual = det.costo || costo_unitario;
                 let catIndividual = det.categoria_id || defaultCatId;
                 let pelajeIndividual = det.pelaje || req.body.pelaje || 'SIN ESPECIFICAR';
 
                 // Insert Animal
                 const [animResult] = await connection.query(
-                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, peso_inicial, categoria_id, pelaje, negocio_destino, estado_sanitario)
-                    VALUES (?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                    [caravana, rfid, pesoIndividual, pesoIndividual, catIndividual, pelajeIndividual]
+                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
+                    [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual]
                 );
                 const animalId = animResult.insertId;
 

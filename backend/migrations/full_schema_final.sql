@@ -49,6 +49,7 @@ CREATE TABLE IF NOT EXISTS animales (
     pelaje VARCHAR(50),
     peso_inicial DECIMAL(10,2),
     peso_actual DECIMAL(10,2),
+    precio_compra DECIMAL(15,2) DEFAULT 0,
     rodeo_id INT,
     fecha_nacimiento DATE,
     negocio_destino ENUM('CRIA', 'ENGORDE', 'CABAÑA') DEFAULT 'ENGORDE',

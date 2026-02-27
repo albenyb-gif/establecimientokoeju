@@ -92,6 +92,7 @@ const PurchaseSheet = () => {
                         caravana_visual: '',
                         caravana_rfid: '',
                         peso: formData.kilos_compra || '',
+                        costo: formData.costo_unitario || '',
                         categoria_id: formData.categoria_id || '',
                         pelaje: formData.pelaje || '',
                         marcas: [] // Local preview/file info
@@ -104,18 +105,32 @@ const PurchaseSheet = () => {
         }
     }, [formData.cantidad, formData.tipo_ingreso]);
 
-    // Calcular peso promedio automático desde la tabla
+    // Calcular peso promedio y costo unitario automáticos desde la tabla
     useEffect(() => {
         if (formData.tipo_ingreso === 'detallado' && formData.animales.length > 0) {
             const weights = formData.animales.map(a => parseFloat(a.peso)).filter(p => !isNaN(p));
-            if (weights.length > 0) {
-                const sum = weights.reduce((acc, curr) => acc + curr, 0);
-                const avg = (sum / weights.length).toFixed(1);
+            const costs = formData.animales.map(a => parseFloat(a.costo)).filter(c => !isNaN(c));
 
-                // Solo actualizar si es diferente para evitar loops infinitos
-                if (parseFloat(formData.kilos_compra) !== parseFloat(avg)) {
-                    setFormData(prev => ({ ...prev, kilos_compra: avg }));
+            let updates = {};
+
+            if (weights.length > 0) {
+                const sumWeights = weights.reduce((acc, curr) => acc + curr, 0);
+                const avgWeight = (sumWeights / weights.length).toFixed(1);
+                if (parseFloat(formData.kilos_compra) !== parseFloat(avgWeight)) {
+                    updates.kilos_compra = avgWeight;
                 }
+            }
+
+            if (costs.length > 0) {
+                const sumCosts = costs.reduce((acc, curr) => acc + curr, 0);
+                const avgCost = Math.round(sumCosts / costs.length);
+                if (parseInt(formData.costo_unitario) !== avgCost) {
+                    updates.costo_unitario = avgCost;
+                }
+            }
+
+            if (Object.keys(updates).length > 0) {
+                setFormData(prev => ({ ...prev, ...updates }));
             }
         }
     }, [formData.animales, formData.tipo_ingreso]);
@@ -133,6 +148,7 @@ const PurchaseSheet = () => {
                     caravana_visual: a.caravana_visual,
                     caravana_rfid: a.caravana_rfid,
                     peso: a.peso,
+                    costo: a.costo,
                     categoria_id: a.categoria_id,
                     pelaje: a.pelaje
                 }));
@@ -340,6 +356,7 @@ const PurchaseSheet = () => {
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Caravana Visual</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">RFID</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Peso (kg)</th>
+                                                <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Costo (Gs)</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Categoría</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Pelaje</th>
                                                 <th className="text-[10px] font-black text-slate-400 uppercase text-left pb-4">Marcas</th>
@@ -385,6 +402,19 @@ const PurchaseSheet = () => {
                                                             onChange={e => {
                                                                 const newAnims = [...formData.animales];
                                                                 newAnims[idx].peso = e.target.value;
+                                                                setFormData({ ...formData, animales: newAnims });
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td className="py-2 pr-2">
+                                                        <input
+                                                            type="number"
+                                                            placeholder="Monto"
+                                                            className="w-32 p-2 bg-white border border-slate-100 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500 outline-none transition-all text-emerald-700"
+                                                            value={anim.costo}
+                                                            onChange={e => {
+                                                                const newAnims = [...formData.animales];
+                                                                newAnims[idx].costo = e.target.value;
                                                                 setFormData({ ...formData, animales: newAnims });
                                                             }}
                                                         />
