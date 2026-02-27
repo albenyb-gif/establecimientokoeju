@@ -857,11 +857,18 @@ class AnimalController {
     }
     static async getCategories(req, res) {
         try {
+            // Check connection first
+            await db.query('SELECT 1');
             const [rows] = await db.query('SELECT * FROM categorias ORDER BY descripcion');
             res.json(rows);
         } catch (error) {
             console.error('Error fetching categories:', error);
-            res.status(500).json({ error: 'Error al obtener categorías', details: error.message });
+            res.status(500).json({
+                error: 'Error al obtener categorías',
+                details: error.message,
+                code: error.code,
+                sqlState: error.sqlState
+            });
         }
     }
 
