@@ -140,9 +140,9 @@ class AnimalController {
             // Categoria ID por defecto
             let defaultCatId = req.body.categoria_id ? parseInt(req.body.categoria_id) : null;
             if (!defaultCatId) {
-                let categoriaDefecto = 'NOVILLO_1_2';
-                if (kilos_compra < 180) categoriaDefecto = 'TERNERO';
-                else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE_M';
+                let categoriaDefecto = 'NOVILLO 1 a 2';
+                if (kilos_compra < 180) categoriaDefecto = 'TERNERO MACHO';
+                else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE MACHO';
                 const [catResult] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
                 defaultCatId = catResult.length > 0 ? catResult[0].id : null;
             }

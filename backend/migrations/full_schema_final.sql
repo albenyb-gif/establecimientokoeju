@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS categorias (
 );
 
 INSERT IGNORE INTO categorias (descripcion) VALUES 
-('TERNERO'), ('DESMAMANTE_M'), ('DESMAMANTE_H'), ('NOVILLO_1_2'), 
-('NOVILLO_2_3'), ('NOVILLO_3_MAS'), ('VAQUILLONA'), ('VACA'), ('TORO'),
+('TERNERO MACHO'), ('TERNERA HEMBRA'), ('DESMAMANTE MACHO'), ('DESMAMANTE HEMBRA'),
+('NOVILLO 1 a 2'), ('NOVILLO 2 a 3'), ('NOVILLO 3+'), ('VAQUILLA'), ('VACA'), ('TORO'),
 ('CORDERO'), ('CORDERA'), ('BORREGO'), ('BORREGA'), ('OVEJA'), ('CARNERO'), ('CAPON');
 
 -- 3. Hacienda (Animales)
