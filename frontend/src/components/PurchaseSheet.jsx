@@ -38,6 +38,7 @@ const PurchaseSheet = () => {
 
     const [isNewVendor, setIsNewVendor] = useState(false);
     const [newVendorName, setNewVendorName] = useState('');
+    const [newVendorRuc, setNewVendorRuc] = useState('');
     const [isNewCategory, setIsNewCategory] = useState(false);
     const [newCategoryName, setNewCategoryName] = useState('');
 
@@ -281,20 +282,60 @@ const PurchaseSheet = () => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Vendedor / Proveedor</label>
                                     {isNewVendor ? (
-                                        <div className="flex gap-2">
-                                            <input type="text" placeholder="Nombre (Ej. Juan Pérez)" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={newVendorName} onChange={e => setNewVendorName(e.target.value)} autoFocus />
-                                            <button type="button" onClick={async () => {
-                                                if (newVendorName.trim()) {
-                                                    try {
-                                                        const newClient = await ClientService.create({ nombre: newVendorName, tipo: 'PROVEEDOR' });
-                                                        const clientObj = { id: newClient.id, nombre: newVendorName, ruc: 'S/N' };
-                                                        setClients([...clients, clientObj]);
-                                                        setFormData({ ...formData, vendedor: newVendorName });
-                                                        setIsNewVendor(false);
-                                                    } catch (e) { console.error(e); }
-                                                }
-                                            }} className="bg-emerald-500 text-white px-4 rounded-2xl hover:bg-emerald-600 transition-colors flex items-center justify-center shrink-0"><CheckCircle size={20} /></button>
-                                            <button type="button" onClick={() => { setIsNewVendor(false); setNewVendorName(''); }} className="bg-slate-200 text-slate-700 px-4 rounded-2xl hover:bg-slate-300 transition-colors font-bold shrink-0">X</button>
+                                        <div className="flex flex-col gap-3 bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100 shadow-sm animate-in slide-in-from-top-2 duration-300">
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    placeholder="Nombre Completo / Razón Social"
+                                                    className="w-full p-3 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
+                                                    value={newVendorName}
+                                                    onChange={e => setNewVendorName(e.target.value)}
+                                                    autoFocus
+                                                />
+                                                <input
+                                                    type="text"
+                                                    placeholder="RUC"
+                                                    className="w-32 p-3 bg-white border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold"
+                                                    value={newVendorRuc}
+                                                    onChange={e => setNewVendorRuc(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        if (newVendorName.trim()) {
+                                                            try {
+                                                                const rucFinal = newVendorRuc.trim() || 'S/N';
+                                                                const newClient = await ClientService.create({
+                                                                    nombre: newVendorName.toUpperCase(),
+                                                                    ruc: rucFinal,
+                                                                    tipo: 'PROVEEDOR'
+                                                                });
+                                                                const clientObj = { id: newClient.id, nombre: newVendorName.toUpperCase(), ruc: rucFinal };
+                                                                setClients([...clients, clientObj]);
+                                                                setFormData({ ...formData, vendedor: newVendorName.toUpperCase() });
+                                                                setIsNewVendor(false);
+                                                                setNewVendorName('');
+                                                                setNewVendorRuc('');
+                                                            } catch (e) {
+                                                                console.error(e);
+                                                                alert('Error al crear el contacto. Verifique si el RUC ya existe.');
+                                                            }
+                                                        }
+                                                    }}
+                                                    className="flex-1 bg-emerald-600 text-white p-3 rounded-xl hover:bg-emerald-700 transition-all font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg shadow-emerald-200"
+                                                >
+                                                    <CheckCircle size={16} /> Confirmar Guardado
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setIsNewVendor(false); setNewVendorName(''); setNewVendorRuc(''); }}
+                                                    className="bg-white text-slate-400 p-3 rounded-xl hover:bg-slate-100 transition-all font-bold border border-slate-200"
+                                                >
+                                                    <X size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     ) : (
                                         <select required className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none bg-white appearance-none cursor-pointer" value={formData.vendedor} onChange={e => {
