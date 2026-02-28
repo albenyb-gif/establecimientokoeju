@@ -22,6 +22,13 @@ const SalesSheet = () => {
     const [selectedIds, setSelectedIds] = useState([]);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         loadData();
@@ -185,39 +192,69 @@ const SalesSheet = () => {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div className="overflow-y-auto max-h-[700px] custom-scrollbar">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] sticky top-0 z-10 border-b border-slate-100">
-                                    <tr>
-                                        <th className="p-4 w-12"></th>
-                                        <th className="p-4">Caravana</th>
-                                        <th className="p-4">Categoría</th>
-                                        <th className="p-4">Rodeo</th>
-                                        <th className="p-4 text-right">Peso Actual</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {animals.map((animal) => (
-                                        <tr key={animal.id} onClick={() => toggleSelect(animal.id)} className={`hover:bg-emerald-50/30 cursor-pointer transition-colors group ${selectedIds.includes(animal.id) ? 'bg-emerald-50/50' : ''}`}>
-                                            <td className="p-4">
-                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIds.includes(animal.id) ? 'bg-emerald-500 border-emerald-500 rotate-0' : 'border-slate-200 -rotate-12 group-hover:rotate-0'}`}>
-                                                    {selectedIds.includes(animal.id) && <CheckSquare size={16} className="text-white" />}
-                                                </div>
-                                            </td>
-                                            <td className="p-4 font-black text-slate-700 tracking-tight">{animal.caravana_visual}</td>
-                                            <td className="p-4 text-xs font-bold text-slate-500 uppercase">{animal.categoria}</td>
-                                            <td className="p-4 text-xs font-bold text-slate-400">{animal.rodeo}</td>
-                                            <td className="p-4 text-right font-mono font-bold text-slate-800">{animal.peso_actual} <span className="text-[10px] text-slate-400 uppercase">kg</span></td>
-                                        </tr>
-                                    ))}
-                                    {animals.length === 0 && (
-                                        <tr><td colSpan="5" className="p-10 text-center text-slate-300 font-bold uppercase tracking-widest">No hay animales activos disponibles</td></tr>
-                                    )}
-                                </tbody>
-                            </table>
+                    {isMobile ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[700px] overflow-y-auto custom-scrollbar p-1">
+                            {animals.map((animal) => (
+                                <div key={animal.id} onClick={() => toggleSelect(animal.id)} className={`relative bg-white p-4 rounded-2xl border-2 transition-all cursor-pointer ${selectedIds.includes(animal.id) ? 'border-emerald-500 shadow-md shadow-emerald-500/10' : 'border-slate-100 hover:border-slate-300'}`}>
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all shrink-0 ${selectedIds.includes(animal.id) ? 'bg-emerald-500 border-emerald-500' : 'border-slate-200 bg-slate-50'}`}>
+                                                {selectedIds.includes(animal.id) && <CheckSquare size={14} className="text-white" />}
+                                            </div>
+                                            <div>
+                                                <h4 className="font-black text-slate-800 tracking-tight">{animal.caravana_visual}</h4>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{animal.categoria}</span>
+                                            </div>
+                                        </div>
+                                        <div className="text-right shrink-0">
+                                            <span className="font-mono font-black text-emerald-700 text-lg">{animal.peso_actual}</span>
+                                            <span className="text-[9px] text-slate-400 uppercase tracking-widest ml-1">kg</span>
+                                        </div>
+                                    </div>
+                                    <div className="mt-3 text-[10px] font-bold text-slate-400 flex items-center gap-1.5 bg-slate-50/50 p-2 rounded-xl inline-flex border border-slate-100/50">
+                                        <Filter size={12} className="text-slate-300" /> {animal.rodeo}
+                                    </div>
+                                </div>
+                            ))}
+                            {animals.length === 0 && (
+                                <div className="col-span-1 sm:col-span-2 p-10 text-center text-slate-300 font-bold uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-3xl">No hay animales activos disponibles</div>
+                            )}
                         </div>
-                    </div>
+                    ) : (
+                        <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+                            <div className="overflow-y-auto max-h-[700px] custom-scrollbar">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] sticky top-0 z-10 border-b border-slate-100">
+                                        <tr>
+                                            <th className="p-4 w-12"></th>
+                                            <th className="p-4">Caravana</th>
+                                            <th className="p-4">Categoría</th>
+                                            <th className="p-4">Rodeo</th>
+                                            <th className="p-4 text-right">Peso Actual</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {animals.map((animal) => (
+                                            <tr key={animal.id} onClick={() => toggleSelect(animal.id)} className={`hover:bg-emerald-50/30 cursor-pointer transition-colors group ${selectedIds.includes(animal.id) ? 'bg-emerald-50/50' : ''}`}>
+                                                <td className="p-4">
+                                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${selectedIds.includes(animal.id) ? 'bg-emerald-500 border-emerald-500 rotate-0' : 'border-slate-200 -rotate-12 group-hover:rotate-0'}`}>
+                                                        {selectedIds.includes(animal.id) && <CheckSquare size={16} className="text-white" />}
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 font-black text-slate-700 tracking-tight">{animal.caravana_visual}</td>
+                                                <td className="p-4 text-xs font-bold text-slate-500 uppercase">{animal.categoria}</td>
+                                                <td className="p-4 text-xs font-bold text-slate-400">{animal.rodeo}</td>
+                                                <td className="p-4 text-right font-mono font-bold text-slate-800">{animal.peso_actual} <span className="text-[10px] text-slate-400 uppercase">kg</span></td>
+                                            </tr>
+                                        ))}
+                                        {animals.length === 0 && (
+                                            <tr><td colSpan="5" className="p-10 text-center text-slate-300 font-bold uppercase tracking-widest">No hay animales activos disponibles</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </form>
         </div>

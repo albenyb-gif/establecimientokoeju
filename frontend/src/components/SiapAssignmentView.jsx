@@ -8,10 +8,16 @@ const SiapAssignmentView = () => {
     const [selectedBatchId, setSelectedBatchId] = useState('');
     const [animals, setAnimals] = useState([]);
 
-    const [startSeries, setStartSeries] = useState('');
     const [rfidSeries, setRfidSeries] = useState('');
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         setBatches([
@@ -166,55 +172,96 @@ const SiapAssignmentView = () => {
                             {animals.length > 0 && <span className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-500 uppercase tracking-widest tracking-tight">{animals.length} INDIVIDUOS</span>}
                         </div>
 
-                        <div className="flex-1 overflow-x-auto min-h-[500px]">
-                            <table className="w-full text-left">
-                                <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
-                                    <tr>
-                                        <th className="p-8">Identidad Actual</th>
-                                        <th className="p-8">Proyección SIAP (Tarjeta)</th>
-                                        <th className="p-8 hidden md:table-cell">Proyección RFID</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {animals.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="3" className="p-32 text-center">
-                                                <Layers size={48} className="mx-auto text-slate-100 mb-4 opacity-50" />
-                                                <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-[10px]">Esperando selección de lote origen</p>
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        animals.map((animal, i) => (
-                                            <tr key={animal.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="p-8">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-slate-900 transition-colors"></div>
-                                                        <span className="font-bold text-slate-400">{animal.caravana_visual}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-8">
-                                                    <div className="bg-indigo-50 border border-indigo-100 inline-block px-4 py-2 rounded-xl text-indigo-700 font-mono font-black text-lg shadow-sm group-hover:bg-white group-hover:shadow-indigo-900/5 transition-all">
-                                                        {startSeries ? (() => {
-                                                            const match = startSeries.match(/^(.+?)(\d+)$/);
-                                                            if (match) {
-                                                                const newNum = parseInt(match[2]) + i;
-                                                                return `${match[1]}${newNum.toString().padStart(match[2].length, '0')}`;
-                                                            }
-                                                            return '---';
-                                                        })() : '---'}
-                                                    </div>
-                                                </td>
-                                                <td className="p-8 hidden md:table-cell">
-                                                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest font-mono">
-                                                        {rfidSeries ? `${rfidSeries}-${(i + 1).toString().padStart(3, '0')}` : '--- DISPOSITIVO ---'}
+                        {isMobile ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4">
+                                {animals.length === 0 ? (
+                                    <div className="col-span-full p-10 text-center text-slate-300 font-bold uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-3xl">Esperando selección de lote origen</div>
+                                ) : (
+                                    animals.map((animal, i) => (
+                                        <div key={animal.id} className="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col gap-3">
+                                            <div className="flex justify-between items-center bg-slate-50/50 p-2 rounded-xl">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Identidad Actual</span>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                    <span className="font-bold text-slate-600">{animal.caravana_visual}</span>
+                                                </div>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Proyección SIAP</span>
+                                                <div className="bg-indigo-50 border border-indigo-100 px-3 py-1.5 rounded-xl text-indigo-700 font-mono font-black text-lg shadow-sm">
+                                                    {startSeries ? (() => {
+                                                        const match = startSeries.match(/^(.+?)(\d+)$/);
+                                                        if (match) {
+                                                            const newNum = parseInt(match[2]) + i;
+                                                            return `${match[1]}${newNum.toString().padStart(match[2].length, '0')}`;
+                                                        }
+                                                        return '---';
+                                                    })() : '---'}
+                                                </div>
+                                            </div>
+                                            {rfidSeries && (
+                                                <div className="flex justify-between items-center border-t border-slate-50 pt-2 mt-1">
+                                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">RFID</span>
+                                                    <span className="text-[10px] font-black text-slate-500 font-mono">
+                                                        {`${rfidSeries}-${(i + 1).toString().padStart(3, '0')}`}
                                                     </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        ) : (
+                            <div className="flex-1 overflow-x-auto min-h-[500px]">
+                                <table className="w-full text-left">
+                                    <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
+                                        <tr>
+                                            <th className="p-8">Identidad Actual</th>
+                                            <th className="p-8">Proyección SIAP (Tarjeta)</th>
+                                            <th className="p-8 hidden md:table-cell">Proyección RFID</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {animals.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="3" className="p-32 text-center">
+                                                    <Layers size={48} className="mx-auto text-slate-100 mb-4 opacity-50" />
+                                                    <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-[10px]">Esperando selección de lote origen</p>
                                                 </td>
                                             </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                        ) : (
+                                            animals.map((animal, i) => (
+                                                <tr key={animal.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                    <td className="p-8">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-slate-900 transition-colors"></div>
+                                                            <span className="font-bold text-slate-400">{animal.caravana_visual}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-8">
+                                                        <div className="bg-indigo-50 border border-indigo-100 inline-block px-4 py-2 rounded-xl text-indigo-700 font-mono font-black text-lg shadow-sm group-hover:bg-white group-hover:shadow-indigo-900/5 transition-all">
+                                                            {startSeries ? (() => {
+                                                                const match = startSeries.match(/^(.+?)(\d+)$/);
+                                                                if (match) {
+                                                                    const newNum = parseInt(match[2]) + i;
+                                                                    return `${match[1]}${newNum.toString().padStart(match[2].length, '0')}`;
+                                                                }
+                                                                return '---';
+                                                            })() : '---'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-8 hidden md:table-cell">
+                                                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest font-mono">
+                                                            {rfidSeries ? `${rfidSeries}-${(i + 1).toString().padStart(3, '0')}` : '--- DISPOSITIVO ---'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

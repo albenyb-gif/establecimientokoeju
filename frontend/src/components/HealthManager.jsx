@@ -12,6 +12,13 @@ const HealthManager = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showEventModal, setShowEventModal] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [newProduct, setNewProduct] = useState({
         nombre_comercial: '', principio_activo: '', descripcion: '',
@@ -122,56 +129,92 @@ const HealthManager = () => {
                                 <Plus size={20} />
                             </button>
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
-                                    <tr>
-                                        <th className="p-6">Producto</th>
-                                        <th className="p-6">P. Activo</th>
-                                        <th className="p-6 text-center">Stock</th>
-                                        <th className="p-6 text-right">Vencimiento</th>
-                                        <th className="p-6 text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {inventory.map((item) => {
-                                        const status = getStatus(item);
-                                        return (
-                                            <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="p-6">
-                                                    <p className="font-black text-slate-800 group-hover:text-blue-600 transition-colors">{item.nombre_comercial}</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{item.descripcion}</p>
-                                                </td>
-                                                <td className="p-6 text-slate-500 font-medium">{item.principio_activo}</td>
-                                                <td className="p-6 text-center">
-                                                    <div className="inline-flex flex-col items-center px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
-                                                        <span className="font-black text-slate-800">{item.stock_actual}</span>
-                                                        <span className="text-[10px] text-slate-400 font-bold uppercase">{item.unidad_medida}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="p-6 text-right text-slate-500 font-mono font-bold">{item.vencimiento ? item.vencimiento.split('T')[0] : 'S/V'}</td>
-                                                <td className="p-6 text-center">
-                                                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest
-                                                    ${status === 'ok' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
-                                                            status === 'low' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-red-50 text-red-600 border border-red-100'}
-                                                `}>
-                                                        {status === 'ok' ? 'Estado Óptimo' : status === 'low' ? 'Stock Bajo' : 'Vencido'}
+                        {isMobile ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                                {inventory.map(item => {
+                                    const status = getStatus(item);
+                                    return (
+                                        <div key={item.id} className="bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm relative flex flex-col gap-3 hover:border-blue-200 transition-colors">
+                                            <div className="flex justify-between items-start">
+                                                <div className="pr-4">
+                                                    <p className="font-black text-slate-800 text-lg leading-tight">{item.nombre_comercial}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{item.descripcion} | {item.principio_activo}</p>
+                                                </div>
+                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest shrink-0 ${status === 'ok' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : status === 'low' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-red-50 text-red-600 border border-red-100'}`}>
+                                                    {status === 'ok' ? 'Óptimo' : status === 'low' ? 'Bajo' : 'Vencido'}
+                                                </span>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3 mt-2">
+                                                <div className="bg-slate-50 p-3 rounded-2xl flex flex-col items-center justify-center border border-slate-100">
+                                                    <span className="font-black text-slate-800 text-xl leading-none">{item.stock_actual}</span>
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase mt-1">{item.unidad_medida}</span>
+                                                </div>
+                                                <div className="bg-slate-50 p-3 rounded-2xl flex flex-col items-center justify-center border border-slate-100">
+                                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Vence</span>
+                                                    <span className="font-mono font-bold text-slate-600 text-sm">
+                                                        {item.vencimiento ? item.vencimiento.split('T')[0] : 'S/V'}
                                                     </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                                {inventory.length === 0 && !loading && (
+                                    <div className="col-span-full p-10 text-center text-slate-300 font-bold uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-3xl">Sin insumos registrados</div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
+                                        <tr>
+                                            <th className="p-6">Producto</th>
+                                            <th className="p-6">P. Activo</th>
+                                            <th className="p-6 text-center">Stock</th>
+                                            <th className="p-6 text-right">Vencimiento</th>
+                                            <th className="p-6 text-center">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {inventory.map((item) => {
+                                            const status = getStatus(item);
+                                            return (
+                                                <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
+                                                    <td className="p-6">
+                                                        <p className="font-black text-slate-800 group-hover:text-blue-600 transition-colors">{item.nombre_comercial}</p>
+                                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{item.descripcion}</p>
+                                                    </td>
+                                                    <td className="p-6 text-slate-500 font-medium">{item.principio_activo}</td>
+                                                    <td className="p-6 text-center">
+                                                        <div className="inline-flex flex-col items-center px-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
+                                                            <span className="font-black text-slate-800">{item.stock_actual}</span>
+                                                            <span className="text-[10px] text-slate-400 font-bold uppercase">{item.unidad_medida}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="p-6 text-right text-slate-500 font-mono font-bold">{item.vencimiento ? item.vencimiento.split('T')[0] : 'S/V'}</td>
+                                                    <td className="p-6 text-center">
+                                                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest
+                                                        ${status === 'ok' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' :
+                                                                status === 'low' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-red-50 text-red-600 border border-red-100'}
+                                                    `}>
+                                                            {status === 'ok' ? 'Estado Óptimo' : status === 'low' ? 'Stock Bajo' : 'Vencido'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        {inventory.length === 0 && !loading && (
+                                            <tr>
+                                                <td colSpan="5" className="p-16 text-center">
+                                                    <Package size={48} className="mx-auto text-slate-200 mb-4 opacity-50" />
+                                                    <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-xs">Sin insumos registrados</p>
                                                 </td>
                                             </tr>
-                                        );
-                                    })}
-                                    {inventory.length === 0 && !loading && (
-                                        <tr>
-                                            <td colSpan="5" className="p-16 text-center">
-                                                <Package size={48} className="mx-auto text-slate-200 mb-4 opacity-50" />
-                                                <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-xs">Sin insumos registrados</p>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-6">
@@ -238,47 +281,73 @@ const HealthManager = () => {
                             <Plus size={18} /> Registrar Aplicación
                         </button>
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
-                                <tr>
-                                    <th className="p-6">Fecha</th>
-                                    <th className="p-6">Tipo de Evento</th>
-                                    <th className="p-6">Población / Animal</th>
-                                    <th className="p-6">Insumo Aplicado</th>
-                                    <th className="p-6 text-right">Referencia / Acta</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {events.map((evt) => (
-                                    <tr key={evt.id} className="hover:bg-slate-50/50 transition-colors group">
-                                        <td className="p-6 font-mono font-bold text-slate-500">{evt.fecha_aplicacion ? evt.fecha_aplicacion.split('T')[0] : 'S/F'}</td>
-                                        <td className="p-6">
-                                            <span className="font-black text-slate-800 group-hover:text-emerald-600 transition-colors">{evt.tipo_evento}</span>
-                                        </td>
-                                        <td className="p-6">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                                                <span className="text-slate-600 font-bold">{evt.animal}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-wider border border-indigo-100">{evt.producto}</span>
-                                        </td>
-                                        <td className="p-6 text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest">{evt.nro_acta || 'Sin Acta'}</td>
-                                    </tr>
-                                ))}
-                                {events.length === 0 && !loading && (
+                    {isMobile ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                            {events.map(evt => (
+                                <div key={evt.id} className="bg-white p-5 rounded-[2rem] border-2 border-slate-100 shadow-sm flex flex-col gap-3 hover:border-emerald-200 transition-colors">
+                                    <div className="flex justify-between items-center border-b border-slate-50 pb-3">
+                                        <span className="font-black text-slate-800 text-lg uppercase tracking-tight">{evt.tipo_evento}</span>
+                                        <span className="font-mono font-bold text-slate-500 text-xs bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">{evt.fecha_aplicacion ? evt.fecha_aplicacion.split('T')[0] : 'S/F'}</span>
+                                    </div>
+                                    <div className="space-y-3 pt-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-2.5 h-2.5 rounded-full bg-slate-300 shrink-0"></div>
+                                            <span className="text-slate-600 font-bold text-sm truncate">{evt.animal}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-wider truncate max-w-[150px] border border-indigo-100">{evt.producto}</span>
+                                            <span className="text-slate-400 font-bold uppercase text-[9px] tracking-widest bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">{evt.nro_acta || 'Sin Acta'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                            {events.length === 0 && !loading && (
+                                <div className="col-span-full p-10 text-center text-slate-300 font-bold uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-3xl">No hay historial sanitario</div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm">
+                                <thead className="bg-slate-50/50 text-slate-400 font-black uppercase text-[10px] tracking-[0.2em]">
                                     <tr>
-                                        <td colSpan="5" className="p-20 text-center">
-                                            <Activity size={48} className="mx-auto text-slate-200 mb-4 opacity-50" />
-                                            <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-xs">No hay historial sanitario</p>
-                                        </td>
+                                        <th className="p-6">Fecha</th>
+                                        <th className="p-6">Tipo de Evento</th>
+                                        <th className="p-6">Población / Animal</th>
+                                        <th className="p-6">Insumo Aplicado</th>
+                                        <th className="p-6 text-right">Referencia / Acta</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-slate-50">
+                                    {events.map((evt) => (
+                                        <tr key={evt.id} className="hover:bg-slate-50/50 transition-colors group">
+                                            <td className="p-6 font-mono font-bold text-slate-500">{evt.fecha_aplicacion ? evt.fecha_aplicacion.split('T')[0] : 'S/F'}</td>
+                                            <td className="p-6">
+                                                <span className="font-black text-slate-800 group-hover:text-emerald-600 transition-colors">{evt.tipo_evento}</span>
+                                            </td>
+                                            <td className="p-6">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-2 h-2 rounded-full bg-slate-300"></div>
+                                                    <span className="text-slate-600 font-bold">{evt.animal}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-6">
+                                                <span className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-wider border border-indigo-100">{evt.producto}</span>
+                                            </td>
+                                            <td className="p-6 text-right text-slate-400 font-bold uppercase text-[10px] tracking-widest">{evt.nro_acta || 'Sin Acta'}</td>
+                                        </tr>
+                                    ))}
+                                    {events.length === 0 && !loading && (
+                                        <tr>
+                                            <td colSpan="5" className="p-20 text-center">
+                                                <Activity size={48} className="mx-auto text-slate-200 mb-4 opacity-50" />
+                                                <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-xs">No hay historial sanitario</p>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             )}
 

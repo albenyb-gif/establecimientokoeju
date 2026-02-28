@@ -34,6 +34,13 @@ const ExpenseManager = () => {
         comprobante_nro: ''
     });
     const [status, setStatus] = useState({ type: '', message: '' });
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     useEffect(() => {
         loadData();
@@ -321,26 +328,43 @@ const ExpenseManager = () => {
                                 {expenses.map(exp => {
                                     const cat = CATEGORIAS.find(c => c.value === exp.categoria);
                                     return (
-                                        <div key={exp.id} className="flex items-center justify-between p-6 hover:bg-slate-50 transition-colors group">
-                                            <div className="flex items-center gap-6">
-                                                <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm border border-slate-100 group-hover:bg-white group-hover:rotate-6 transition-all">{cat?.emoji || '📦'}</div>
-                                                <div>
-                                                    <p className="font-black text-slate-800 text-lg leading-none tracking-tight group-hover:text-red-600 transition-colors">
+                                        <div key={exp.id} className="flex flex-col md:flex-row md:items-center justify-between p-6 hover:bg-slate-50 transition-colors group gap-4 md:gap-0">
+                                            <div className="flex items-start md:items-center gap-4 md:gap-6">
+                                                <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-inner border border-slate-100 group-hover:bg-white group-hover:rotate-6 transition-all shrink-0">
+                                                    {cat?.emoji || '📦'}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-black text-slate-800 text-base md:text-lg leading-tight tracking-tight group-hover:text-red-600 transition-colors break-words">
                                                         {exp.descripcion || cat?.label}
                                                     </p>
-                                                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-100">{new Date(exp.fecha).toLocaleDateString('es-PY')}</span>
-                                                        {exp.proveedor && <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Proveedor: {exp.proveedor}</span>}
-                                                        {exp.comprobante_nro && <span className="text-[10px] font-bold text-slate-300">#{exp.comprobante_nro}</span>}
+                                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                                                            {new Date(exp.fecha).toLocaleDateString('es-PY')}
+                                                        </span>
+                                                        {exp.proveedor && (
+                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate max-w-[120px] md:max-w-none">
+                                                                Prov: {exp.proveedor}
+                                                            </span>
+                                                        )}
+                                                        {exp.comprobante_nro && (
+                                                            <span className="text-[9px] font-black text-slate-300 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+                                                                #{exp.comprobante_nro}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-8">
-                                                <div className="text-right">
+                                            <div className="flex items-center justify-between md:justify-end gap-4 md:gap-8 pt-4 border-t border-slate-50 md:border-0 md:pt-0 pl-16 md:pl-0">
+                                                <div className="text-left md:text-right">
                                                     <p className="font-black text-red-600 text-xl tracking-tighter">{formatCurrency(exp.monto)}</p>
-                                                    <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">{cat?.label}</p>
+                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{cat?.label}</p>
                                                 </div>
-                                                <button onClick={() => handleDelete(exp.id)} className="p-3 rounded-xl bg-slate-50 text-slate-300 hover:text-white hover:bg-red-500 transition-all shadow-sm"><Trash2 size={16} /></button>
+                                                <button
+                                                    onClick={() => handleDelete(exp.id)}
+                                                    className="p-3 flex-shrink-0 rounded-xl bg-slate-50 text-slate-300 hover:text-white hover:bg-red-500 hover:shadow-lg hover:shadow-red-500/20 transition-all border border-slate-100"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
                                         </div>
                                     );
@@ -349,6 +373,16 @@ const ExpenseManager = () => {
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* FAB for Mobile */}
+            {isMobile && tab !== 'registrar' && (
+                <button
+                    onClick={() => setTab('registrar')}
+                    className="fixed bottom-24 right-5 z-50 w-16 h-16 bg-red-500 text-white rounded-[2rem] shadow-2xl shadow-red-500/30 flex items-center justify-center hover:bg-red-600 transition-colors active:scale-95"
+                >
+                    <PlusCircle size={28} />
+                </button>
             )}
         </div>
     );

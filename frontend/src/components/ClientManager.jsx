@@ -9,6 +9,13 @@ const ClientManager = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingClient, setEditingClient] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const [formData, setFormData] = useState({
         nombre: '',
@@ -92,7 +99,7 @@ const ClientManager = () => {
                 actions={
                     <button
                         onClick={() => handleOpenModal()}
-                        className="px-8 py-3 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 uppercase tracking-widest text-sm"
+                        className="hidden md:flex px-8 py-3 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 items-center justify-center gap-2 uppercase tracking-widest text-sm"
                     >
                         <Plus size={20} /> Nuevo Contacto
                     </button>
@@ -234,6 +241,16 @@ const ClientManager = () => {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* FAB for Mobile */}
+            {isMobile && !isModalOpen && (
+                <button
+                    onClick={() => handleOpenModal()}
+                    className="fixed bottom-24 right-5 z-50 w-16 h-16 bg-slate-900 text-white rounded-[2rem] shadow-2xl shadow-slate-900/30 flex items-center justify-center hover:bg-emerald-600 transition-colors active:scale-95"
+                >
+                    <Plus size={28} />
+                </button>
             )}
         </div>
     );

@@ -137,18 +137,32 @@ class AnimalController {
                 }
             }
 
+            // Helper function to get or create category by name
+            const getOrCreateCategory = async (desc) => {
+                if (!desc) return null;
+                const [existing] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [desc.toUpperCase()]);
+                if (existing.length > 0) return existing[0].id;
+
+                const [created] = await connection.query('INSERT INTO categorias (descripcion) VALUES (?)', [desc.toUpperCase()]);
+                return created.insertId;
+            };
+
             // Categoria ID por defecto
-            let defaultCatId = req.body.categoria_id ? parseInt(req.body.categoria_id) : null;
+            let defaultCatId = null;
+            if (req.body.categoria_id) {
+                if (!isNaN(req.body.categoria_id)) {
+                    defaultCatId = parseInt(req.body.categoria_id);
+                } else {
+                    // Si es un string (manual), buscarlo o crearlo
+                    defaultCatId = await getOrCreateCategory(req.body.categoria_id);
+                }
+            }
+
             if (!defaultCatId) {
                 let categoriaDefecto = 'VAQUILLA';
                 if (kilos_compra < 180) categoriaDefecto = 'TERNERO MACHO';
                 else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE MACHO';
-                try {
-                    const [catResult] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
-                    defaultCatId = catResult.length > 0 ? catResult[0].id : null;
-                } catch (catErr) {
-                    console.error('Error auto-selecting category:', catErr);
-                }
+                defaultCatId = await getOrCreateCategory(categoriaDefecto);
             }
 
             for (let i = 0; i < qty; i++) {
@@ -157,7 +171,14 @@ class AnimalController {
                 let rfid = det.caravana_rfid || null;
                 let pesoIndividual = det.peso || kilos_compra;
                 let costoIndividual = det.costo || costo_unitario;
-                let catIndividual = det.categoria_id || defaultCatId;
+                let catIndividual = defaultCatId;
+                if (det.categoria_id) {
+                    if (!isNaN(det.categoria_id)) {
+                        catIndividual = parseInt(det.categoria_id);
+                    } else {
+                        catIndividual = await getOrCreateCategory(det.categoria_id);
+                    }
+                }
                 let pelajeIndividual = det.pelaje || req.body.pelaje || 'SIN ESPECIFICAR';
 
                 // Insert Animal
@@ -859,6 +880,13 @@ class AnimalController {
         try {
             // Check connection first
             await db.query('SELECT 1');
+
+            // Check if table exists
+            const [tables] = await db.query("SHOW TABLES LIKE 'categorias'");
+            if (tables.length === 0) {
+                throw new Error("La tabla 'categorias' no existe en esta base de datos.");
+            }
+
             const [rows] = await db.query('SELECT * FROM categorias ORDER BY descripcion');
             res.json(rows);
         } catch (error) {
@@ -867,7 +895,8 @@ class AnimalController {
                 error: 'Error al obtener categorías',
                 details: error.message,
                 code: error.code,
-                sqlState: error.sqlState
+                sqlState: error.sqlState,
+                hint: "Asegúrese de haber importado el archivo SQL de migraciones en Hostinger."
             });
         }
     }
