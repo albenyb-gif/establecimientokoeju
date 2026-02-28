@@ -554,8 +554,13 @@ const PurchaseSheet = () => {
                                                                     }}
                                                                 >
                                                                     <option value="">Auto-Categorizar</option>
-                                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.descripcion}</option>)}
-                                                                    <option value="MANUAL" className="text-emerald-600 font-bold">Manual</option>
+                                                                    <option value="DESMAMANTE MACHO">DESMAMANTE MACHO</option>
+                                                                    <option value="DESMAMANTE HEMBRA">DESMAMANTE HEMBRA</option>
+                                                                    <option value="TERNERO MACHO">TERNERO MACHO</option>
+                                                                    <option value="TERNERO HEMBRA">TERNERO HEMBRA</option>
+                                                                    <option value="VAQUILLA">VAQUILLA</option>
+                                                                    <option value="TORO">TORO</option>
+                                                                    <option value="MANUAL" className="text-emerald-600 font-bold">Otra/Manual</option>
                                                                 </select>
                                                             )}
                                                             {(categoryError || anim.categoria_id === 'MANUAL') && (
@@ -742,8 +747,13 @@ const PurchaseSheet = () => {
                                                                             }}
                                                                         >
                                                                             <option value="">Auto</option>
-                                                                            {categories.map(c => <option key={c.id} value={c.id}>{c.descripcion}</option>)}
-                                                                            <option value="MANUAL" className="text-emerald-600 font-bold">Manual</option>
+                                                                            <option value="DESMAMANTE MACHO">DESMAMANTE MACHO</option>
+                                                                            <option value="DESMAMANTE HEMBRA">DESMAMANTE HEMBRA</option>
+                                                                            <option value="TERNERO MACHO">TERNERO MACHO</option>
+                                                                            <option value="TERNERO HEMBRA">TERNERO HEMBRA</option>
+                                                                            <option value="VAQUILLA">VAQUILLA</option>
+                                                                            <option value="TORO">TORO</option>
+                                                                            <option value="MANUAL" className="text-emerald-600 font-bold">Otra/Manual</option>
                                                                         </select>
                                                                     )}
                                                                     {(categoryError || anim.categoria_id === 'MANUAL') && (

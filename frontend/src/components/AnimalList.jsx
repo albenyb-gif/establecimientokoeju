@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight } from 'lucide-react';
+import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
