@@ -661,7 +661,7 @@ const PurchaseSheet = () => {
                                             <table className="w-full text-left">
                                                 <thead>
                                                     <tr className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                                        <th className="pb-3 px-2">Visual</th>
+                                                        <th className="pb-3 px-2">Caravana</th>
                                                         <th className="pb-3 px-2">RFID</th>
                                                         <th className="pb-3 px-2">Peso</th>
                                                         <th className="pb-3 px-2">Costo (Gs)</th>
