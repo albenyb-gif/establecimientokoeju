@@ -164,9 +164,12 @@ const IngresoForm = () => {
                                 onChange={(e) => setFormData({ ...formData, categoria_id: e.target.value })}
                             >
                                 <option value="">-- Seleccionar --</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
-                                ))}
+                                <option value="DESMAMANTE MACHO">DESMAMANTE MACHO</option>
+                                <option value="DESMAMANTE HEMBRA">DESMAMANTE HEMBRA</option>
+                                <option value="TERNERO MACHO">TERNERO MACHO</option>
+                                <option value="TERNERO HEMBRA">TERNERO HEMBRA</option>
+                                <option value="VAQUILLA">VAQUILLA</option>
+                                <option value="TORO">TORO</option>
                             </select>
                         </div>
                         <div className="space-y-2">

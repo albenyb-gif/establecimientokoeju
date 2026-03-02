@@ -415,7 +415,7 @@ const PurchaseSheet = () => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Categoría General</label>
                                     <div className="flex gap-3">
                                         <div className="flex-1">
-                                            {categoryError || formData.categoria_id === 'MANUAL' ? (
+                                            {formData.categoria_id === 'MANUAL' ? (
                                                 <input
                                                     type="text"
                                                     placeholder="Escriba la categoría (ej. VAQUILLA)"
@@ -431,7 +431,12 @@ const PurchaseSheet = () => {
                                                     onChange={e => setFormData({ ...formData, categoria_id: e.target.value })}
                                                 >
                                                     <option value="">Auto-Categorizar por Peso</option>
-                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.descripcion}</option>)}
+                                                    <option value="DESMAMANTE MACHO">DESMAMANTE MACHO</option>
+                                                    <option value="DESMAMANTE HEMBRA">DESMAMANTE HEMBRA</option>
+                                                    <option value="TERNERO MACHO">TERNERO MACHO</option>
+                                                    <option value="TERNERO HEMBRA">TERNERO HEMBRA</option>
+                                                    <option value="VAQUILLA">VAQUILLA</option>
+                                                    <option value="TORO">TORO</option>
                                                     <option value="MANUAL" className="text-emerald-600 font-bold">➕ Ingreso Manual / Nueva...</option>
                                                 </select>
                                             )}
@@ -530,7 +535,7 @@ const PurchaseSheet = () => {
                                                     <div className="space-y-1">
                                                         <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Categoría</label>
                                                         <div className="flex gap-2">
-                                                            {categoryError || anim.categoria_id === 'MANUAL' ? (
+                                                            {anim.categoria_id === 'MANUAL' ? (
                                                                 <input
                                                                     type="text"
                                                                     placeholder="Categoría..."
@@ -723,7 +728,7 @@ const PurchaseSheet = () => {
                                                             </td>
                                                             <td className="py-3 pr-2 border-l border-slate-50 pl-2">
                                                                 <div className="flex gap-1 items-center min-w-[120px]">
-                                                                    {categoryError || anim.categoria_id === 'MANUAL' ? (
+                                                                    {anim.categoria_id === 'MANUAL' ? (
                                                                         <input
                                                                             type="text"
                                                                             placeholder="Nueva..."
