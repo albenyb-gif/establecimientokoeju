@@ -287,7 +287,7 @@ const AnimalDetail = () => {
                             <DetailItem icon={<Calendar />} label="Fecha de Nacimiento" value={animal.fecha_nacimiento || 'Registro Desconocido'} />
                             <DetailItem icon={<Activity />} label="Pelaje" value={animal.pelaje || 'SIN ESPECIFICAR'} />
                             <DetailItem icon={<LayoutDashboard />} label="Potrero / Lote" value={animal.ubicacion || 'Potrero Nro 04'} />
-                            <DetailItem icon={<TrendingUp />} label="Precio de Compra" value="-- Gs/Kg" />
+                            <DetailItem icon={<TrendingUp />} label="Precio de Compra" value="-- ₲/Kg" />
                             <DetailItem icon={<Scale />} label="Peso de Ingreso" value={`${animal.peso_inicial || 0} kg`} />
                         </div>
                     </div>

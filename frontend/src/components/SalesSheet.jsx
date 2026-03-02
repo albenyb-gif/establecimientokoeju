@@ -154,7 +154,7 @@ const SalesSheet = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Precio (Gs/Kg)</label>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Precio (₲/Kg)</label>
                                 <input type="number" required step="100" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-emerald-700" value={formData.precio_promedio} onChange={e => setFormData({ ...formData, precio_promedio: e.target.value })} />
                             </div>
                             <div className="space-y-2">

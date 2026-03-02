@@ -60,12 +60,28 @@ class AnimalController {
      * Registra un lote de compra y genera automáticamente los animales.
      */
     static async registrarCompraLote(req, res) {
+        const parseSafely = (val, isInt = false) => {
+            if (val === undefined || val === null || val === '') return 0;
+            const parsed = isInt ? parseInt(val) : parseFloat(val);
+            return isNaN(parsed) ? 0 : parsed;
+        };
+
         const {
             fecha, cantidad, pelaje, kilos_compra, vendedor, lugar,
             documento, observaciones, costo_unitario, peso_total,
             ganancia_estimada, nro_cot, nro_guia,
             comision_feria, flete, tasas, porcentaje_ganancia
         } = req.body;
+
+        const numCantidad = parseSafely(cantidad, true);
+        const numCostoUnit = parseSafely(costo_unitario);
+        const numPesoTotal = parseSafely(peso_total);
+        const numKilosCompra = parseSafely(kilos_compra);
+        const numGanancia = parseSafely(ganancia_estimada);
+        const numComision = parseSafely(comision_feria);
+        const numFlete = parseSafely(flete);
+        const numTasas = parseSafely(tasas);
+        const totalCostCalculated = numCantidad * numCostoUnit;
 
         // 1. Procesar Imagen Global/Documento
         let foto_marca_path = null;
@@ -90,37 +106,39 @@ class AnimalController {
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
                 `INSERT INTO compras_lotes 
-                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, cantidad, pelaje, kilos_compra, peso_total, costo_unitario, ganancia_estimada, vendedor, lugar, documento, observaciones, nro_cot]
+                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot]
             );
             const loteId = loteResult.insertId;
 
             // 1.1 Insertar Gastos Automáticos
-            const baseCost = parseFloat(cantidad) * parseFloat(costo_unitario);
-            await connection.query(
-                'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "OTROS", ?, ?, ?)',
-                [fecha, baseCost, `Compra de Lote #${loteId} (${cantidad} animales)`, vendedor]
-            );
+            const baseCost = numCantidad * numCostoUnit;
+            if (baseCost > 0) {
+                await connection.query(
+                    'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "OTROS", ?, ?, ?)',
+                    [fecha, baseCost, `Compra de Lote #${loteId} (${numCantidad} animales)`, vendedor]
+                );
+            }
 
-            if (parseFloat(comision_feria) > 0) {
+            if (numComision > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "SERVICIOS", ?, ?, ?)',
-                    [fecha, parseFloat(comision_feria) * 1.10, `Comisión Compra Lote #${loteId}`, 'Feria/Intermediario']
+                    [fecha, numComision * 1.10, `Comisión Compra Lote #${loteId}`, 'Feria/Intermediario']
                 );
             }
 
-            if (parseFloat(flete) > 0) {
+            if (numFlete > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "TRANSPORTE", ?, ?, ?)',
-                    [fecha, parseFloat(flete) * 1.10, `Flete Lote #${loteId}`, 'Transportista']
+                    [fecha, numFlete * 1.10, `Flete Lote #${loteId}`, 'Transportista']
                 );
             }
 
-            if (parseFloat(tasas) > 0) {
+            if (numTasas > 0) {
                 await connection.query(
                     'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor) VALUES (?, "IMPUESTOS", ?, ?, ?)',
-                    [fecha, tasas, `Tasas Municipales/SENACSA Lote #${loteId}`, 'Estado']
+                    [fecha, numTasas, `Tasas Municipales/SENACSA Lote #${loteId}`, 'Estado']
                 );
             }
 
@@ -169,17 +187,17 @@ class AnimalController {
                 const det = animalesDetalle[i] || {};
                 let caravana = det.caravana_visual || `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
                 let rfid = det.caravana_rfid || null;
-                let pesoIndividual = det.peso || kilos_compra;
-                let costoIndividual = det.costo || costo_unitario;
+                let pesoIndividual = parseSafely(det.peso) || numKilosCompra;
+                let costoIndividual = parseSafely(det.costo) || numCostoUnit;
                 let catIndividual = defaultCatId;
                 if (det.categoria_id) {
-                    if (!isNaN(det.categoria_id)) {
+                    if (!isNaN(det.categoria_id) && det.categoria_id !== '') {
                         catIndividual = parseInt(det.categoria_id);
-                    } else {
+                    } else if (typeof det.categoria_id === 'string' && det.categoria_id.trim() !== '') {
                         catIndividual = await getOrCreateCategory(det.categoria_id);
                     }
                 }
-                let pelajeIndividual = det.pelaje || req.body.pelaje || 'SIN ESPECIFICAR';
+                let pelajeIndividual = det.pelaje || pelaje || 'SIN ESPECIFICAR';
 
                 // Insert Animal
                 const [animResult] = await connection.query(
@@ -278,7 +296,14 @@ class AnimalController {
 
             // 2. Generar Animales y Movimientos
             const qty = parseInt(cantidad) || 0;
-            const catId = categoria_id ? parseInt(categoria_id) : null;
+            let catId = null;
+            if (categoria_id) {
+                if (!isNaN(categoria_id)) {
+                    catId = parseInt(categoria_id);
+                } else {
+                    catId = await getOrCreateCategory(categoria_id);
+                }
+            }
             const createdIds = [];
 
             // Si quantity > 0, creamos fichas individuales

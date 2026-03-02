@@ -248,7 +248,7 @@ const ExpenseManager = () => {
                                 <input type="date" required className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-bold text-slate-800 transition-all" value={form.fecha} onChange={(e) => setForm({ ...form, fecha: e.target.value })} />
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto Total (Gs)</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Monto Total (₲)</label>
                                 <input type="number" required min="0" className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-red-500 focus:bg-white outline-none font-black text-red-600 text-2xl transition-all" value={form.monto} onChange={(e) => setForm({ ...form, monto: e.target.value })} placeholder="0" />
                             </div>
                         </div>

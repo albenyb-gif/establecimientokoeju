@@ -99,7 +99,7 @@ const HealthModal = ({ animal, onClose, onSave }) => {
                     </div>
 
                     <div>
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Costo Estimado (Gs)</label>
+                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Costo Estimado (₲)</label>
                         <input
                             type="number"
                             name="costo"

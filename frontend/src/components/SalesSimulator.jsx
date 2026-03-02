@@ -188,7 +188,7 @@ const SalesSimulator = () => {
                                         <p className="text-lg font-black text-white">{formatCurrency(results?.promedio_cabeza)}</p>
                                     </div>
                                     <div className="bg-white/5 backdrop-blur-md rounded-2xl p-4 border border-white/10 flex items-center justify-between min-w-[220px]">
-                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kg/Neto Gs</p>
+                                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Kg/Neto ₲</p>
                                         <p className="text-lg font-black text-white">{formatCurrency(results?.precio_neto_kg)}</p>
                                     </div>
                                 </div>

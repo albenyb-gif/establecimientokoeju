@@ -377,15 +377,15 @@ const PurchaseSheet = () => {
                             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-50 pb-2">2. Gastos de Adquisición (Logística)</h3>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Comisión Feria (Gs)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Comisión Feria (₲)</label>
                                     <input type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.comision_feria} onChange={e => setFormData({ ...formData, comision_feria: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Flete (Gs)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Flete (₲)</label>
                                     <input type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.flete} onChange={e => setFormData({ ...formData, flete: e.target.value })} />
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tasas/Otros (Gs)</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Tasas/Otros (₲)</label>
                                     <input type="number" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.tasas} onChange={e => setFormData({ ...formData, tasas: e.target.value })} />
                                 </div>
                             </div>
@@ -596,7 +596,7 @@ const PurchaseSheet = () => {
 
                                                     <div className="grid grid-cols-2 gap-3">
                                                         <div className="space-y-1">
-                                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Costo (Gs)</label>
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Costo (₲)</label>
                                                             <input
                                                                 type="number"
                                                                 placeholder="0"
@@ -669,7 +669,7 @@ const PurchaseSheet = () => {
                                                         <th className="pb-3 px-2">Caravana</th>
                                                         <th className="pb-3 px-2">RFID</th>
                                                         <th className="pb-3 px-2">Peso</th>
-                                                        <th className="pb-3 px-2">Costo (Gs)</th>
+                                                        <th className="pb-3 px-2">Costo (₲)</th>
                                                         <th className="pb-3 px-2">Categoría</th>
                                                         <th className="pb-3 px-2">Pelaje</th>
                                                         <th className="pb-3 text-right pr-2">Marcas</th>
