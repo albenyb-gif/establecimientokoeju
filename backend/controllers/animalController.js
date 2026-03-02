@@ -183,7 +183,7 @@ class AnimalController {
 
                 // Insert Animal
                 const [animResult] = await connection.query(
-                    `INSERT INTO animales (caravana_visual, caravana_electronica, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
+                    `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
                     VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
                     [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual]
                 );
@@ -881,10 +881,26 @@ class AnimalController {
             // Check connection first
             await db.query('SELECT 1');
 
-            // Check if table exists
-            const [tables] = await db.query("SHOW TABLES LIKE 'categorias'");
-            if (tables.length === 0) {
-                throw new Error("La tabla 'categorias' no existe en esta base de datos.");
+            // Asegurar que la tabla existe
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS categorias (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    descripcion VARCHAR(255) UNIQUE NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+            `);
+
+            // Sembrar categorías si la tabla está vacía
+            const [countRows] = await db.query('SELECT COUNT(*) as count FROM categorias');
+            if (countRows[0].count === 0) {
+                const initialCategories = [
+                    'DESMAMANTE MACHO', 'DESMAMANTE HEMBRA',
+                    'TERNERO MACHO', 'TERNERO HEMBRA',
+                    'VAQUILLA', 'TORO'
+                ];
+                for (const cat of initialCategories) {
+                    await db.query('INSERT IGNORE INTO categorias (descripcion) VALUES (?)', [cat]);
+                }
             }
 
             const [rows] = await db.query('SELECT * FROM categorias ORDER BY descripcion');
