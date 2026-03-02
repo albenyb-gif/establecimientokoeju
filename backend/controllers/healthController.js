@@ -1,11 +1,32 @@
 const db = require('../config/db');
 
+const parseSafely = (val, isInt = false) => {
+    if (val === undefined || val === null || val === '') return 0;
+    const parsed = isInt ? parseInt(val) : parseFloat(val);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
 class HealthController {
 
     // --- INSUMOS / STOCK MANAGEMENT ---
 
     static async getStock(req, res) {
         try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS insumos_stock (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombre_comercial VARCHAR(100) NOT NULL,
+                    principio_activo VARCHAR(100),
+                    descripcion TEXT,
+                    dias_carencia INT DEFAULT 0,
+                    lote VARCHAR(50),
+                    vencimiento DATE,
+                    stock_actual DECIMAL(10,2) DEFAULT 0,
+                    unidad_medida VARCHAR(20),
+                    costo_unitario DECIMAL(15,2) DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const [rows] = await db.query('SELECT * FROM insumos_stock ORDER BY nombre_comercial');
             res.json(rows);
         } catch (error) {
@@ -27,12 +48,16 @@ class HealthController {
 
     static async createInsumo(req, res) {
         const { nombre_comercial, principio_activo, descripcion, dias_carencia, lote, vencimiento, stock_actual, unidad_medida, costo_unitario } = req.body;
+        const numStock = parseSafely(stock_actual);
+        const numCosto = parseSafely(costo_unitario);
+        const numCarencia = parseSafely(dias_carencia, true);
+
         try {
             const [result] = await db.query(
                 `INSERT INTO insumos_stock 
                 (nombre_comercial, principio_activo, descripcion, dias_carencia, lote, vencimiento, stock_actual, unidad_medida, costo_unitario) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [nombre_comercial, principio_activo, descripcion, dias_carencia, lote, vencimiento, stock_actual, unidad_medida, costo_unitario]
+                [nombre_comercial, principio_activo, descripcion, numCarencia, lote, vencimiento, numStock, unidad_medida, numCosto]
             );
             res.status(201).json({ message: 'Insumo registrado', id: result.insertId });
         } catch (error) {
@@ -72,6 +97,20 @@ class HealthController {
 
     static async getEvents(req, res) {
         try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS sanidad_eventos (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    tipo_evento VARCHAR(50) NOT NULL,
+                    animal_id INT,
+                    producto_id INT,
+                    fecha_aplicacion DATE NOT NULL,
+                    fecha_fin_carencia DATE,
+                    nro_acta VARCHAR(50),
+                    lote_vencimiento VARCHAR(50),
+                    responsable VARCHAR(100),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const query = `
                 SELECT e.*, i.nombre_comercial as producto_nombre, count(a.id) as cantidad_animales
                 FROM sanidad_eventos e

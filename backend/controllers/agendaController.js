@@ -3,6 +3,17 @@ const db = require('../config/db');
 const agendaController = {
     getAll: async (req, res) => {
         try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS agenda (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    titulo VARCHAR(100) NOT NULL,
+                    descripcion TEXT,
+                    tipo VARCHAR(50),
+                    fecha_hora DATETIME NOT NULL,
+                    ubicacion VARCHAR(100),
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const [rows] = await db.query('SELECT * FROM agenda ORDER BY fecha_hora ASC');
             res.json(rows);
         } catch (error) {

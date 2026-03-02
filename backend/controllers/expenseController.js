@@ -1,5 +1,11 @@
 const db = require('../config/db');
 
+const parseSafely = (val, isInt = false) => {
+    if (val === undefined || val === null || val === '') return 0;
+    const parsed = isInt ? parseInt(val) : parseFloat(val);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
 class ExpenseController {
 
     // GET /api/gastos?desde=...&hasta=...&categoria=...
@@ -36,14 +42,22 @@ class ExpenseController {
     static async create(req, res) {
         try {
             const { fecha, categoria, monto, descripcion, proveedor, comprobante_nro } = req.body;
+            const numMonto = parseSafely(monto);
 
-            if (!fecha || !categoria || !monto) {
+            if (!fecha || !categoria || !numMonto) {
                 return res.status(400).json({ error: 'Fecha, categoría y monto son obligatorios' });
+            }
+
+            // Self-healing schema: ensure comprobante_nro exists
+            try {
+                await db.query('ALTER TABLE gastos ADD COLUMN comprobante_nro VARCHAR(50)');
+            } catch (e) {
+                // Ignore if exists
             }
 
             const [result] = await db.query(
                 'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor, comprobante_nro) VALUES (?, ?, ?, ?, ?, ?)',
-                [fecha, categoria, monto, descripcion || null, proveedor || null, comprobante_nro || null]
+                [fecha, categoria, numMonto, descripcion || null, proveedor || null, comprobante_nro || null]
             );
 
             res.status(201).json({

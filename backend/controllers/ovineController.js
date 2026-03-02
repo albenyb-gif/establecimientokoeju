@@ -1,5 +1,11 @@
 const db = require('../config/db');
 
+const parseSafely = (val, isInt = false) => {
+    if (val === undefined || val === null || val === '') return 0;
+    const parsed = isInt ? parseInt(val) : parseFloat(val);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
 class OvineController {
 
     // --- ESTADISTICAS ---
@@ -62,10 +68,24 @@ class OvineController {
     // --- ESQUILA (LANA) ---
     static async registerShearing(req, res) {
         const { fecha, kilos_totales, cantidad_animales, observaciones } = req.body;
+        const numKilos = parseSafely(kilos_totales);
+        const numCant = parseSafely(cantidad_animales, true);
+
         try {
+            // Self-healing schema: ensure produccion_lana exists
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS produccion_lana (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fecha DATE NOT NULL,
+                    cantidad_animales INT,
+                    kilos_totales DECIMAL(10,2),
+                    observaciones TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const [result] = await db.query(
                 `INSERT INTO produccion_lana (fecha, cantidad_animales, kilos_totales, observaciones) VALUES (?, ?, ?, ?)`,
-                [fecha, cantidad_animales, kilos_totales, observaciones]
+                [fecha, numCant, numKilos, observaciones]
             );
             res.json({ message: 'Esquila registrada exitosamente', id: result.insertId });
         } catch (error) {
@@ -94,13 +114,27 @@ class OvineController {
         const connection = await db.getConnection();
 
         try {
+            // Self-healing schema: ensure pariciones_ovinas exists
+            await connection.query(`
+                CREATE TABLE IF NOT EXISTS pariciones_ovinas (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    fecha DATE NOT NULL,
+                    madre_id INT,
+                    cantidad_crias INT NOT NULL,
+                    sexo_crias VARCHAR(20),
+                    raza VARCHAR(50),
+                    observaciones TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             await connection.beginTransaction();
 
             // 1. Registrar evento de parición
+            const numCrias = parseSafely(cantidad_crias, true);
             const [parResult] = await connection.query(
                 `INSERT INTO pariciones_ovinas (fecha, madre_id, cantidad_crias, sexo_crias, raza, observaciones) 
                  VALUES (?, ?, ?, ?, ?, ?)`,
-                [fecha, madre_id || null, cantidad_crias, sexo_crias || 'MIXTO', raza || null, observaciones]
+                [fecha, madre_id || null, numCrias, sexo_crias || 'MIXTO', raza || null, observaciones]
             );
             const paricionId = parResult.insertId;
 

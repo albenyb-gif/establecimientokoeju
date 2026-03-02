@@ -9,6 +9,12 @@ if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const parseSafely = (val, isInt = false) => {
+    if (val === undefined || val === null || val === '') return 0;
+    const parsed = isInt ? parseInt(val) : parseFloat(val);
+    return isNaN(parsed) ? 0 : parsed;
+};
+
 
 class AnimalController {
 
@@ -60,11 +66,6 @@ class AnimalController {
      * Registra un lote de compra y genera automáticamente los animales.
      */
     static async registrarCompraLote(req, res) {
-        const parseSafely = (val, isInt = false) => {
-            if (val === undefined || val === null || val === '') return 0;
-            const parsed = isInt ? parseInt(val) : parseFloat(val);
-            return isNaN(parsed) ? 0 : parsed;
-        };
 
         const {
             fecha, cantidad, pelaje, kilos_compra, vendedor, lugar,
@@ -606,47 +607,53 @@ class AnimalController {
     static async registerWeight(req, res) {
         const { id } = req.params;
         const { peso_kg } = req.body;
+        const numPeso = parseSafely(peso_kg);
 
+        if (!numPeso) {
+            return res.status(400).json({ error: 'Peso no válido' });
+        }
+
+        const connection = await db.getConnection();
         try {
+            await connection.beginTransaction();
+
             // 1. Obtener último pesaje y datos del animal
-            const [lastWeights] = await db.query(
-                'SELECT * FROM pesajes WHERE animal_id = ? ORDER BY fecha DESC LIMIT 1',
+            const [lastRows] = await connection.query(
+                'SELECT peso_kg, fecha FROM pesajes WHERE animal_id = ? ORDER BY fecha DESC LIMIT 1',
                 [id]
             );
 
-            const [animalData] = await db.query(
+            const [animalData] = await connection.query(
                 'SELECT a.*, c.descripcion as categoria_desc FROM animales a JOIN categorias c ON c.id = a.categoria_id WHERE a.id = ?',
                 [id]
             );
 
             let gdp = 0;
-            if (lastWeights.length > 0) {
-                const prev = lastWeights[0];
-                const daysDiff = (new Date() - new Date(prev.fecha)) / (1000 * 60 * 60 * 24);
-
-                if (daysDiff > 0) {
-                    gdp = (peso_kg - prev.peso_kg) / daysDiff;
-                }
+            if (lastRows.length > 0) {
+                const lastPeso = parseFloat(lastRows[0].peso_kg);
+                const lastFecha = new Date(lastRows[0].fecha);
+                const diffDays = Math.max(1, (new Date() - lastFecha) / (1000 * 60 * 60 * 24));
+                gdp = (numPeso - lastPeso) / diffDays;
             }
 
             // 2. Insertar nuevo pesaje
-            await db.query(
+            await connection.query(
                 'INSERT INTO pesajes (animal_id, peso_kg, gdp_calculado) VALUES (?, ?, ?)',
-                [id, peso_kg, gdp]
+                [id, numPeso, gdp]
             );
 
             // 3. Actualizar animal y Verificar Cambio de Categoría (Auto-Upgrade)
             let newCategoryMessage = null;
             let updateQuery = 'UPDATE animales SET peso_actual = ? WHERE id = ?';
-            let updateParams = [peso_kg, id];
+            let updateParams = [numPeso, id];
 
             // Regla de Negocio: Desmamante Macho > 250kg -> Novillo 1-2
-            if (animalData[0] && animalData[0].categoria_desc === 'DESMAMANTE_M' && peso_kg > 250) {
+            if (animalData[0] && animalData[0].categoria_desc === 'DESMAMANTE_M' && numPeso > 250) {
                 // Buscar ID de Novillo 1-2
-                const [catRow] = await db.query("SELECT id FROM categorias WHERE descripcion = 'NOVILLO_1_2'");
+                const [catRow] = await connection.query("SELECT id FROM categorias WHERE descripcion = 'NOVILLO_1_2'");
                 if (catRow.length > 0) {
                     updateQuery = 'UPDATE animales SET peso_actual = ?, categoria_id = ? WHERE id = ?';
-                    updateParams = [peso_kg, catRow[0].id, id];
+                    updateParams = [numPeso, catRow[0].id, id];
                     newCategoryMessage = 'Animal promovido a NOVILLO 1-2 por peso > 250kg';
                 }
             }
@@ -850,9 +857,27 @@ class AnimalController {
     static async registrarVenta(req, res) {
         const { fecha, cliente, destino, animales_ids, precio_promedio, total_bruto, descuentos, total_neto, observaciones } = req.body;
 
+        const numPrecio = parseSafely(precio_promedio);
+        const numBruto = parseSafely(total_bruto);
+        const numDesc = parseSafely(descuentos);
+        const numNeto = parseSafely(total_neto);
+
         const connection = await db.getConnection();
 
         try {
+            // Self-healing schema for movements_salida
+            await connection.query(`
+                CREATE TABLE IF NOT EXISTS movimientos_salida (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    venta_lote_id INT,
+                    animal_id INT,
+                    fecha_salida DATE NOT NULL,
+                    peso_salida DECIMAL(10,2),
+                    precio_kg_real DECIMAL(15,2),
+                    motivo_salida VARCHAR(50) DEFAULT 'VENTA',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             await connection.beginTransaction();
 
             // 1. Insertar Venta
@@ -873,7 +898,7 @@ class AnimalController {
                 `INSERT INTO ventas_lotes 
                 (fecha, cliente, destino, cantidad_animales, precio_promedio_kg, total_bruto, descuentos_total, total_neto, observaciones)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, cliente, destino, cant, precio_promedio, total_bruto, descuentos, total_neto, observaciones]
+                [fecha, cliente, destino, cant, numPrecio, numBruto, numDesc, numNeto, observaciones]
             );
             const ventaId = ventaResult.insertId;
 
@@ -887,7 +912,7 @@ class AnimalController {
                 await connection.query(
                     `INSERT INTO movimientos_salida (venta_lote_id, animal_id, fecha_salida, peso_salida, precio_kg_real, motivo_salida)
                     VALUES (?, ?, ?, ?, ?, 'VENTA')`,
-                    [ventaId, animalId, fecha, peso, precio_promedio]
+                    [ventaId, animalId, fecha, peso, numPrecio]
                 );
 
                 // Update Animal Status
