@@ -25,7 +25,7 @@ const ReportGenerator = {
         doc.text(`Kilos Totales: ${totalKilos.toLocaleString()} kg`, 80, 45);
 
         // Tabla
-        const tableColumn = ["ID Visual", "Categoría", "Raza", "Peso (kg)", "Rodeo", "Estado"];
+        const tableColumn = ["ID Caravana", "Categoría", "Raza", "Peso (kg)", "Rodeo", "Estado"];
         const tableRows = [];
 
         animals.forEach(animal => {

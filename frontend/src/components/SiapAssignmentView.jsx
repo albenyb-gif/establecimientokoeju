@@ -118,7 +118,7 @@ const SiapAssignmentView = () => {
 
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                            <CreditCard size={12} className="text-slate-400" /> Serie Visual (Tarjeta)
+                                            <CreditCard size={12} className="text-slate-400" /> Serie Caravana (Tarjeta)
                                         </label>
                                         <input
                                             type="text"

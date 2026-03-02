@@ -218,7 +218,7 @@ const AnimalList = () => {
                                             <td className="p-6">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-700 uppercase tracking-tighter text-xs">{animal.categoria}</span>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Biotipo Estándar</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CARAVANA</span>
                                                 </div>
                                             </td>
                                             <td className="p-6">

@@ -209,7 +209,7 @@ const AnimalDetail = () => {
                             </h4>
                             <div className="space-y-4">
                                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 group/item hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Visual (Tarjeta)</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Caravana (Tarjeta)</p>
                                     <p className="font-mono font-black text-2xl text-slate-800 tracking-tighter">{animal.caravana_visual}</p>
                                 </div>
                                 <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 group/item hover:bg-white hover:shadow-xl hover:shadow-indigo-900/5 transition-all">
