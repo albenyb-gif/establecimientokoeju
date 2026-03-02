@@ -3,6 +3,18 @@ const db = require('../config/db');
 class ClientController {
     static async getAll(req, res) {
         try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS clientes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombre VARCHAR(100) NOT NULL,
+                    ruc VARCHAR(20) UNIQUE,
+                    telefono VARCHAR(50),
+                    email VARCHAR(100),
+                    direccion TEXT,
+                    tipo ENUM('PARTICULAR', 'FRIGORIFICO', 'FERIA', 'PROVEEDOR') DEFAULT 'PARTICULAR',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const [rows] = await db.query('SELECT * FROM clientes ORDER BY nombre');
             res.json(rows);
         } catch (error) {
@@ -26,6 +38,18 @@ class ClientController {
     static async create(req, res) {
         const { nombre, ruc, telefono, email, direccion, tipo } = req.body;
         try {
+            await db.query(`
+                CREATE TABLE IF NOT EXISTS clientes (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    nombre VARCHAR(100) NOT NULL,
+                    ruc VARCHAR(20) UNIQUE,
+                    telefono VARCHAR(50),
+                    email VARCHAR(100),
+                    direccion TEXT,
+                    tipo ENUM('PARTICULAR', 'FRIGORIFICO', 'FERIA', 'PROVEEDOR') DEFAULT 'PARTICULAR',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
             const [result] = await db.query(
                 'INSERT INTO clientes (nombre, ruc, telefono, email, direccion, tipo) VALUES (?, ?, ?, ?, ?, ?)',
                 [nombre, ruc, telefono, email, direccion, tipo]

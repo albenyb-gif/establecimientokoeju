@@ -100,6 +100,13 @@ class AnimalController {
 
         const connection = await db.getConnection();
 
+        // Ensure cost_total column exists for backward compatibility in production
+        try {
+            await connection.query('ALTER TABLE compras_lotes ADD COLUMN costo_total DECIMAL(15,2)');
+        } catch (e) {
+            // Ignorar si la columna ya existe
+        }
+
         try {
             await connection.beginTransaction();
 
