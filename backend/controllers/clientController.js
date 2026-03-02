@@ -7,7 +7,7 @@ class ClientController {
                 CREATE TABLE IF NOT EXISTS clientes (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     nombre VARCHAR(100) NOT NULL,
-                    ruc VARCHAR(20) UNIQUE,
+                    ruc VARCHAR(20),
                     telefono VARCHAR(50),
                     email VARCHAR(100),
                     direccion TEXT,
@@ -15,6 +15,13 @@ class ClientController {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+
+            try {
+                // Remove unique constraint if it exists from previous versions
+                await db.query('ALTER TABLE clientes DROP INDEX ruc');
+            } catch (e) {
+                // Ignore if index doesn't exist
+            }
             const [rows] = await db.query('SELECT * FROM clientes ORDER BY nombre');
             res.json(rows);
         } catch (error) {
@@ -42,7 +49,7 @@ class ClientController {
                 CREATE TABLE IF NOT EXISTS clientes (
                     id INT AUTO_INCREMENT PRIMARY KEY,
                     nombre VARCHAR(100) NOT NULL,
-                    ruc VARCHAR(20) UNIQUE,
+                    ruc VARCHAR(20),
                     telefono VARCHAR(50),
                     email VARCHAR(100),
                     direccion TEXT,
@@ -50,6 +57,19 @@ class ClientController {
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             `);
+
+            try {
+                await db.query('ALTER TABLE clientes DROP INDEX ruc');
+            } catch (e) {
+                // Ignorar si el índice no existe
+            }
+
+            // Check if exact client already exists to prevent duplicate entries
+            const [existing] = await db.query('SELECT id FROM clientes WHERE nombre = ? AND ruc = ?', [nombre, ruc]);
+            if (existing.length > 0) {
+                return res.status(200).json({ message: 'Cliente ya existía', id: existing[0].id });
+            }
+
             const [result] = await db.query(
                 'INSERT INTO clientes (nombre, ruc, telefono, email, direccion, tipo) VALUES (?, ?, ?, ?, ?, ?)',
                 [nombre, ruc, telefono, email, direccion, tipo]
