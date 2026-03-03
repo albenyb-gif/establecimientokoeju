@@ -443,12 +443,9 @@ const PurchaseSheet = () => {
                                         value={formData.comparador}
                                         onChange={e => setFormData({ ...formData, comparador: e.target.value })}
                                     >
-                                        <option value="">-- Sin código --</option>
-                                        <option value="M">M — Macho</option>
-                                        <option value="MF">MF — Macho Fértil</option>
-                                        <option value="MC">MC — Macho Castrado</option>
-                                        <option value="H">H — Hembra</option>
-                                        <option value="HE">HE — Hembra en Edad</option>
+                                        <option value="">-- Seleccione --</option>
+                                        <option value="M">M — Maidana</option>
+                                        <option value="MF">MF — Martina Fernandez</option>
                                     </select>
                                 </div>
                                 <div className="md:col-span-3 space-y-2">
