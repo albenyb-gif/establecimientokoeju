@@ -46,9 +46,22 @@ const PurchaseSheet = () => {
     const [savingEdit, setSavingEdit] = useState(false);
     const [purchases, setPurchases] = useState(null); // null = let PurchaseList manage its own; non-null = sync after edit
 
-    const handleOpenPurchaseDetail = (purchase) => {
+    const handleOpenPurchaseDetail = (purchase, editMode = false) => {
         setSelectedPurchase(purchase);
-        setIsEditingPurchase(false);
+        if (editMode) {
+            setEditForm({
+                fecha: purchase.fecha ? purchase.fecha.split('T')[0] : '',
+                vendedor: purchase.vendedor || '',
+                lugar_procedencia: purchase.lugar_procedencia || '',
+                nro_guia: purchase.nro_guia || '',
+                nro_cot: purchase.nro_cot || '',
+                costo_unitario: purchase.costo_unitario || '',
+                observaciones: purchase.observaciones || '',
+            });
+            setIsEditingPurchase(true);
+        } else {
+            setIsEditingPurchase(false);
+        }
     };
 
     const startEditPurchase = () => {
