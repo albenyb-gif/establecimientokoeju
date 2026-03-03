@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import AnimalService from '../services/animalService';
 import {
     FileText, Trash2, Calendar, ShoppingCart, Info, X, Save, Pencil,
@@ -101,8 +102,8 @@ const PurchaseList = () => {
 
     return (
         <div className="space-y-6">
-            {/* Modal de Detalle / Edición */}
-            {selectedPurchase && (
+            {/* Modal de Detalle / Edición — renderizado en body para evitar problemas de z-index */}
+            {selectedPurchase && ReactDOM.createPortal(
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                     onClick={() => { setSelectedPurchase(null); setIsEditing(false); }}>
                     <div
@@ -211,7 +212,7 @@ const PurchaseList = () => {
                         </div>
                     </div>
                 </div>
-            )}
+                , document.body)}
 
             {/* Grid de Tarjetas */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
