@@ -35,6 +35,8 @@ const PurchaseSheet = () => {
     const [file, setFile] = useState(null);
     const [status, setStatus] = useState({ type: '', message: '' });
     const [loading, setLoading] = useState(false);
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [savedCount, setSavedCount] = useState(0);
 
     const [isNewVendor, setIsNewVendor] = useState(false);
     const [newVendorName, setNewVendorName] = useState('');
@@ -220,7 +222,10 @@ const PurchaseSheet = () => {
 
         try {
             await AnimalService.registrarCompraLote(submitData);
-            setStatus({ type: 'success', message: `Planilla Guardada. ${formData.cantidad} animales registrados.` });
+            const count = parseInt(formData.cantidad) || 0;
+            setSavedCount(count);
+            setStatus({ type: 'success', message: `Planilla Guardada. ${count} animales registrados.` });
+            if (isMobile) setShowSuccessModal(true);
             setFormData(prev => ({
                 ...prev,
                 cantidad: '',
@@ -246,6 +251,27 @@ const PurchaseSheet = () => {
 
     return (
         <div className="max-w-6xl mx-auto pb-20">
+            {/* Modal de Éxito Móvil */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-300">
+                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
+                            <CheckCircle size={44} className="text-emerald-500" />
+                        </div>
+                        <h2 className="font-black text-2xl text-slate-900 tracking-tight mb-2">¡Guardado!</h2>
+                        <p className="text-slate-500 font-bold text-sm mb-1">
+                            {savedCount} animal{savedCount !== 1 ? 'es' : ''} registrado{savedCount !== 1 ? 's' : ''} con éxito
+                        </p>
+                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">Lote de compra confirmado</p>
+                        <button
+                            onClick={() => setShowSuccessModal(false)}
+                            className="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest hover:bg-emerald-600 transition-colors"
+                        >
+                            Continuar
+                        </button>
+                    </div>
+                </div>
+            )}
             <PageHeader
                 title="Planilla de Compra"
                 subtitle="Registro masivo de ingresos y detalles comerciales."
