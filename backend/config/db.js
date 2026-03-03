@@ -2,32 +2,38 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-// Forzamos 127.0.0.1 para evitar que se use IPv6 (::1) o IPs públicas internas.
-let dbHost = '127.0.0.1';
-
-// Si el usuario puso un host específico en el panel, lo usamos, 
-// a menos que sea localhost o el host que sabemos que da problemas de IPv6.
-if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== 'srv1842.hstgr.io') {
-    dbHost = process.env.DB_HOST;
-}
-
-console.log('--- DIAGNÓSTICO DE CONEXIÓN HOSTINGER ---');
-console.log('📡 Host en uso:', dbHost);
-console.log('👤 Usuario:', (process.env.DB_USER || 'root').trim());
-console.log('🗄️ Base de Datos:', (process.env.DB_NAME || 'gestion_ganadera').trim());
-console.log('------------------------------------------');
-
-const pool = mysql.createPool({
-    host: dbHost,
+// Configuración del pool de conexiones
+// En Hostinger, el usuario MySQL tiene permisos @'localhost' (socket Unix),
+// no por TCP. Usar socketPath evita el error 'Access denied'.
+const poolConfig = {
     user: (process.env.DB_USER || 'root').trim(),
     password: (process.env.DB_PASSWORD || '').trim(),
     database: (process.env.DB_NAME || 'gestion_ganadera').trim(),
     waitForConnections: true,
-    connectionLimit: 10, // Aumentado para producción
+    connectionLimit: 10,
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000
-});
+};
+
+// En producción Hostinger, usar socket Unix
+if (process.env.NODE_ENV === 'production') {
+    // Rutas comunes del socket en Hostinger / servidores Linux
+    poolConfig.socketPath = '/var/run/mysqld/mysqld.sock';
+    console.log('🔌 Modo producción: usando socket Unix');
+} else {
+    // En desarrollo local, usar TCP normal
+    poolConfig.host = '127.0.0.1';
+    console.log('💻 Modo desarrollo: usando TCP 127.0.0.1');
+}
+
+console.log('--- DIAGNÓSTICO HOSTINGER ---');
+console.log('👤 Usuario:', poolConfig.user);
+console.log('🗄️ BD:', poolConfig.database);
+console.log('🔌 Socket/Host:', poolConfig.socketPath || poolConfig.host);
+console.log('------------------------------');
+
+const pool = mysql.createPool(poolConfig);
 
 const promisePool = pool.promise();
 
