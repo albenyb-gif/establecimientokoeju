@@ -2,13 +2,20 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-// Normalizar Host para forzar IPv4 (Evita error 'Access denied @ ::1')
-let dbHost = process.env.DB_HOST || '127.0.0.1';
-if (dbHost === 'localhost' || !dbHost) {
-    dbHost = '127.0.0.1';
+// Prioridad de Host: 
+// 1. Variable DB_HOST
+// 2. Host real de Hostinger (srv1842.hstgr.io)
+// 3. Fallback Local
+let dbHost = process.env.DB_HOST || 'srv1842.hstgr.io';
+if (dbHost === 'localhost') {
+    dbHost = '127.0.0.1'; // Forzar IPv4 si es localhost
 }
 
-console.log('📡 Database Host forced to:', dbHost);
+console.log('--- DIAGNÓSTICO DE CONEXIÓN ---');
+console.log('📡 Host:', dbHost);
+console.log('👤 Usuario:', process.env.DB_USER || 'root');
+console.log('🗄️ Base de Datos:', process.env.DB_NAME || 'gestion_ganadera');
+console.log('-------------------------------');
 
 const pool = mysql.createPool({
     host: dbHost,
@@ -16,7 +23,7 @@ const pool = mysql.createPool({
     password: (process.env.DB_PASSWORD || '').trim(),
     database: (process.env.DB_NAME || 'gestion_ganadera').trim(),
     waitForConnections: true,
-    connectionLimit: 5,
+    connectionLimit: 10, // Aumentado para producción
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 10000
