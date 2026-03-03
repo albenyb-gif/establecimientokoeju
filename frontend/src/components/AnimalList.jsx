@@ -139,8 +139,8 @@ const AnimalList = () => {
                             <Download size={16} /> Exportar PDF
                         </button>
                         <button
-                            onClick={() => navigate('/purchase')}
-                            className="hidden md:flex px-8 py-3 bg-slate-900 text-white font-black rounded-2xl hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 items-center justify-center gap-2 uppercase tracking-widest text-sm"
+                            onClick={() => navigate('/ingreso')}
+                            className="hidden md:flex px-8 py-3 bg-emerald-600 text-white font-black rounded-2xl hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-600/10 items-center justify-center gap-2 uppercase tracking-widest text-sm"
                         >
                             <Plus size={20} /> Registrar Hacienda
                         </button>
