@@ -609,8 +609,8 @@ const PurchaseSheet = () => {
                                         onChange={e => setFormData({ ...formData, comparador: e.target.value })}
                                     >
                                         <option value="">-- Seleccione --</option>
-                                        <option value="M">M — Maidana</option>
-                                        <option value="MF">MF — Martina Fernandez</option>
+                                        <option value="M">M — Martina</option>
+                                        <option value="MF">MF — Leli</option>
                                     </select>
                                 </div>
                                 <div className="md:col-span-3 space-y-2">
