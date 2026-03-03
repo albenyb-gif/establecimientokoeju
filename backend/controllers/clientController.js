@@ -3,25 +3,6 @@ const db = require('../config/db');
 class ClientController {
     static async getAll(req, res) {
         try {
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS clientes (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    nombre VARCHAR(100) NOT NULL,
-                    ruc VARCHAR(20),
-                    telefono VARCHAR(50),
-                    email VARCHAR(100),
-                    direccion TEXT,
-                    tipo ENUM('PARTICULAR', 'FRIGORIFICO', 'FERIA', 'PROVEEDOR') DEFAULT 'PARTICULAR',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
-
-            try {
-                // Remove unique constraint if it exists from previous versions
-                await db.query('ALTER TABLE clientes DROP INDEX ruc');
-            } catch (e) {
-                // Ignore if index doesn't exist
-            }
             const [rows] = await db.query('SELECT * FROM clientes ORDER BY nombre');
             res.json(rows);
         } catch (error) {
@@ -45,25 +26,6 @@ class ClientController {
     static async create(req, res) {
         const { nombre, ruc, telefono, email, direccion, tipo } = req.body;
         try {
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS clientes (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    nombre VARCHAR(100) NOT NULL,
-                    ruc VARCHAR(20),
-                    telefono VARCHAR(50),
-                    email VARCHAR(100),
-                    direccion TEXT,
-                    tipo ENUM('PARTICULAR', 'FRIGORIFICO', 'FERIA', 'PROVEEDOR') DEFAULT 'PARTICULAR',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
-
-            try {
-                await db.query('ALTER TABLE clientes DROP INDEX ruc');
-            } catch (e) {
-                // Ignorar si el índice no existe
-            }
-
             // 1. Check if name matches exactly first
             const [byName] = await db.query('SELECT id FROM clientes WHERE nombre = ?', [nombre]);
             if (byName.length > 0) {

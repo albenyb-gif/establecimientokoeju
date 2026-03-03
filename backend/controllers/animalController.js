@@ -101,24 +101,6 @@ class AnimalController {
 
         const connection = await db.getConnection();
 
-        // Ensure all columns exist for backward compatibility and new features
-        const migrations = [
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS costo_total DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_guia VARCHAR(50)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comision_feria DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS flete DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tasas DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS porcentaje_ganancia DECIMAL(5,2)'
-        ];
-
-        for (const sql of migrations) {
-            try {
-                await connection.query(sql);
-            } catch (e) {
-                // Ignore errors (e.g. column already exists or IF NOT EXISTS not supported by some engines)
-            }
-        }
-
         try {
             await connection.beginTransaction();
 
@@ -895,19 +877,6 @@ class AnimalController {
         const connection = await db.getConnection();
 
         try {
-            // Self-healing schema for movements_salida
-            await connection.query(`
-                CREATE TABLE IF NOT EXISTS movimientos_salida (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    venta_lote_id INT,
-                    animal_id INT,
-                    fecha_salida DATE NOT NULL,
-                    peso_salida DECIMAL(10,2),
-                    precio_kg_real DECIMAL(15,2),
-                    motivo_salida VARCHAR(50) DEFAULT 'VENTA',
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
             await connection.beginTransaction();
 
             // 1. Insertar Venta

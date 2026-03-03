@@ -72,17 +72,6 @@ class OvineController {
         const numCant = parseSafely(cantidad_animales, true);
 
         try {
-            // Self-healing schema: ensure produccion_lana exists
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS produccion_lana (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    fecha DATE NOT NULL,
-                    cantidad_animales INT,
-                    kilos_totales DECIMAL(10,2),
-                    observaciones TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
             const [result] = await db.query(
                 `INSERT INTO produccion_lana (fecha, cantidad_animales, kilos_totales, observaciones) VALUES (?, ?, ?, ?)`,
                 [fecha, numCant, numKilos, observaciones]
@@ -114,19 +103,6 @@ class OvineController {
         const connection = await db.getConnection();
 
         try {
-            // Self-healing schema: ensure pariciones_ovinas exists
-            await connection.query(`
-                CREATE TABLE IF NOT EXISTS pariciones_ovinas (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    fecha DATE NOT NULL,
-                    madre_id INT,
-                    cantidad_crias INT NOT NULL,
-                    sexo_crias VARCHAR(20),
-                    raza VARCHAR(50),
-                    observaciones TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
             await connection.beginTransaction();
 
             // 1. Registrar evento de parición

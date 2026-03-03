@@ -12,21 +12,6 @@ class HealthController {
 
     static async getStock(req, res) {
         try {
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS insumos_stock (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    nombre_comercial VARCHAR(100) NOT NULL,
-                    principio_activo VARCHAR(100),
-                    descripcion TEXT,
-                    dias_carencia INT DEFAULT 0,
-                    lote VARCHAR(50),
-                    vencimiento DATE,
-                    stock_actual DECIMAL(10,2) DEFAULT 0,
-                    unidad_medida VARCHAR(20),
-                    costo_unitario DECIMAL(15,2) DEFAULT 0,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
             const [rows] = await db.query('SELECT * FROM insumos_stock ORDER BY nombre_comercial');
             res.json(rows);
         } catch (error) {
@@ -97,20 +82,6 @@ class HealthController {
 
     static async getEvents(req, res) {
         try {
-            await db.query(`
-                CREATE TABLE IF NOT EXISTS sanidad_eventos (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    tipo_evento VARCHAR(50) NOT NULL,
-                    animal_id INT,
-                    producto_id INT,
-                    fecha_aplicacion DATE NOT NULL,
-                    fecha_fin_carencia DATE,
-                    nro_acta VARCHAR(50),
-                    lote_vencimiento VARCHAR(50),
-                    responsable VARCHAR(100),
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            `);
             const query = `
                 SELECT e.*, i.nombre_comercial as producto_nombre, count(a.id) as cantidad_animales
                 FROM sanidad_eventos e

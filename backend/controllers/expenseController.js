@@ -48,13 +48,6 @@ class ExpenseController {
                 return res.status(400).json({ error: 'Fecha, categoría y monto son obligatorios' });
             }
 
-            // Self-healing schema: ensure comprobante_nro exists
-            try {
-                await db.query('ALTER TABLE gastos ADD COLUMN comprobante_nro VARCHAR(50)');
-            } catch (e) {
-                // Ignore if exists
-            }
-
             const [result] = await db.query(
                 'INSERT INTO gastos (fecha, categoria, monto, descripcion, proveedor, comprobante_nro) VALUES (?, ?, ?, ?, ?, ?)',
                 [fecha, categoria, numMonto, descripcion || null, proveedor || null, comprobante_nro || null]
