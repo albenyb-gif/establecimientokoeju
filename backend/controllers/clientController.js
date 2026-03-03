@@ -1,6 +1,4 @@
 const db = require('../config/db');
-const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 class ClientController {
     static async getAll(req, res) {
@@ -49,14 +47,10 @@ class ClientController {
             res.status(201).json({ message: 'Cliente creado correctamente', id: result.insertId });
         } catch (error) {
             console.error('Error creating client:', error.message);
-
-            // Diagnóstico para el usuario en el error (borrar después de arreglar)
-            const dbDiag = `(Host: ${db.pool?.config?.connectionConfig?.host || '?'}, User: ${process.env.DB_USER})`;
-
             res.status(500).json({
                 error: 'Error al crear cliente',
                 message: error.message,
-                details: error.code === 'ER_DUP_ENTRY' ? 'El RUC o Nombre ya está registrado' : `${error.message} ${dbDiag}`
+                details: error.code === 'ER_DUP_ENTRY' ? 'El RUC o Nombre ya está registrado' : error.message
             });
         }
     }
