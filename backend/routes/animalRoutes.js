@@ -11,6 +11,7 @@ router.post('/ingreso', upload.single('file'), AnimalController.registrarIngreso
 router.get('/compras', AnimalController.getPurchaseHistory);
 router.post('/compras', upload.any(), AnimalController.registrarCompraLote);
 router.delete('/compras/:id', AnimalController.deletePurchaseLote);
+router.put('/compras/:id', AnimalController.updatePurchaseLote);
 router.post('/ventas', AnimalController.registrarVenta);
 router.post('/batch-update', AnimalController.batchUpdateIds);
 router.post('/import', AnimalController.importMasiva);

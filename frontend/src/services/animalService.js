@@ -82,6 +82,11 @@ const AnimalService = {
         return response.data;
     },
 
+    updatePurchaseLote: async (id, data) => {
+        const response = await api.put(`/animales/compras/${id}`, data);
+        return response.data;
+    },
+
     batchUpdateIds: async (updates) => {
         const response = await api.post('/animales/batch-update', { updates });
         return response.data;

@@ -299,6 +299,24 @@ class AnimalController {
             res.status(500).json({ error: 'Error al eliminar lote' });
         }
     }
+
+    /**
+     * Editar Lote de Compra
+     */
+    static async updatePurchaseLote(req, res) {
+        const { id } = req.params;
+        const { fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones } = req.body;
+        try {
+            await db.query(
+                'UPDATE compras_lotes SET fecha=?, vendedor=?, lugar_procedencia=?, nro_guia=?, costo_unitario=?, observaciones=? WHERE id=?',
+                [fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones, id]
+            );
+            res.json({ message: 'Lote actualizado correctamente' });
+        } catch (error) {
+            console.error('Error updating purchase lote:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
     static async registrarIngreso(req, res) {
         const connection = await db.getConnection();
         await connection.beginTransaction();

@@ -10,6 +10,7 @@ const PurchaseSheet = () => {
         fecha: new Date().toISOString().split('T')[0],
         cantidad: '',
         pelaje: '',
+        comparador: '',
         kilos_compra: '',
         vendedor: '',
         lugar: '',
@@ -25,8 +26,8 @@ const PurchaseSheet = () => {
         peso_total: 0,
         ganancia_estimada: 0,
         porcentaje_ganancia: 35,
-        tipo_ingreso: 'masivo', // 'masivo' o 'detallado'
-        animales: [] // Array of { caravana_visual, caravana_rfid, peso, categoria_id, pelaje, marcas: [] }
+        tipo_ingreso: 'masivo',
+        animales: []
     });
     const [tab, setTab] = useState('registrar'); // 'registrar' or 'historial'
 
@@ -434,7 +435,27 @@ const PurchaseSheet = () => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Costo Unit. (Gs)</label>
                                     <input type="number" required step="1000" placeholder="Gs/Animal" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-mono font-bold text-emerald-700" value={formData.costo_unitario} onChange={e => setFormData({ ...formData, costo_unitario: e.target.value })} />
                                 </div>
+                                {/* Fila 2: Comparador, Pelaje */}
                                 <div className="md:col-span-3 space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Comparador</label>
+                                    <select
+                                        className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-emerald-500 outline-none cursor-pointer appearance-none font-black text-slate-700"
+                                        value={formData.comparador}
+                                        onChange={e => setFormData({ ...formData, comparador: e.target.value })}
+                                    >
+                                        <option value="">-- Sin código --</option>
+                                        <option value="M">M — Macho</option>
+                                        <option value="MF">MF — Macho Fértil</option>
+                                        <option value="MC">MC — Macho Castrado</option>
+                                        <option value="H">H — Hembra</option>
+                                        <option value="HE">HE — Hembra en Edad</option>
+                                    </select>
+                                </div>
+                                <div className="md:col-span-3 space-y-2">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Pelaje</label>
+                                    <input type="text" placeholder="Ej. Colorado, Negro..." className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none uppercase" value={formData.pelaje} onChange={e => setFormData({ ...formData, pelaje: e.target.value.toUpperCase() })} />
+                                </div>
+                                <div className="md:col-span-6 space-y-2">
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lugar de Procedencia</label>
                                     <input type="text" placeholder="Ej. Santa Rosa" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.lugar} onChange={e => setFormData({ ...formData, lugar: e.target.value })} />
                                 </div>
