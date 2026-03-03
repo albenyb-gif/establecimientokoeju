@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
 import PurchaseList from './PurchaseList';
-import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown, Pencil, Trash2, MapPin, User, FileCheck, Hash, Package, StickyNote, Calendar } from 'lucide-react';
+import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown, Pencil, Trash2, MapPin, User, FileCheck, Hash, Package, StickyNote, Calendar, Camera } from 'lucide-react';
 
 const PurchaseSheet = () => {
     const [formData, setFormData] = useState({
@@ -29,7 +30,8 @@ const PurchaseSheet = () => {
         tipo_ingreso: 'masivo',
         animales: []
     });
-    const [tab, setTab] = useState('registrar'); // 'registrar' or 'historial'
+    const location = useLocation();
+    const [tab, setTab] = useState(location.state?.tab || 'registrar'); // 'registrar' or 'historial'
 
     const [categories, setCategories] = useState([]);
     const [clients, setClients] = useState([]);
@@ -853,19 +855,51 @@ const PurchaseSheet = () => {
                                                                     </button>
                                                                 </div>
                                                             ))}
-                                                            <div className="relative">
-                                                                <input type="file" multiple className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onChange={e => {
-                                                                    const newFiles = Array.from(e.target.files);
-                                                                    const newAnims = [...formData.animales];
-                                                                    newAnims[idx].marcas = [...(anim.marcas || []), ...newFiles];
-                                                                    setFormData({ ...formData, animales: newAnims });
-                                                                }} />
-                                                                <div className="w-14 h-14 rounded-xl border-2 border-dashed flex items-center justify-center bg-slate-50 text-slate-300 border-slate-200">
-                                                                    <Plus size={20} />
+                                                            <div className="flex gap-2">
+                                                                {/* Botón Cámara (Móvil nativo) */}
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="file"
+                                                                        accept="image/*"
+                                                                        capture="environment"
+                                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                        onChange={e => {
+                                                                            const newFiles = Array.from(e.target.files);
+                                                                            if (newFiles.length === 0) return;
+                                                                            const newAnims = [...formData.animales];
+                                                                            newAnims[idx].marcas = [...(anim.marcas || []), ...newFiles];
+                                                                            setFormData({ ...formData, animales: newAnims });
+                                                                            e.target.value = ''; // Reset
+                                                                        }}
+                                                                    />
+                                                                    <div className="w-14 h-14 rounded-xl border-2 border-emerald-100 flex items-center justify-center bg-emerald-50 text-emerald-600 active:scale-95 transition-transform shadow-sm">
+                                                                        <Camera size={24} />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Botón Archivos (Galería) */}
+                                                                <div className="relative">
+                                                                    <input
+                                                                        type="file"
+                                                                        multiple
+                                                                        accept="image/*"
+                                                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                                        onChange={e => {
+                                                                            const newFiles = Array.from(e.target.files);
+                                                                            if (newFiles.length === 0) return;
+                                                                            const newAnims = [...formData.animales];
+                                                                            newAnims[idx].marcas = [...(anim.marcas || []), ...newFiles];
+                                                                            setFormData({ ...formData, animales: newAnims });
+                                                                            e.target.value = '';
+                                                                        }}
+                                                                    />
+                                                                    <div className="w-14 h-14 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center bg-slate-50 text-slate-400 active:scale-95 transition-transform">
+                                                                        <Upload size={20} />
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-wider">Toca para agregar marcas</p>
+                                                        <p className="text-[9px] text-center text-slate-400 font-bold uppercase tracking-wider">Foto de marca con cámara o desde galería</p>
                                                     </div>
                                                 </div>
                                             ))}

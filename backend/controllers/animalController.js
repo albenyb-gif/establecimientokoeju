@@ -71,7 +71,7 @@ class AnimalController {
             fecha, cantidad, pelaje, kilos_compra, vendedor, lugar,
             documento, observaciones, costo_unitario, peso_total,
             ganancia_estimada, nro_cot, nro_guia,
-            comision_feria, flete, tasas, porcentaje_ganancia
+            comision_feria, flete, tasas, porcentaje_ganancia, comparador
         } = req.body;
 
         const numCantidad = parseSafely(cantidad, true);
@@ -113,9 +113,9 @@ class AnimalController {
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
                 `INSERT INTO compras_lotes 
-                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot, nro_guia, comision_feria, flete, tasas, porcentaje_ganancia)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot, nro_guia, numComision, numFlete, numTasas, numPorcentaje]
+                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot, nro_guia, comision_feria, flete, tasas, porcentaje_ganancia, comparador)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot, nro_guia, numComision, numFlete, numTasas, numPorcentaje, comparador]
             );
             const loteId = loteResult.insertId;
 
@@ -150,7 +150,7 @@ class AnimalController {
             }
 
             // 2. Procesar Animales Individuales
-            const qty = parseInt(cantidad);
+            const qty = numCantidad;
             const tipoIngreso = req.body.tipo_ingreso || 'masivo';
             let animalesDetalle = [];
 
@@ -214,15 +214,15 @@ class AnimalController {
                     // Update existing animal with new purchase data? 
                     // For now, let's just update its state and weight as it's coming back "into" the system.
                     await connection.query(
-                        "UPDATE animales SET estado_general = 'ACTIVO', peso_actual = ?, peso_inicial = ?, precio_compra = ?, categoria_id = ?, pelaje = ? WHERE id = ?",
-                        [pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, animalId]
+                        "UPDATE animales SET estado_general = 'ACTIVO', peso_actual = ?, peso_inicial = ?, precio_compra = ?, categoria_id = ?, pelaje = ?, comparador = ? WHERE id = ?",
+                        [pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparador, animalId]
                     );
                 } else {
                     // Insert New Animal
                     const [animResult] = await connection.query(
-                        `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                        [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual]
+                        `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_general, estado_sanitario, comparador)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO', 'ACTIVO', ?)`,
+                        [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparador]
                     );
                     animalId = animResult.insertId;
                 }
@@ -562,10 +562,13 @@ class AnimalController {
                     a.negocio_destino as negocio,
                     a.estado_sanitario,
                     a.estado_general,
-                    a.fecha_liberacion_carencia
+                    a.fecha_liberacion_carencia,
+                    a.comparador,
+                    mi.compra_lote_id as lote_id
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
+                LEFT JOIN movimientos_ingreso mi ON mi.animal_id = a.id
             `;
 
             const params = [];

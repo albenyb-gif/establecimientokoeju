@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus, Trash2 } from 'lucide-react';
+import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus, Trash2, Printer, FileText, X, MapPin, Activity as ActivityIcon, Scale, Calendar as CalendarIcon, User, Package } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
@@ -12,6 +12,8 @@ const AnimalList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+    const [selectedAnimal, setSelectedAnimal] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -111,6 +113,12 @@ const AnimalList = () => {
                         </div>
                         <button
                             onClick={handleExport}
+                            className="p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
+                        >
+                            <Printer size={16} /> Imprimir
+                        </button>
+                        <button
+                            onClick={handleExport}
                             className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
                         >
                             <Download size={16} /> Exportar PDF
@@ -176,6 +184,14 @@ const AnimalList = () => {
                                             <p className="font-bold text-slate-700 text-xs truncate">{animal.rodeo}</p>
                                         </div>
                                     </div>
+                                    <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-100/50">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Lote</p>
+                                        <p className="font-bold text-slate-700 text-xs truncate">#{animal.lote_id || 'S/L'}</p>
+                                    </div>
+                                    <div className="bg-slate-50/80 p-3 rounded-2xl border border-slate-100/50">
+                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Comp.</p>
+                                        <p className="font-bold text-slate-700 text-xs truncate">{animal.comparador || 'N/A'}</p>
+                                    </div>
                                 </div>
                             </div>
                         ))
@@ -189,6 +205,8 @@ const AnimalList = () => {
                                 <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                                     <th className="p-6 border-b border-slate-50 pl-8">Identidad SIAP</th>
                                     <th className="p-6 border-b border-slate-50">Clasificación</th>
+                                    <th className="p-6 border-b border-slate-50">Lote</th>
+                                    <th className="p-6 border-b border-slate-50">Comp.</th>
                                     <th className="p-6 border-b border-slate-50">Unidad de Manejo</th>
                                     <th className="p-6 border-b border-slate-50 text-right">Peso Bruto</th>
                                     <th className="p-6 border-b border-slate-50">Modelo Negocio</th>
@@ -199,7 +217,7 @@ const AnimalList = () => {
                             <tbody className="text-sm divide-y divide-slate-50">
                                 {loading ? (
                                     <tr>
-                                        <td colSpan="7" className="p-20 text-center">
+                                        <td colSpan="9" className="p-20 text-center">
                                             <div className="flex flex-col items-center gap-4">
                                                 <div className="w-10 h-10 border-4 border-slate-100 border-t-indigo-500 rounded-full animate-spin"></div>
                                                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Sincronizando registros...</p>
@@ -208,7 +226,7 @@ const AnimalList = () => {
                                     </tr>
                                 ) : filteredAnimals.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="p-20 text-center bg-slate-50/20">
+                                        <td colSpan="9" className="p-20 text-center bg-slate-50/20">
                                             <Database size={48} className="mx-auto text-slate-100 mb-4 opacity-50" />
                                             <p className="text-slate-300 font-black uppercase tracking-[0.2em] text-[10px]">Sin coincidencias en el inventario actual</p>
                                         </td>
@@ -229,15 +247,30 @@ const AnimalList = () => {
                                             <td className="p-6">
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-slate-700 uppercase tracking-tighter text-xs">{animal.categoria}</span>
-                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CARAVANA</span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">CATEGORÍA</span>
                                                 </div>
                                             </td>
                                             <td className="p-6">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover:bg-white group-hover:text-indigo-500 transition-all border border-transparent group-hover:border-slate-100">
+                                                <span className="font-black text-slate-700 text-xs">#{animal.lote_id || 'S/L'}</span>
+                                            </td>
+                                            <td className="p-6">
+                                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${animal.comparador === 'M' ? 'bg-rose-50 text-rose-600 border border-rose-100' : animal.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                                    {animal.comparador || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td className="p-6">
+                                                <div
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedAnimal(animal);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-2 cursor-pointer group/rodeo"
+                                                >
+                                                    <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center text-slate-400 group-hover/rodeo:bg-indigo-50 group-hover/rodeo:text-indigo-500 transition-all border border-transparent group-hover/rodeo:border-indigo-100">
                                                         <Filter size={14} />
                                                     </div>
-                                                    <span className="font-bold text-slate-600 uppercase text-[11px] tracking-tight">{animal.rodeo}</span>
+                                                    <span className="font-bold text-slate-600 uppercase text-[11px] tracking-tight group-hover/rodeo:text-indigo-600 underline decoration-slate-200 decoration-2 underline-offset-4">{animal.rodeo}</span>
                                                 </div>
                                             </td>
                                             <td className="p-6 text-right">
@@ -263,7 +296,14 @@ const AnimalList = () => {
                                                     >
                                                         <Trash2 size={16} />
                                                     </button>
-                                                    <button className="text-slate-200 hover:text-slate-900 p-2 rounded-xl transition-all group-hover:text-slate-400">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedAnimal(animal);
+                                                            setIsModalOpen(true);
+                                                        }}
+                                                        className="text-slate-200 hover:text-slate-900 p-2 rounded-xl transition-all group-hover:text-indigo-600 bg-transparent hover:bg-indigo-50"
+                                                    >
                                                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                                     </button>
                                                 </div>
@@ -284,6 +324,137 @@ const AnimalList = () => {
                     </div>
                 </div>
             )}
+            {/* Detail Modal */}
+            {isModalOpen && selectedAnimal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
+                        {/* Header Modal */}
+                        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-white sticky top-0 z-10">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                    <FileText size={24} />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-slate-800 tracking-tight">Detalles Totales</h2>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Animal ID: {selectedAnimal.caravana_visual}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setIsModalOpen(false)}
+                                className="p-3 hover:bg-slate-50 rounded-2xl transition-colors text-slate-400 hover:text-slate-800"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {/* Content Modal */}
+                        <div className="p-8 overflow-y-auto custom-scrollbar">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                {/* Información Principal */}
+                                <div className="space-y-6">
+                                    <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <Fingerprint className="text-indigo-400" size={18} />
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Identificación</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-500">Visual</span>
+                                                <span className="font-black text-slate-800">{selectedAnimal.caravana_visual}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-500">RFID</span>
+                                                <span className="font-mono text-xs text-slate-400">{selectedAnimal.caravana_rfid || 'NO ASIGNADO'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-emerald-50/30 p-6 rounded-[2rem] border border-emerald-100/50">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <Scale className="text-emerald-500" size={18} />
+                                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Biometría</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-emerald-600/60">Peso Actual</span>
+                                                <span className="font-black text-2xl text-emerald-700 tracking-tighter">{selectedAnimal.peso_actual} <span className="text-xs">Kg</span></span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-emerald-600/60">Categoría</span>
+                                                <span className="font-bold text-emerald-700 uppercase text-xs">{selectedAnimal.categoria}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-emerald-600/60">Lote de Compra</span>
+                                                <span className="font-bold text-emerald-700 uppercase text-xs">#{selectedAnimal.lote_id || 'S/L'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-emerald-600/60">Comparador</span>
+                                                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-black">{selectedAnimal.comparador || 'NO ASIGNADO'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Ubicación y Estado */}
+                                <div className="space-y-6">
+                                    <div className="bg-amber-50/30 p-6 rounded-[2rem] border border-amber-100/50">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <MapPin className="text-amber-500" size={18} />
+                                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Ubicación</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-amber-600/60">Rodeo</span>
+                                                <span className="font-black text-amber-700 uppercase">{selectedAnimal.rodeo}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-amber-600/60">Potrero</span>
+                                                <span className="font-bold text-amber-700">{selectedAnimal.potrero || '—'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <Package className="text-slate-400" size={18} />
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Negocio</p>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-500">Destino</span>
+                                                <span className="px-3 py-1 bg-slate-200/50 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest">{selectedAnimal.negocio || 'REPOSICIÓN'}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-xs font-bold text-slate-500">Estado</span>
+                                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getStatusStyle(selectedAnimal.estado_sanitario)}`}>
+                                                    {selectedAnimal.estado_sanitario}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Acciones del Modal */}
+                            <div className="mt-8 flex gap-3">
+                                <button
+                                    onClick={() => navigate(`/animal/${selectedAnimal.id}`)}
+                                    className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
+                                >
+                                    Ir a Trazabilidad Completa <ArrowRight size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setIsModalOpen(false)}
+                                    className="px-8 py-4 bg-slate-50 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-100 hover:text-slate-600 transition-all"
+                                >
+                                    Cerrar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* FAB for Mobile */}
             {isMobile && (
                 <button

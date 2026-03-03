@@ -208,7 +208,7 @@ const Dashboard = () => {
                         <h3 className="font-black text-slate-800 text-base flex items-center gap-2">
                             <span className="w-2 h-5 bg-amber-500 rounded-full" /> Últimas Compras
                         </h3>
-                        <button onClick={() => navigate('/compras')} className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
+                        <button onClick={() => navigate('/compras', { state: { tab: 'historial' } })} className="text-[10px] font-black uppercase tracking-widest text-emerald-600 hover:text-emerald-700 flex items-center gap-1">
                             Ver todas <ChevronRight size={14} />
                         </button>
                     </div>

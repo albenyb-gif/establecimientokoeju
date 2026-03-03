@@ -25,17 +25,18 @@ const ReportGenerator = {
         doc.text(`Kilos Totales: ${totalKilos.toLocaleString()} kg`, 80, 45);
 
         // Tabla
-        const tableColumn = ["ID Caravana", "Categoría", "Raza", "Peso (kg)", "Rodeo", "Estado"];
+        const tableColumn = ["Lote", "Caravana", "Categoría", "Raza", "Peso (kg)", "Unid. Manejo (Rodeo)", "Comp."];
         const tableRows = [];
 
         animals.forEach(animal => {
             const animalData = [
+                animal.lote_id ? `#${animal.lote_id}` : 'S/L',
                 animal.caravana_visual,
-                animal.categoria_id,
+                animal.categoria || 'N/A',
                 animal.raza || 'N/A',
                 animal.peso_actual,
-                animal.rodeo_id,
-                animal.estado_sanitario
+                animal.rodeo || 'S/N',
+                animal.comparador || 'N/A'
             ];
             tableRows.push(animalData);
         });

@@ -98,7 +98,8 @@ async function runMigrations() {
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS lugar_procedencia VARCHAR(100)',
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tipo_documento VARCHAR(50)',
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_cot VARCHAR(50)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS observaciones TEXT'
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS observaciones TEXT',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comparador VARCHAR(20)'
         ];
         for (const sql of comprasColumns) { try { await connection.query(sql); } catch (e) { } }
 
@@ -124,7 +125,8 @@ async function runMigrations() {
             'ALTER TABLE animales ADD COLUMN IF NOT EXISTS estado_sanitario ENUM("ACTIVO", "BLOQUEADO", "CUARENTENA") DEFAULT "ACTIVO"',
             'ALTER TABLE animales ADD COLUMN IF NOT EXISTS precio_compra DECIMAL(15,2) DEFAULT 0',
             'ALTER TABLE animales ADD COLUMN IF NOT EXISTS peso_inicial DECIMAL(10,2)',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS peso_actual DECIMAL(10,2)'
+            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS peso_actual DECIMAL(10,2)',
+            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS comparador VARCHAR(20)'
         ];
         for (const sql of animalsColumns) { try { await connection.query(sql); } catch (e) { } }
 
@@ -209,6 +211,11 @@ async function runMigrations() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
+
+        // 9. DATA RECOVERY: Fix missing states for dashboard consistency
+        console.log('🔄 Verificando integridad de estados...');
+        await connection.query("UPDATE animales SET estado_general = 'ACTIVO' WHERE estado_general IS NULL");
+        await connection.query("UPDATE animales SET estado_sanitario = 'ACTIVO' WHERE estado_sanitario IS NULL");
 
         connection.release();
         console.log('🚀 DB Self-Healing Completed');
