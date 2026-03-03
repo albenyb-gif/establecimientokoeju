@@ -631,13 +631,16 @@ class AnimalController {
      */
     static async updateAnimal(req, res) {
         const { id } = req.params;
-        const { peso_actual, rodeo_id, estado_sanitario, categoria_id } = req.body;
+        const { peso_actual, rodeo_id, estado_sanitario, categoria_id, caravana_visual, caravana_rfid } = req.body;
 
         try {
             // Try actual update
             await db.query(
-                'UPDATE animales SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ? WHERE id = ?',
-                [peso_actual, rodeo_id, estado_sanitario, categoria_id, id]
+                `UPDATE animales 
+                 SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?, 
+                     caravana_visual = ?, caravana_rfid = ? 
+                 WHERE id = ?`,
+                [peso_actual, rodeo_id, estado_sanitario, categoria_id, caravana_visual, caravana_rfid, id]
             );
             res.json({ message: 'Animal actualizado correctamente', id });
         } catch (error) {

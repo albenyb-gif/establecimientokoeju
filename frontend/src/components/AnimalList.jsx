@@ -4,6 +4,8 @@ import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, Che
 import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
+import EditAnimalModal from './EditAnimalModal';
+import { Edit } from 'lucide-react';
 
 const AnimalList = () => {
     const [animals, setAnimals] = useState([]);
@@ -14,6 +16,7 @@ const AnimalList = () => {
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -59,6 +62,18 @@ const AnimalList = () => {
             setAnimals(prev => prev.filter(a => a.id !== animal.id));
         } catch (err) {
             alert('Error al eliminar: ' + (err.response?.data?.error || err.message));
+        }
+    };
+
+    const handleSave = async (updatedData) => {
+        try {
+            await AnimalService.update(selectedAnimal.id, updatedData);
+            setAnimals(prev => prev.map(a => a.id === selectedAnimal.id ? { ...a, ...updatedData } : a));
+            setSelectedAnimal(prev => ({ ...prev, ...updatedData }));
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error updating animal:', error);
+            alert('Error al actualizar animal');
         }
     };
 
@@ -439,9 +454,15 @@ const AnimalList = () => {
                             <div className="mt-8 flex gap-3">
                                 <button
                                     onClick={() => navigate(`/animal/${selectedAnimal.id}`)}
-                                    className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
+                                    className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-600 transition-all flex items-center justify-center gap-2"
                                 >
                                     Ir a Trazabilidad Completa <ArrowRight size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex-1 py-4 bg-indigo-50 text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-indigo-100 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Edit size={16} /> Editar
                                 </button>
                                 <button
                                     onClick={() => setIsModalOpen(false)}
@@ -463,6 +484,14 @@ const AnimalList = () => {
                 >
                     <Plus size={28} />
                 </button>
+            )}
+            {/* Edit Modal */}
+            {isEditing && selectedAnimal && (
+                <EditAnimalModal
+                    animal={selectedAnimal}
+                    onClose={() => setIsEditing(false)}
+                    onSave={handleSave}
+                />
             )}
         </div>
     );

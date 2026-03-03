@@ -4,27 +4,35 @@ import AnimalService from '../services/animalService';
 
 const EditAnimalModal = ({ animal, onClose, onSave }) => {
     const [formData, setFormData] = useState({
-        peso_actual: animal.peso_actual,
-        rodeo: animal.rodeo,
-        estado_sanitario: animal.estado_sanitario,
-        categoria_id: animal.categoria_id
+        peso_actual: animal.peso_actual || '',
+        rodeo_id: animal.rodeo_id || '',
+        estado_sanitario: animal.estado_sanitario || 'ACTIVO',
+        categoria_id: animal.categoria_id || '',
+        caravana_visual: animal.caravana_visual || '',
+        caravana_rfid: animal.caravana_rfid || ''
     });
     const [categories, setCategories] = useState([]);
+    const [rodeos, setRodeos] = useState([]);
 
     useEffect(() => {
-        const loadCategories = async () => {
+        const loadInitialData = async () => {
             try {
-                const data = await AnimalService.getCategories();
-                setCategories(data);
+                const [cats, rods] = await Promise.all([
+                    AnimalService.getCategories(),
+                    AnimalService.getRodeos()
+                ]);
+                setCategories(cats);
+                setRodeos(rods);
             } catch (e) {
-                console.error(e);
+                console.error('Error loading initial data:', e);
             }
         };
-        loadCategories();
+        loadInitialData();
     }, []);
 
     const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        const value = e.target.type === 'number' ? parseFloat(e.target.value) : e.target.value;
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     const handleSubmit = (e) => {
@@ -42,7 +50,32 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                    {/* Identificación */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Caravana Visual</label>
+                            <input
+                                type="text"
+                                name="caravana_visual"
+                                value={formData.caravana_visual}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">RFID (Electrónica)</label>
+                            <input
+                                type="text"
+                                name="caravana_rfid"
+                                value={formData.caravana_rfid}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none font-bold"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Biometría */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Peso Actual (Kg)</label>
                         <input
@@ -54,6 +87,7 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                         />
                     </div>
 
+                    {/* Clasificación */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Categoría</label>
                         <div className="relative">
@@ -74,36 +108,48 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                         </div>
                     </div>
 
+                    {/* Ubicación */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Rodeo / Potrero</label>
-                        <select
-                            name="rodeo"
-                            value={formData.rodeo}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                        >
-                            <option value="Potrero Norte">Potrero Norte</option>
-                            <option value="Bajo Río">Bajo Río</option>
-                            <option value="Monte Alto">Monte Alto</option>
-                            <option value="Corral de Enfermería">Corral de Enfermería</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                name="rodeo_id"
+                                value={formData.rodeo_id}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer pr-10"
+                            >
+                                <option value="">Seleccionar Rodeo...</option>
+                                {rodeos.map(r => (
+                                    <option key={r.id} value={r.id}>{r.nombre}</option>
+                                ))}
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <ChevronDown size={14} />
+                            </div>
+                        </div>
                     </div>
 
+                    {/* Estado */}
                     <div>
                         <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Estado Sanitario</label>
-                        <select
-                            name="estado_sanitario"
-                            value={formData.estado_sanitario}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
-                        >
-                            <option value="ACTIVO">ACTIVO</option>
-                            <option value="BLOQUEADO">BLOQUEADO</option>
-                            <option value="CUARENTENA">CUARENTENA</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                name="estado_sanitario"
+                                value={formData.estado_sanitario}
+                                onChange={handleChange}
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer pr-10"
+                            >
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="BLOQUEADO">BLOQUEADO</option>
+                                <option value="CUARENTENA">CUARENTENA</option>
+                            </select>
+                            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                                <ChevronDown size={14} />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="pt-4 flex gap-3">
+                    <div className="pt-4 flex gap-3 sticky bottom-0 bg-white">
                         <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">
                             Cancelar
                         </button>
