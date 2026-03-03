@@ -101,22 +101,39 @@ class AnimalController {
 
         const connection = await db.getConnection();
 
-        // Ensure cost_total column exists for backward compatibility in production
-        try {
-            await connection.query('ALTER TABLE compras_lotes ADD COLUMN costo_total DECIMAL(15,2)');
-        } catch (e) {
-            // Ignorar si la columna ya existe
+        // Ensure all columns exist for backward compatibility and new features
+        const migrations = [
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS costo_total DECIMAL(15,2)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_guia VARCHAR(50)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comision_feria DECIMAL(15,2)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS flete DECIMAL(15,2)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tasas DECIMAL(15,2)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS porcentaje_ganancia DECIMAL(5,2)'
+        ];
+
+        for (const sql of migrations) {
+            try {
+                await connection.query(sql);
+            } catch (e) {
+                // Ignore errors (e.g. column already exists or IF NOT EXISTS not supported by some engines)
+            }
         }
 
         try {
             await connection.beginTransaction();
 
+            const numPorcentaje = parseSafely(porcentaje_ganancia);
+
+            // Calculation Logic (Matches Frontend and CostService)
+            // Comisiones y fletes con IVA 10%
+            const totalCostCalculated = (numCantidad * numCostoUnit) + (numComision * 1.10) + (numFlete * 1.10) + numTasas;
+
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
                 `INSERT INTO compras_lotes 
-                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot]
+                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot, nro_guia, comision_feria, flete, tasas, porcentaje_ganancia)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot, nro_guia, numComision, numFlete, numTasas, numPorcentaje]
             );
             const loteId = loteResult.insertId;
 
@@ -207,13 +224,26 @@ class AnimalController {
                 }
                 let pelajeIndividual = det.pelaje || pelaje || 'SIN ESPECIFICAR';
 
-                // Insert Animal
-                const [animResult] = await connection.query(
-                    `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
-                    [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual]
-                );
-                const animalId = animResult.insertId;
+                // Check for duplicate caravan to avoid crash
+                const [dup] = await connection.query('SELECT id FROM animales WHERE caravana_visual = ?', [caravana]);
+                let animalId;
+                if (dup.length > 0) {
+                    animalId = dup[0].id;
+                    // Update existing animal with new purchase data? 
+                    // For now, let's just update its state and weight as it's coming back "into" the system.
+                    await connection.query(
+                        "UPDATE animales SET estado_general = 'ACTIVO', peso_actual = ?, peso_inicial = ?, precio_compra = ?, categoria_id = ?, pelaje = ? WHERE id = ?",
+                        [pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, animalId]
+                    );
+                } else {
+                    // Insert New Animal
+                    const [animResult] = await connection.query(
+                        `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_sanitario)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO')`,
+                        [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual]
+                    );
+                    animalId = animResult.insertId;
+                }
 
                 // 2.1 Registrar Pesaje Inicial para GDP
                 await connection.query(

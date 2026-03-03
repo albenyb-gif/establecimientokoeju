@@ -90,6 +90,11 @@ CREATE TABLE IF NOT EXISTS compras_lotes (
     lugar_procedencia VARCHAR(100),
     tipo_documento VARCHAR(50),
     nro_cot VARCHAR(50),
+    nro_guia VARCHAR(50),
+    comision_feria DECIMAL(15,2),
+    flete DECIMAL(15,2),
+    tasas DECIMAL(15,2),
+    porcentaje_ganancia DECIMAL(5,2),
     observaciones TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
