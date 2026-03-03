@@ -159,7 +159,7 @@ const AnimalList = () => {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <span className="font-black text-2xl text-slate-900 tracking-tighter">{animal.peso_actual}</span>
+                                        <span className="font-black text-2xl text-slate-900 tracking-tighter">{parseFloat(animal.peso_actual)}</span>
                                         <span className="text-[10px] text-slate-400 ml-1 font-black uppercase tracking-widest">Kg</span>
                                     </div>
                                 </div>
@@ -241,7 +241,7 @@ const AnimalList = () => {
                                                 </div>
                                             </td>
                                             <td className="p-6 text-right">
-                                                <span className="font-black text-lg text-slate-900 tracking-tighter">{animal.peso_actual}</span>
+                                                <span className="font-black text-lg text-slate-900 tracking-tighter">{parseFloat(animal.peso_actual)}</span>
                                                 <span className="text-[10px] font-black text-slate-300 ml-1 tracking-widest uppercase">Kg</span>
                                             </td>
                                             <td className="p-6">
