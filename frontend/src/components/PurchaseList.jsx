@@ -78,8 +78,13 @@ const PurchaseList = ({ onSelectPurchase }) => {
 
                             <div className="space-y-3">
                                 <div>
-                                    <h4 className="font-black text-slate-800 text-lg">
+                                    <h4 className="font-black text-slate-800 text-lg flex items-center gap-2">
                                         Lote #{purchase.id} · {purchase.cantidad_animales} Cab.
+                                        {purchase.tipo_ingreso === 'detallado' && (
+                                            <span className="p-1 bg-amber-50 text-amber-600 rounded-md" title="Detalle Individual">
+                                                <FileText size={14} />
+                                            </span>
+                                        )}
                                     </h4>
                                     <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">
                                         <Calendar size={12} />

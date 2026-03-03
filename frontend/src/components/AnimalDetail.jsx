@@ -189,6 +189,12 @@ const AnimalDetail = () => {
                             <Edit size={16} /> Editar
                         </button>
                         <button
+                            onClick={() => setIsMoving(true)}
+                            className="px-6 py-3 bg-orange-500 text-white font-black rounded-xl shadow-xl shadow-orange-500/20 hover:bg-orange-600 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
+                        >
+                            <Truck size={16} /> Mover
+                        </button>
+                        <button
                             onClick={handleDelete}
                             className="px-6 py-3 bg-rose-500 text-white font-black rounded-xl shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
                         >
@@ -302,7 +308,7 @@ const AnimalDetail = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             <DetailItem icon={<Calendar />} label="Fecha de Nacimiento" value={animal.fecha_nacimiento || 'Registro Desconocido'} />
                             <DetailItem icon={<Activity />} label="Pelaje" value={animal.pelaje || 'SIN ESPECIFICAR'} />
-                            <DetailItem icon={<LayoutDashboard />} label="Potrero / Lote" value={animal.ubicacion || 'Potrero Nro 04'} />
+                            <DetailItem icon={<LayoutDashboard />} label="Rodeo / Ubicación" value={animal.rodeo || 'SIN ASIGNAR'} />
                             <DetailItem icon={<TrendingUp />} label="Precio de Compra" value="-- ₲/Kg" />
                             <DetailItem icon={<Scale />} label="Peso de Ingreso" value={`${animal.peso_inicial || 0} kg`} />
                         </div>

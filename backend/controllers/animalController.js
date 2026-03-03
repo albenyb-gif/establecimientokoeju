@@ -71,7 +71,7 @@ class AnimalController {
             fecha, cantidad, pelaje, kilos_compra, vendedor, lugar,
             documento, observaciones, costo_unitario, peso_total,
             ganancia_estimada, nro_cot, nro_guia,
-            comision_feria, flete, tasas, porcentaje_ganancia, comparador
+            comision_feria, flete, tasas, porcentaje_ganancia, comparador, tipo_ingreso
         } = req.body;
 
         const numCantidad = parseSafely(cantidad, true);
@@ -113,9 +113,9 @@ class AnimalController {
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
                 `INSERT INTO compras_lotes 
-                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot, nro_guia, comision_feria, flete, tasas, porcentaje_ganancia, comparador)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot, nro_guia, numComision, numFlete, numTasas, numPorcentaje, comparador]
+                (fecha, cantidad_animales, pelaje, peso_promedio_compra, peso_total, costo_unitario, costo_total, ganancia_estimada, vendedor, lugar_procedencia, tipo_documento, observaciones, nro_cot, nro_guia, comision_feria, flete, tasas, porcentaje_ganancia, comparador, tipo_ingreso)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [fecha, numCantidad, pelaje, numKilosCompra, numPesoTotal, numCostoUnit, totalCostCalculated, numGanancia, vendedor, lugar, documento, observaciones, nro_cot, nro_guia, numComision, numFlete, numTasas, numPorcentaje, comparador, tipo_ingreso || 'masivo']
             );
             const loteId = loteResult.insertId;
 
@@ -551,7 +551,7 @@ class AnimalController {
      */
     static async getAnimals(req, res) {
         try {
-            const { estado } = req.query;
+            const { estado, lote_id } = req.query;
             let query = `
                 SELECT 
                     a.id, 
@@ -569,15 +569,17 @@ class AnimalController {
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
                 LEFT JOIN movimientos_ingreso mi ON mi.animal_id = a.id
+                WHERE 1=1
             `;
 
             const params = [];
             if (estado) {
-                query += ' WHERE a.estado_general = ?';
+                query += ' AND a.estado_general = ?';
                 params.push(estado);
-            } else {
-                // Default to showing all or just active? Let's show all if no filter, or maybe LIMIT if no filter.
-                // If filter is present, maybe we want all of them for selection?
+            }
+            if (lote_id) {
+                query += ' AND mi.compra_lote_id = ?';
+                params.push(lote_id);
             }
 
             query += ' ORDER BY a.id DESC';

@@ -47,8 +47,10 @@ const PurchaseSheet = () => {
     const [editForm, setEditForm] = useState({});
     const [savingEdit, setSavingEdit] = useState(false);
     const [purchases, setPurchases] = useState(null); // null = let PurchaseList manage its own; non-null = sync after edit
+    const [lotAnimals, setLotAnimals] = useState([]);
+    const [loadingLotAnimals, setLoadingLotAnimals] = useState(false);
 
-    const handleOpenPurchaseDetail = (purchase, editMode = false) => {
+    const handleOpenPurchaseDetail = async (purchase, editMode = false) => {
         setSelectedPurchase(purchase);
         if (editMode) {
             setEditForm({
@@ -63,6 +65,19 @@ const PurchaseSheet = () => {
             setIsEditingPurchase(true);
         } else {
             setIsEditingPurchase(false);
+            if (purchase.tipo_ingreso === 'detallado') {
+                setLoadingLotAnimals(true);
+                try {
+                    const anims = await AnimalService.getAnimals({ lote_id: purchase.id });
+                    setLotAnimals(anims);
+                } catch (err) {
+                    console.error('Error fetching lot animals:', err);
+                } finally {
+                    setLoadingLotAnimals(false);
+                }
+            } else {
+                setLotAnimals([]);
+            }
         }
     };
 
@@ -367,6 +382,38 @@ const PurchaseSheet = () => {
                                             <span className="font-bold text-slate-800 text-sm text-right max-w-[60%] truncate">{row.value}</span>
                                         </div>
                                     ) : null)}
+
+                                    {selectedPurchase.tipo_ingreso === 'detallado' && (
+                                        <div className="mt-6 pt-4 border-t border-slate-50">
+                                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                                <FileText size={14} /> Animales Registrados Individualmente
+                                            </p>
+                                            <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+                                                {loadingLotAnimals ? (
+                                                    <div className="p-4 text-center text-slate-400 text-xs animate-pulse">Cargando animales...</div>
+                                                ) : (
+                                                    <table className="w-full text-left text-[11px]">
+                                                        <thead>
+                                                            <tr className="bg-slate-100 text-slate-500 font-black uppercase tracking-tighter">
+                                                                <th className="px-3 py-2">ID</th>
+                                                                <th className="px-3 py-2">Categoría</th>
+                                                                <th className="px-3 py-2 text-right">Peso</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-100">
+                                                            {lotAnimals.map(anim => (
+                                                                <tr key={anim.id} className="text-slate-700 font-bold hover:bg-white transition-colors">
+                                                                    <td className="px-3 py-2">{anim.caravana_visual}</td>
+                                                                    <td className="px-3 py-2 truncate max-w-[100px]">{anim.categoria}</td>
+                                                                    <td className="px-3 py-2 text-right">{anim.peso_actual} Kg</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="flex gap-3 mt-6 pt-4 border-t border-slate-50">
                                         <button onClick={startEditPurchase}

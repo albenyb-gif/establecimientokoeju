@@ -99,7 +99,8 @@ async function runMigrations() {
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tipo_documento VARCHAR(50)',
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_cot VARCHAR(50)',
             'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS observaciones TEXT',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comparador VARCHAR(20)'
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comparador VARCHAR(20)',
+            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tipo_ingreso VARCHAR(20) DEFAULT "masivo"'
         ];
         for (const sql of comprasColumns) { try { await connection.query(sql); } catch (e) { } }
 

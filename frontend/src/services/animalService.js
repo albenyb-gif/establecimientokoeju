@@ -30,8 +30,8 @@ const AnimalService = {
         return response.data;
     },
 
-    getAnimals: async (estado = null) => {
-        const params = estado ? { estado } : {};
+    getAnimals: async (filters = null) => {
+        const params = typeof filters === 'string' ? { estado: filters } : (filters || {});
         const response = await api.get('/animales', { params });
         return response.data;
     },
