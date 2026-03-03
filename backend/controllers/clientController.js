@@ -64,10 +64,18 @@ class ClientController {
                 // Ignorar si el índice no existe
             }
 
-            // Check if exact client already exists to prevent duplicate entries
-            const [existing] = await db.query('SELECT id FROM clientes WHERE nombre = ? AND ruc = ?', [nombre, ruc]);
-            if (existing.length > 0) {
-                return res.status(200).json({ message: 'Cliente ya existía', id: existing[0].id });
+            // 1. Check if name matches exactly first
+            const [byName] = await db.query('SELECT id FROM clientes WHERE nombre = ?', [nombre]);
+            if (byName.length > 0) {
+                return res.status(200).json({ message: 'Cliente ya existía', id: byName[0].id });
+            }
+
+            // 2. Check if RUC matches (if provided and not generic 'S/N')
+            if (ruc && ruc !== 'S/N' && ruc !== '0') {
+                const [byRuc] = await db.query('SELECT id FROM clientes WHERE ruc = ?', [ruc]);
+                if (byRuc.length > 0) {
+                    return res.status(200).json({ message: 'RUC ya registrado', id: byRuc[0].id });
+                }
             }
 
             const [result] = await db.query(
@@ -76,8 +84,12 @@ class ClientController {
             );
             res.status(201).json({ message: 'Cliente creado correctamente', id: result.insertId });
         } catch (error) {
-            console.error('Error creating client:', error);
-            res.status(500).json({ error: 'Error al crear cliente', details: error.message });
+            console.error('Error creating client:', error.message);
+            res.status(500).json({
+                error: 'Error al crear cliente',
+                message: error.message,
+                details: error.code === 'ER_DUP_ENTRY' ? 'El RUC o Nombre ya está registrado' : error.message
+            });
         }
     }
 

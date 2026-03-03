@@ -335,7 +335,8 @@ const PurchaseSheet = () => {
                                                                 setNewVendorRuc('');
                                                             } catch (e) {
                                                                 console.error(e);
-                                                                alert('Error al crear el contacto. Verifique si el RUC ya existe.');
+                                                                const errorMsg = e.response?.data?.details || e.response?.data?.error || 'Verifique si el RUC ya existe.';
+                                                                alert(`Error al crear el contacto: ${errorMsg}`);
                                                             }
                                                         }
                                                     }}
