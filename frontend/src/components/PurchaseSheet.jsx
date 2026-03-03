@@ -3,7 +3,7 @@ import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
 import PurchaseList from './PurchaseList';
-import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown } from 'lucide-react';
+import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown, Pencil, Trash2, MapPin, User, FileCheck, Hash, Package, StickyNote, Calendar } from 'lucide-react';
 
 const PurchaseSheet = () => {
     const [formData, setFormData] = useState({
@@ -38,6 +38,51 @@ const PurchaseSheet = () => {
     const [loading, setLoading] = useState(false);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const [savedCount, setSavedCount] = useState(0);
+
+    // --- Estado del modal de detalle/edición de compra ---
+    const [selectedPurchase, setSelectedPurchase] = useState(null);
+    const [isEditingPurchase, setIsEditingPurchase] = useState(false);
+    const [editForm, setEditForm] = useState({});
+    const [savingEdit, setSavingEdit] = useState(false);
+    const [purchases, setPurchases] = useState(null); // null = let PurchaseList manage its own; non-null = sync after edit
+
+    const handleOpenPurchaseDetail = (purchase) => {
+        setSelectedPurchase(purchase);
+        setIsEditingPurchase(false);
+    };
+
+    const startEditPurchase = () => {
+        setEditForm({
+            fecha: selectedPurchase.fecha ? selectedPurchase.fecha.split('T')[0] : '',
+            vendedor: selectedPurchase.vendedor || '',
+            lugar_procedencia: selectedPurchase.lugar_procedencia || '',
+            nro_guia: selectedPurchase.nro_guia || '',
+            nro_cot: selectedPurchase.nro_cot || '',
+            costo_unitario: selectedPurchase.costo_unitario || '',
+            observaciones: selectedPurchase.observaciones || '',
+        });
+        setIsEditingPurchase(true);
+    };
+
+    const handleSavePurchaseEdit = async () => {
+        setSavingEdit(true);
+        try {
+            await AnimalService.updatePurchaseLote(selectedPurchase.id, editForm);
+            const updated = { ...selectedPurchase, ...editForm };
+            setSelectedPurchase(updated);
+            setIsEditingPurchase(false);
+        } catch (err) {
+            alert('Error al guardar: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setSavingEdit(false);
+        }
+    };
+
+    const formatGs = (v) =>
+        new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 })
+            .format(v || 0).replace('PYG', '\u20b2');
+
+    const fmtDate = (d) => d ? new Date(d).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
 
     const [isNewVendor, setIsNewVendor] = useState(false);
     const [newVendorName, setNewVendorName] = useState('');
@@ -253,6 +298,113 @@ const PurchaseSheet = () => {
     return (
         <div className="max-w-6xl mx-auto pb-20">
             {/* Modal de Éxito Móvil */}
+            {/* ===== Modal Detalle / Edición de Compra ===== */}
+            {selectedPurchase && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    onClick={() => { setSelectedPurchase(null); setIsEditingPurchase(false); }}>
+                    <div
+                        className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto"
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Header Modal */}
+                        <div className="flex justify-between items-center p-6 border-b border-slate-50 sticky top-0 bg-white rounded-t-[2rem] z-10">
+                            <div>
+                                <h3 className="font-black text-slate-900 text-xl">Lote #{selectedPurchase.id}</h3>
+                                <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                                    {selectedPurchase.cantidad_animales} Cabezas · {fmtDate(selectedPurchase.fecha)}
+                                </p>
+                            </div>
+                            <button onClick={() => { setSelectedPurchase(null); setIsEditingPurchase(false); }}
+                                className="p-2 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-all">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="p-6">
+                            {!isEditingPurchase ? (
+                                /* ---- VISTA DETALLE ---- */
+                                <div className="space-y-1">
+                                    <div className="bg-emerald-50 rounded-2xl p-4 mb-5 flex justify-between items-center">
+                                        <div>
+                                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-1">Inversión Total</p>
+                                            <p className="text-2xl font-black text-emerald-700 tracking-tighter">
+                                                {formatGs(selectedPurchase.costo_total || (selectedPurchase.cantidad_animales * selectedPurchase.costo_unitario))}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Costo/Cab.</p>
+                                            <p className="font-black text-slate-800 text-lg">{formatGs(selectedPurchase.costo_unitario)}</p>
+                                        </div>
+                                    </div>
+                                    {[
+                                        { label: 'Fecha', value: fmtDate(selectedPurchase.fecha) },
+                                        { label: 'Vendedor', value: selectedPurchase.vendedor },
+                                        { label: 'Procedencia', value: selectedPurchase.lugar_procedencia },
+                                        { label: 'Cantidad', value: `${selectedPurchase.cantidad_animales} cabezas` },
+                                        { label: 'N° Guía', value: selectedPurchase.nro_guia },
+                                        { label: 'N° Cotización', value: selectedPurchase.nro_cot },
+                                        { label: 'Comisión Feria', value: selectedPurchase.comision_feria > 0 ? formatGs(selectedPurchase.comision_feria) : null },
+                                        { label: 'Flete', value: selectedPurchase.flete > 0 ? formatGs(selectedPurchase.flete) : null },
+                                        { label: 'Observaciones', value: selectedPurchase.observaciones },
+                                    ].map(row => row.value ? (
+                                        <div key={row.label} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{row.label}</span>
+                                            <span className="font-bold text-slate-800 text-sm text-right max-w-[60%] truncate">{row.value}</span>
+                                        </div>
+                                    ) : null)}
+
+                                    <div className="flex gap-3 mt-6 pt-4 border-t border-slate-50">
+                                        <button onClick={startEditPurchase}
+                                            className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+                                            <Pencil size={16} /> Editar Compra
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* ---- FORMULARIO EDICIÓN ---- */
+                                <div className="space-y-4">
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Modificar datos del Lote #{selectedPurchase.id}</p>
+                                    {[
+                                        { label: 'Fecha', key: 'fecha', type: 'date' },
+                                        { label: 'Vendedor', key: 'vendedor', type: 'text' },
+                                        { label: 'Lugar de Procedencia', key: 'lugar_procedencia', type: 'text' },
+                                        { label: 'N° Guía de Traslado', key: 'nro_guia', type: 'text' },
+                                        { label: 'N° Cotización', key: 'nro_cot', type: 'text' },
+                                        { label: 'Costo Unitario (₲)', key: 'costo_unitario', type: 'number' },
+                                    ].map(f => (
+                                        <div key={f.key} className="space-y-1">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</label>
+                                            <input type={f.type}
+                                                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-bold text-sm"
+                                                value={editForm[f.key] || ''}
+                                                onChange={e => setEditForm({ ...editForm, [f.key]: e.target.value })} />
+                                        </div>
+                                    ))}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Observaciones</label>
+                                        <textarea rows={3}
+                                            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 font-bold text-sm resize-none"
+                                            value={editForm.observaciones || ''}
+                                            onChange={e => setEditForm({ ...editForm, observaciones: e.target.value })} />
+                                    </div>
+                                    <div className="flex gap-3 pt-2">
+                                        <button onClick={() => setIsEditingPurchase(false)}
+                                            className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-500 font-black text-sm hover:bg-slate-50">
+                                            Cancelar
+                                        </button>
+                                        <button onClick={handleSavePurchaseEdit} disabled={savingEdit}
+                                            className="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-black text-sm hover:bg-emerald-600 flex items-center justify-center gap-2 disabled:opacity-50">
+                                            {savingEdit ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" /> : <Save size={16} />}
+                                            Guardar Cambios
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {showSuccessModal && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
                     <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-300">
@@ -954,7 +1106,7 @@ const PurchaseSheet = () => {
                     </form>
                 </div >
             ) : (
-                <PurchaseList />
+                <PurchaseList onSelectPurchase={handleOpenPurchaseDetail} />
             )}
         </div >
     );
