@@ -4,7 +4,32 @@ import App from './App.jsx'
 import './index.css'
 import { registerSW } from 'virtual:pwa-register'
 
-registerSW({ immediate: true })
+// Force clear all SW caches so new deployments are always visible immediately
+if ('serviceWorker' in navigator) {
+    // On every load: tell active SW to skip waiting
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(reg => {
+            // Force update check
+            reg.update();
+            if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+        });
+    });
+    // Clear all old caches
+    caches.keys().then(names => {
+        names.forEach(name => {
+            if (!name.includes('all-cache-v2')) {
+                caches.delete(name);
+                console.log('[SW] Cleared old cache:', name);
+            }
+        });
+    });
+}
+
+registerSW({
+    immediate: true,
+    onNeedRefresh() { window.location.reload(); },
+    onOfflineReady() { },
+});
 
 class ErrorBoundary extends React.Component {
     constructor(props) {

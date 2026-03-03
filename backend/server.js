@@ -17,6 +17,20 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Force no-cache for Service Worker and HTML so updates deploy immediately
+app.get('/sw.js', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.sendFile(path.join(__dirname, 'public', 'sw.js'));
+});
+app.get('/workbox-*.js', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.sendFile(path.join(__dirname, 'public', req.path.slice(1)));
+});
+app.get('/', (req, res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Serve static frontend files (Production)
 app.use(express.static(path.join(__dirname, 'public')));
 

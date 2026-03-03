@@ -2,7 +2,6 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// https://vitejs.dev/config/
 export default defineConfig({
     build: {
         outDir: '../backend/public',
@@ -24,25 +23,27 @@ export default defineConfig({
                 scope: '/',
                 start_url: '/',
                 icons: [
-                    {
-                        src: 'pwa-192x192.png',
-                        sizes: '192x192',
-                        type: 'image/png',
-                        purpose: 'any maskable'
-                    },
-                    {
-                        src: 'pwa-512x512.png',
-                        sizes: '512x512',
-                        type: 'image/png',
-                        purpose: 'any maskable'
-                    }
+                    { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+                    { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
                 ]
             },
             workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,jpeg}'],
+                // Network-first for all assets: always fetch fresh, fall back to cache
+                runtimeCaching: [
+                    {
+                        urlPattern: /^https?.*/,
+                        handler: 'NetworkFirst',
+                        options: {
+                            cacheName: 'all-cache-v2',
+                            expiration: { maxEntries: 50, maxAgeSeconds: 60 },
+                            networkTimeoutSeconds: 4,
+                        },
+                    },
+                ],
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
                 cleanupOutdatedCaches: true,
                 clientsClaim: true,
-                skipWaiting: true
+                skipWaiting: true,
             }
         })
     ],
