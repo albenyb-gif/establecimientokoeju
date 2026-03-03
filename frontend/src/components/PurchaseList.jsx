@@ -84,15 +84,18 @@ const PurchaseList = () => {
 
                                 <div className="border-t border-slate-50 pt-4 flex justify-between items-end">
                                     <div>
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Inversión (Base)</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Inversión Final (c/ Logística)</p>
                                         <p className="text-xl font-black text-emerald-600 tracking-tighter">
-                                            {formatCurrency(purchase.cantidad_animales * purchase.costo_unitario)}
+                                            {formatCurrency(purchase.costo_total || (purchase.cantidad_animales * purchase.costo_unitario))}
                                         </p>
+                                        {purchase.nro_guia && (
+                                            <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Guía: {purchase.nro_guia}</p>
+                                        )}
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Ganancia Est.</p>
+                                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Costo Cab. (Base)</p>
                                         <p className="text-sm font-black text-slate-800 tracking-tighter">
-                                            {formatCurrency(purchase.ganancia_estimada)}
+                                            {formatCurrency(purchase.costo_unitario)}
                                         </p>
                                     </div>
                                 </div>
