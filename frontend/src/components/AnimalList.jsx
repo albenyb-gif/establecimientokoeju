@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus } from 'lucide-react';
+import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus, Trash2 } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
@@ -47,6 +47,17 @@ const AnimalList = () => {
 
     const handleExport = () => {
         ReportGenerator.generateStockReport(animals);
+    };
+
+    const handleDelete = async (e, animal) => {
+        e.stopPropagation(); // Evitar navegar al detalle
+        if (!window.confirm(`¿Eliminar el animal "${animal.caravana_visual}" del inventario? Esta acción no se puede deshacer.`)) return;
+        try {
+            await AnimalService.deleteAnimal(animal.id);
+            setAnimals(prev => prev.filter(a => a.id !== animal.id));
+        } catch (err) {
+            alert('Error al eliminar: ' + (err.response?.data?.error || err.message));
+        }
     };
 
     const filteredAnimals = animals.filter(a => {
@@ -244,9 +255,18 @@ const AnimalList = () => {
                                                 </span>
                                             </td>
                                             <td className="p-6 text-center">
-                                                <button className="text-slate-200 hover:text-slate-900 p-2 rounded-xl transition-all group-hover:text-slate-400">
-                                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                                </button>
+                                                <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={(e) => handleDelete(e, animal)}
+                                                        className="p-2 rounded-xl text-slate-200 hover:text-rose-500 hover:bg-rose-50 transition-all"
+                                                        title="Eliminar animal"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                    <button className="text-slate-200 hover:text-slate-900 p-2 rounded-xl transition-all group-hover:text-slate-400">
+                                                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))

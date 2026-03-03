@@ -115,6 +115,11 @@ const AnimalService = {
         }
         const response = await api.post(`/animales/movimiento/${id}`, data);
         return response.data;
+    },
+
+    deleteAnimal: async (id) => {
+        const response = await api.delete(`/animales/${id}`);
+        return response.data;
     }
 };
 

@@ -546,6 +546,20 @@ class AnimalController {
             res.status(500).json({ error: 'Error al actualizar animal' });
         }
     }
+
+    // Eliminar: Baja de un animal del inventario.
+    static async deleteAnimal(req, res) {
+        const { id } = req.params;
+        try {
+            const [rows] = await db.query('SELECT caravana_visual FROM animales WHERE id = ?', [id]);
+            if (rows.length === 0) return res.status(404).json({ error: 'Animal no encontrado' });
+            await db.query('DELETE FROM animales WHERE id = ?', [id]);
+            res.json({ message: `Animal ${rows[0].caravana_visual} eliminado del inventario` });
+        } catch (error) {
+            console.error(`Error in deleteAnimal(${id}):`, error.message);
+            res.status(500).json({ error: error.message });
+        }
+    }
     /**
      * Análisis de Costos y Rentabilidad (Mock)
      */
