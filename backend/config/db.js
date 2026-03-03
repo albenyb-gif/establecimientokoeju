@@ -2,15 +2,13 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-// Prioridad de Host: 
-// 1. Host real de Hostinger (srv1842.hstgr.io)
-// 2. IP Directa (193.203.175.192)
-// 3. Variable de entorno
-let dbHost = process.env.DB_HOST || 'srv1842.hstgr.io';
+// Forzamos 127.0.0.1 para evitar que se use IPv6 (::1) o IPs públicas internas.
+let dbHost = '127.0.0.1';
 
-// Forzar IP si detectamos loopback o localhost para evitar el error ::1
-if (dbHost === 'localhost' || dbHost === '127.0.0.1' || !process.env.DB_HOST) {
-    dbHost = 'srv1842.hstgr.io';
+// Si el usuario puso un host específico en el panel, lo usamos, 
+// a menos que sea localhost o el host que sabemos que da problemas de IPv6.
+if (process.env.DB_HOST && process.env.DB_HOST !== 'localhost' && process.env.DB_HOST !== 'srv1842.hstgr.io') {
+    dbHost = process.env.DB_HOST;
 }
 
 console.log('--- DIAGNÓSTICO DE CONEXIÓN HOSTINGER ---');
