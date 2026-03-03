@@ -470,6 +470,82 @@ class AnimalController {
             res.json([]);
         }
     }
+
+    /**
+     * Panel de Control: Estadísticas completas en una sola consulta.
+     */
+    static async getPanelStats(req, res) {
+        try {
+            const [[totales]] = await db.query(`
+                SELECT
+                    COUNT(*) as total_animales,
+                    SUM(CASE WHEN estado_sanitario = 'ACTIVO' THEN 1 ELSE 0 END) as sanitario_activo,
+                    SUM(CASE WHEN estado_sanitario = 'BLOQUEADO' THEN 1 ELSE 0 END) as sanitario_bloqueado,
+                    SUM(CASE WHEN estado_sanitario = 'CUARENTENA' THEN 1 ELSE 0 END) as sanitario_cuarentena,
+                    SUM(CASE WHEN negocio_destino = 'ENGORDE' THEN 1 ELSE 0 END) as negocio_engorde,
+                    SUM(CASE WHEN negocio_destino = 'CRIA' THEN 1 ELSE 0 END) as negocio_cria,
+                    SUM(CASE WHEN negocio_destino = 'CABAÑA' THEN 1 ELSE 0 END) as negocio_cabana,
+                    ROUND(AVG(peso_actual), 1) as peso_promedio,
+                    ROUND(SUM(precio_compra), 0) as inversion_total,
+                    SUM(CASE WHEN estado_general = 'VENDIDO' THEN 1 ELSE 0 END) as total_vendidos
+                FROM animales WHERE estado_general = 'ACTIVO'
+            `);
+
+            const [porCategoria] = await db.query(`
+                SELECT c.descripcion as categoria, COUNT(a.id) as total
+                FROM animales a
+                LEFT JOIN categorias c ON c.id = a.categoria_id
+                WHERE a.estado_general = 'ACTIVO'
+                GROUP BY c.descripcion
+                ORDER BY total DESC
+            `);
+
+            const [porRodeo] = await db.query(`
+                SELECT r.nombre as rodeo, p.nombre as potrero, COUNT(a.id) as total, p.superficie_ha
+                FROM animales a
+                INNER JOIN rodeos r ON r.id = a.rodeo_id
+                LEFT JOIN potreros p ON p.id = r.potrero_id
+                WHERE a.estado_general = 'ACTIVO'
+                GROUP BY r.id
+                ORDER BY total DESC
+                LIMIT 10
+            `);
+
+            const [[comprasStats]] = await db.query(`
+                SELECT
+                    COUNT(*) as total_lotes,
+                    SUM(cantidad_animales) as total_cabezas_compradas,
+                    ROUND(SUM(costo_total), 0) as total_invertido,
+                    MAX(fecha) as ultima_compra
+                FROM compras_lotes
+            `);
+
+            const [ultimasCompras] = await db.query(`
+                SELECT id, fecha, cantidad_animales, vendedor, costo_total, lugar_procedencia
+                FROM compras_lotes
+                ORDER BY fecha DESC
+                LIMIT 3
+            `);
+
+            const [[gdpStats]] = await db.query(`
+                SELECT ROUND(AVG(gdp_calculado), 3) as gdp_promedio
+                FROM pesajes
+                WHERE gdp_calculado > 0
+            `);
+
+            res.json({
+                totales,
+                porCategoria,
+                porRodeo,
+                comprasStats,
+                ultimasCompras,
+                gdpStats
+            });
+        } catch (error) {
+            console.error('Error in getPanelStats:', error.message);
+            res.status(500).json({ error: error.message });
+        }
+    }
     /**
      * Listado: Obtener lista completa de animales.
      */

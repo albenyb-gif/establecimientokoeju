@@ -208,7 +208,7 @@ function App() {
                         <div className="max-w-7xl mx-auto w-full">
                             <Routes>
                                 <Route path="/" element={
-                                    loading ? <div className="text-center mt-20 text-slate-400">Cargando datos del establecimiento...</div> : <Dashboard potreros={potreros} />
+                                    loading ? <div className="text-center mt-20 text-slate-400">Cargando...</div> : <Dashboard />
                                 } />
 
                                 <Route path="/lista" element={<AnimalList />} />

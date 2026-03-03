@@ -19,6 +19,7 @@ router.get('/categorias', AnimalController.getCategories);
 router.post('/categorias', AnimalController.createCategory);
 router.post('/migrate-categories', AnimalController.migrateCategories);
 router.get('/dashboard', AnimalController.getDashboardStats);
+router.get('/panel-stats', AnimalController.getPanelStats);
 router.get('/ranking', AnimalController.getGDPRanking);
 router.get('/costos', AnimalController.getCostAnalysis);
 router.get('/', AnimalController.getAnimals);

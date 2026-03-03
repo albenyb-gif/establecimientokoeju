@@ -25,6 +25,11 @@ const AnimalService = {
         return response.data;
     },
 
+    getPanelStats: async () => {
+        const response = await api.get('/animales/panel-stats');
+        return response.data;
+    },
+
     getAnimals: async (estado = null) => {
         const params = estado ? { estado } : {};
         const response = await api.get('/animales', { params });
