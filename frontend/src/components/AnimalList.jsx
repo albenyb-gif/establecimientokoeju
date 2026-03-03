@@ -233,8 +233,8 @@ const AnimalList = () => {
                                 <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
                                     <th className="p-6 border-b border-slate-50 pl-8">Identidad SIAP</th>
                                     <th className="p-6 border-b border-slate-50">Clasificación</th>
-                                    <th className="p-6 border-b border-slate-50">Lote</th>
-                                    <th className="p-6 border-b border-slate-50">Comp.</th>
+                                    <th className="p-6 border-b border-slate-50 text-[10px] font-black uppercase tracking-[0.2em]">Lote / Comp.</th>
+                                    <th className="p-6 border-b border-slate-50 text-[10px] font-black uppercase tracking-[0.2em]">Estadía</th>
                                     <th className="p-6 border-b border-slate-50">Unidad de Manejo</th>
                                     <th className="p-6 border-b border-slate-50 text-right">Peso Bruto</th>
                                     <th className="p-6 border-b border-slate-50">Modelo Negocio</th>
@@ -282,12 +282,20 @@ const AnimalList = () => {
                                                 </div>
                                             </td>
                                             <td className="p-6">
-                                                <span className="font-black text-slate-700 text-xs">#{animal.lote_id || 'S/L'}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-black text-slate-700 text-xs">#{animal.lote_id || 'S/L'}</span>
+                                                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black ${animal.comparador === 'M' ? 'bg-rose-50 text-rose-600 border border-rose-100' : animal.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
+                                                        {animal.comparador || 'N/A'}
+                                                    </span>
+                                                </div>
                                             </td>
                                             <td className="p-6">
-                                                <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${animal.comparador === 'M' ? 'bg-rose-50 text-rose-600 border border-rose-100' : animal.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-slate-50 text-slate-400 border border-slate-100'}`}>
-                                                    {animal.comparador || 'N/A'}
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span className="font-black text-slate-700 text-xs">
+                                                        {animal.fecha_ingreso ? Math.floor((new Date() - new Date(animal.fecha_ingreso)) / (1000 * 60 * 60 * 24)) : '—'}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">DÍAS</span>
+                                                </div>
                                             </td>
                                             <td className="p-6">
                                                 <div

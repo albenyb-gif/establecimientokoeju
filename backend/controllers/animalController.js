@@ -564,7 +564,8 @@ class AnimalController {
                     a.estado_general,
                     a.fecha_liberacion_carencia,
                     a.comparador,
-                    mi.compra_lote_id as lote_id
+                    mi.compra_lote_id as lote_id,
+                    mi.fecha as fecha_ingreso
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id

@@ -220,7 +220,7 @@ function App() {
                                 <Route path="/sanidad" element={<HealthManager />} />
                                 <Route path="/gastos" element={<ExpenseManager />} />
                                 <Route path="/siap" element={<SiapAssignmentView />} />
-                                <Route path="/animales/:id" element={<AnimalDetail />} />
+                                <Route path="/animal/:id" element={<AnimalDetail />} />
                                 <Route path="/pesaje/:id" element={<WeighingView />} />
                                 <Route path="/costos" element={<CostDashboard />} />
                                 <Route path="/simulador" element={<SalesSimulator />} />
