@@ -3,19 +3,21 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 // Prioridad de Host: 
-// 1. Variable DB_HOST
-// 2. Host real de Hostinger (srv1842.hstgr.io)
-// 3. Fallback Local
+// 1. Host real de Hostinger (srv1842.hstgr.io)
+// 2. IP Directa (193.203.175.192)
+// 3. Variable de entorno
 let dbHost = process.env.DB_HOST || 'srv1842.hstgr.io';
-if (dbHost === 'localhost') {
-    dbHost = '127.0.0.1'; // Forzar IPv4 si es localhost
+
+// Forzar IP si detectamos loopback o localhost para evitar el error ::1
+if (dbHost === 'localhost' || dbHost === '127.0.0.1' || !process.env.DB_HOST) {
+    dbHost = 'srv1842.hstgr.io';
 }
 
-console.log('--- DIAGNÓSTICO DE CONEXIÓN ---');
-console.log('📡 Host:', dbHost);
-console.log('👤 Usuario:', process.env.DB_USER || 'root');
-console.log('🗄️ Base de Datos:', process.env.DB_NAME || 'gestion_ganadera');
-console.log('-------------------------------');
+console.log('--- DIAGNÓSTICO DE CONEXIÓN HOSTINGER ---');
+console.log('📡 Host en uso:', dbHost);
+console.log('👤 Usuario:', (process.env.DB_USER || 'root').trim());
+console.log('🗄️ Base de Datos:', (process.env.DB_NAME || 'gestion_ganadera').trim());
+console.log('------------------------------------------');
 
 const pool = mysql.createPool({
     host: dbHost,
