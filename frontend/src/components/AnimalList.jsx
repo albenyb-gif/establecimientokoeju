@@ -166,9 +166,22 @@ const AnimalList = () => {
                         filteredAnimals.map((animal) => (
                             <div
                                 key={animal.id}
-                                onClick={() => navigate(`/animal/${animal.id}`)}
+                                onClick={() => {
+                                    setSelectedAnimal(animal);
+                                    setIsModalOpen(true);
+                                }}
                                 className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-4 relative active:scale-[0.98] hover:shadow-md hover:border-indigo-100 transition-all cursor-pointer group"
                             >
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigate(`/animal/${animal.id}`);
+                                    }}
+                                    className="absolute top-4 right-4 p-2 bg-slate-50 text-slate-400 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 transition-all z-10 opacity-0 group-hover:opacity-100"
+                                    title="Ver trazabilidad completa"
+                                >
+                                    <ArrowRight size={16} />
+                                </button>
                                 <div className="flex justify-between items-start">
                                     <div className="flex items-center gap-3">
                                         <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 font-black tracking-tighter shadow-inner group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
@@ -250,7 +263,10 @@ const AnimalList = () => {
                                     filteredAnimals.map((animal) => (
                                         <tr
                                             key={animal.id}
-                                            onClick={() => navigate(`/animal/${animal.id}`)}
+                                            onClick={() => {
+                                                setSelectedAnimal(animal);
+                                                setIsModalOpen(true);
+                                            }}
                                             className="hover:bg-slate-50 transition-all group cursor-pointer"
                                         >
                                             <td className="p-6 pl-8">
@@ -314,10 +330,10 @@ const AnimalList = () => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setSelectedAnimal(animal);
-                                                            setIsModalOpen(true);
+                                                            navigate(`/animal/${animal.id}`);
                                                         }}
                                                         className="text-slate-200 hover:text-slate-900 p-2 rounded-xl transition-all group-hover:text-indigo-600 bg-transparent hover:bg-indigo-50"
+                                                        title="Ver trazabilidad completa"
                                                     >
                                                         <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                                     </button>
