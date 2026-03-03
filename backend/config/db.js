@@ -2,11 +2,19 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
+// Normalizar Host para forzar IPv4 (Evita error 'Access denied @ ::1')
+let dbHost = process.env.DB_HOST || '127.0.0.1';
+if (dbHost === 'localhost' || !dbHost) {
+    dbHost = '127.0.0.1';
+}
+
+console.log('📡 Database Host forced to:', dbHost);
+
 const pool = mysql.createPool({
-    host: process.env.DB_HOST || '127.0.0.1',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'gestion_ganadera',
+    host: dbHost,
+    user: (process.env.DB_USER || 'root').trim(),
+    password: (process.env.DB_PASSWORD || '').trim(),
+    database: (process.env.DB_NAME || 'gestion_ganadera').trim(),
     waitForConnections: true,
     connectionLimit: 5,
     queueLimit: 0,
