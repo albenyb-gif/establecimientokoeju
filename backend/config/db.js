@@ -2,9 +2,9 @@ const mysql = require('mysql2');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
-// Configuración del pool de conexiones
-// En Hostinger, el usuario MySQL tiene permisos @'localhost' (socket Unix),
-// no por TCP. Usar socketPath evita el error 'Access denied'.
+const fs = require('fs');
+
+// Configuración base del pool
 const poolConfig = {
     user: (process.env.DB_USER || 'root').trim(),
     password: (process.env.DB_PASSWORD || '').trim(),
@@ -16,22 +16,37 @@ const poolConfig = {
     keepAliveInitialDelay: 10000
 };
 
-// En producción Hostinger, usar socket Unix
+// Detectar el socket Unix disponible en el servidor
+const socketPaths = [
+    '/tmp/mysql.sock',
+    '/tmp/mysqld.sock',
+    '/var/lib/mysql/mysql.sock',
+    '/run/mysqld/mysqld.sock',
+    '/var/run/mysqld/mysqld.sock'
+];
+
 if (process.env.NODE_ENV === 'production') {
-    // Rutas comunes del socket en Hostinger / servidores Linux
-    poolConfig.socketPath = '/var/run/mysqld/mysqld.sock';
-    console.log('🔌 Modo producción: usando socket Unix');
+    const foundSocket = socketPaths.find(p => {
+        try { return fs.existsSync(p); } catch (e) { return false; }
+    });
+    if (foundSocket) {
+        poolConfig.socketPath = foundSocket;
+        console.log('🔌 Socket encontrado:', foundSocket);
+    } else {
+        // Fallback: TCP localhost si no hay socket
+        poolConfig.host = '127.0.0.1';
+        poolConfig.port = 3306;
+        console.log('⚠️ No se encontró socket, usando TCP 127.0.0.1:3306');
+    }
 } else {
-    // En desarrollo local, usar TCP normal
-    poolConfig.host = '127.0.0.1';
-    console.log('💻 Modo desarrollo: usando TCP 127.0.0.1');
+    poolConfig.host = process.env.DB_HOST || '127.0.0.1';
+    console.log('💻 Modo desarrollo:', poolConfig.host);
 }
 
-console.log('--- DIAGNÓSTICO HOSTINGER ---');
-console.log('👤 Usuario:', poolConfig.user);
-console.log('🗄️ BD:', poolConfig.database);
-console.log('🔌 Socket/Host:', poolConfig.socketPath || poolConfig.host);
-console.log('------------------------------');
+console.log('--- DIAGNÓSTICO DB ---');
+console.log('👤', poolConfig.user, '| 🗄️', poolConfig.database);
+console.log('🔗', poolConfig.socketPath || poolConfig.host);
+console.log('----------------------');
 
 const pool = mysql.createPool(poolConfig);
 
