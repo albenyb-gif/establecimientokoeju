@@ -22,10 +22,6 @@ app.get('/sw.js', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.sendFile(path.join(__dirname, 'public', 'sw.js'));
 });
-app.get('/workbox-*.js', (req, res) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    res.sendFile(path.join(__dirname, 'public', req.path.slice(1)));
-});
 app.get('/', (req, res) => {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
