@@ -1,22 +1,66 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import PageHeader from './common/PageHeader';
 import { LayoutDashboard, TrendingUp, Users, Activity, AlertTriangle, DollarSign } from 'lucide-react';
 import RankingReport from './RankingReport';
+import AnimalService from '../services/animalService';
+import { useNavigate } from 'react-router-dom';
+
+const CATEGORY_COLORS = {
+    'DESMAMANTE MACHO': '#6366f1',
+    'DESMAMANTE HEMBRA': '#f43f5e',
+    'TERNERO MACHO': '#3b82f6',
+    'TERNERO HEMBRA': '#ec4899',
+    'VAQUILLA': '#10b981',
+    'TORO': '#f59e0b',
+    'NOVILLO': '#8b5cf6',
+    'VACA': '#14b8a6',
+};
+const DEFAULT_COLOR = '#94a3b8';
 
 const Dashboard = ({ potreros }) => {
-    // Calcular Estadísticas Globales
+    const navigate = useNavigate();
+    const [animals, setAnimals] = useState([]);
+    const now = new Date().toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' });
+
+    useEffect(() => {
+        AnimalService.getAnimals().then(setAnimals).catch(() => { });
+    }, []);
+
+    // Estadísticas globales
     const stats = useMemo(() => {
         const totalAnimales = potreros.reduce((acc, p) => acc + p.animales_total, 0);
         const totalHectareas = potreros.reduce((acc, p) => acc + p.superficie_ha, 0);
         const cargaPromedio = totalHectareas > 0 ? (totalAnimales / totalHectareas).toFixed(2) : 0;
         const alertasCarga = potreros.filter(p => (p.animales_total / p.superficie_ha) > 3).length;
-
         return { totalAnimales, totalHectareas, cargaPromedio, alertasCarga };
     }, [potreros]);
 
-    // Datos para Gráfico (calculados desde potreros reales)
-    const dataDistribution = [];
+    // Distribución por categoría desde datos reales
+    const dataDistribution = useMemo(() => {
+        if (!animals.length) return [];
+        const counts = {};
+        animals.forEach(a => {
+            const cat = a.categoria || 'Sin Categoría';
+            counts[cat] = (counts[cat] || 0) + 1;
+        });
+        return Object.entries(counts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([name, value]) => ({
+                name,
+                value,
+                color: CATEGORY_COLORS[name] || DEFAULT_COLOR
+            }));
+    }, [animals]);
+
+    // Estado sanitario summary
+    const sanitaryStats = useMemo(() => {
+        const activos = animals.filter(a => a.estado_sanitario === 'ACTIVO').length;
+        const bloqueados = animals.filter(a => a.estado_sanitario === 'BLOQUEADO').length;
+        const cuarentena = animals.filter(a => a.estado_sanitario === 'CUARENTENA').length;
+        return { activos, bloqueados, cuarentena };
+    }, [animals]);
 
     return (
         <div className="space-y-8 pb-20">
@@ -27,14 +71,14 @@ const Dashboard = ({ potreros }) => {
                 actions={
                     <div className="flex gap-2 text-sm font-medium bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
                         <span className="text-slate-400">Última actualización:</span>
-                        <span className="text-emerald-600">Hace 5 minutos</span>
+                        <span className="text-emerald-600">{now}</span>
                     </div>
                 }
             />
 
-            {/* Banner informativo solo si hay animales con peso de faena */}
-            {stats.totalAnimales > 0 && (
-                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden">
+            {/* Banner */}
+            {animals.length > 0 && (
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl p-6 shadow-lg shadow-emerald-500/20 text-white relative overflow-hidden cursor-pointer" onClick={() => navigate('/lista')}>
                     <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-4">
                             <div className="p-3 bg-white/20 rounded-2xl backdrop-blur-sm">
@@ -42,8 +86,26 @@ const Dashboard = ({ potreros }) => {
                             </div>
                             <div>
                                 <h3 className="font-bold text-xl">Resumen del Establecimiento</h3>
-                                <p className="text-emerald-50 opacity-90">Total de <span className="font-black text-white">{stats.totalAnimales} cabezas</span> en {potreros.length} potreros.</p>
+                                <p className="text-emerald-50 opacity-90">Total de <span className="font-black text-white">{animals.length} cabezas</span> en {potreros.length} potreros.</p>
                             </div>
+                        </div>
+                        <div className="flex gap-4 text-center">
+                            <div className="bg-white/10 px-4 py-2 rounded-2xl">
+                                <p className="font-black text-xl">{sanitaryStats.activos}</p>
+                                <p className="text-[10px] uppercase tracking-widest opacity-80">Activos</p>
+                            </div>
+                            {sanitaryStats.bloqueados > 0 && (
+                                <div className="bg-red-500/30 px-4 py-2 rounded-2xl">
+                                    <p className="font-black text-xl">{sanitaryStats.bloqueados}</p>
+                                    <p className="text-[10px] uppercase tracking-widest opacity-80">Bloqueados</p>
+                                </div>
+                            )}
+                            {sanitaryStats.cuarentena > 0 && (
+                                <div className="bg-amber-500/30 px-4 py-2 rounded-2xl">
+                                    <p className="font-black text-xl">{sanitaryStats.cuarentena}</p>
+                                    <p className="text-[10px] uppercase tracking-widest opacity-80">Cuarentena</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                     <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
@@ -51,15 +113,16 @@ const Dashboard = ({ potreros }) => {
                 </div>
             )}
 
-            {/* Tarjetas de Resumen (KPIs) */}
+            {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
                     title="Total Hacienda"
-                    value={stats.totalAnimales}
+                    value={animals.length || stats.totalAnimales}
                     unit="Cabezas"
                     icon={<Users size={24} className="text-blue-600" />}
-                    trend={stats.totalAnimales > 0 ? '' : 'Sin datos aún'}
+                    trend={animals.length > 0 ? `${dataDistribution.length} categorías` : 'Sin datos aún'}
                     trendColor="text-slate-400"
+                    onClick={() => navigate('/lista')}
                 />
                 <KpiCard
                     title="Carga Media"
@@ -75,91 +138,98 @@ const Dashboard = ({ potreros }) => {
                     unit="Hectáreas"
                     icon={<TrendingUp size={24} className="text-emerald-600" />}
                     trend="100% Operativo"
-                    trendColor="text-slate-400"
+                    trendColor="text-emerald-500"
                 />
                 <KpiCard
                     title="Alertas Carga"
                     value={stats.alertasCarga}
                     unit="Potreros"
                     icon={<AlertTriangle size={24} className="text-orange-600" />}
-                    trend="Requiere Atención"
-                    trendColor="text-orange-500"
+                    trend={stats.alertasCarga > 0 ? 'Requiere Atención' : 'Sin alertas'}
+                    trendColor={stats.alertasCarga > 0 ? 'text-orange-500' : 'text-emerald-500'}
                     alert={stats.alertasCarga > 0}
                 />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Gráfico de Distribución */}
+                {/* Gráfico Composición del Hato */}
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 lg:col-span-1 flex flex-col items-center">
                     <h3 className="text-lg font-bold text-slate-800 w-full mb-4">Composición del Hato</h3>
                     <div className="w-full h-64">
                         <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
                                 <Pie
-                                    data={dataDistribution}
+                                    data={dataDistribution.length > 0 ? dataDistribution : [{ name: 'Sin datos', value: 1 }]}
                                     innerRadius={60}
                                     outerRadius={80}
                                     paddingAngle={5}
                                     dataKey="value"
                                 >
-                                    {dataDistribution.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    {(dataDistribution.length > 0 ? dataDistribution : [{ color: '#e2e8f0' }]).map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color || '#e2e8f0'} />
                                     ))}
                                 </Pie>
-                                <Tooltip />
+                                <Tooltip formatter={(value, name) => [`${value} cab.`, name]} />
                             </PieChart>
                         </ResponsiveContainer>
                     </div>
                     {dataDistribution.length === 0 && (
-                        <p className="text-sm text-slate-400 text-center mt-4">Sin datos de distribución aún. Registrá animales para ver el gráfico.</p>
+                        <p className="text-sm text-slate-400 text-center mt-4">Sin datos aún. Registrá animales para ver el gráfico.</p>
                     )}
                     {dataDistribution.length > 0 && (
-                        <div className="grid grid-cols-2 gap-4 w-full mt-4">
+                        <div className="grid grid-cols-1 gap-2 w-full mt-4 max-h-48 overflow-y-auto">
                             {dataDistribution.map((d) => (
                                 <div key={d.name} className="flex items-center gap-2 text-sm">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }}></div>
-                                    <span className="text-slate-600">{d.name}</span>
-                                    <span className="font-bold ml-auto">{d.value}</span>
+                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: d.color }}></div>
+                                    <span className="text-slate-600 text-xs truncate flex-1">{d.name}</span>
+                                    <span className="font-black text-slate-800 text-xs">{d.value}</span>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                {/* Lista de Potreros (Estado de Carga) */}
+                {/* Estado de Potreros */}
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 lg:col-span-2">
                     <h3 className="text-lg font-bold text-slate-800 mb-6">Estado de Potreros</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {potreros.map((p) => {
-                            const carga = (p.animales_total / p.superficie_ha).toFixed(2);
-                            const isOverloaded = carga > 3;
-
-                            return (
-                                <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-colors">
-                                    <div>
-                                        <h4 className="font-bold text-slate-700">{p.nombre}</h4>
-                                        <p className="text-xs text-slate-400">{p.superficie_ha} Ha</p>
-                                    </div>
-                                    <div className="text-right">
-                                        <p className="text-2xl font-black text-slate-800">{p.animales_total}</p>
-                                        <div className={`text-xs font-bold px-2 py-1 rounded-full inline-flex items-center gap-1 ${isOverloaded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
-                                            {carga} UA/Ha
+                    {potreros.length === 0 ? (
+                        <p className="text-slate-400 text-sm text-center py-12">Sin potreros configurados aún.</p>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {potreros.map((p) => {
+                                const carga = (p.animales_total / p.superficie_ha).toFixed(2);
+                                const isOverloaded = carga > 3;
+                                return (
+                                    <div key={p.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center group hover:border-blue-200 transition-colors">
+                                        <div>
+                                            <h4 className="font-bold text-slate-700">{p.nombre}</h4>
+                                            <p className="text-xs text-slate-400">{p.superficie_ha} Ha</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-2xl font-black text-slate-800">{p.animales_total}</p>
+                                            <div className={`text-xs font-bold px-2 py-1 rounded-full inline-flex items-center gap-1 ${isOverloaded ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                                {carga} UA/Ha
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
-            {/* Informe de Rendimiento (Cattler-PY Ranking) */}
+
+            {/* Ranking GDP */}
             <RankingReport />
         </div>
     );
 };
 
-const KpiCard = ({ title, value, unit, icon, trend, trendColor, alert }) => (
-    <div className={`bg-white p-6 rounded-3xl shadow-sm border ${alert ? 'border-red-200 bg-red-50/30' : 'border-slate-100'}`}>
+const KpiCard = ({ title, value, unit, icon, trend, trendColor, alert, onClick }) => (
+    <div
+        className={`bg-white p-6 rounded-3xl shadow-sm border ${alert ? 'border-red-200 bg-red-50/30' : 'border-slate-100'} ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+        onClick={onClick}
+    >
         <div className="flex justify-between items-start mb-4">
             <div className={`p-3 rounded-2xl ${alert ? 'bg-red-100' : 'bg-slate-50'}`}>
                 {icon}

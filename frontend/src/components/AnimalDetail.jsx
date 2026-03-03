@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Activity, Syringe, Truck, Edit, HeartPulse, Scale,
     Info, Calendar, Fingerprint, ShieldAlert, TrendingUp, History,
-    LayoutDashboard
+    LayoutDashboard, Trash2
 } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import AnimalCard from './AnimalCard';
@@ -47,6 +47,16 @@ const AnimalDetail = () => {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating animal:', error);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm(`¿Eliminar el animal "${animal.caravana_visual}" permanentemente? Esta acción no se puede deshacer.`)) return;
+        try {
+            await AnimalService.deleteAnimal(id);
+            navigate('/lista');
+        } catch (err) {
+            alert('Error al eliminar: ' + (err.response?.data?.error || err.message));
         }
     };
 
@@ -177,6 +187,12 @@ const AnimalDetail = () => {
                             className="px-6 py-3 bg-slate-900 text-white font-black rounded-xl shadow-xl shadow-slate-900/10 hover:bg-indigo-600 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
                         >
                             <Edit size={16} /> Editar
+                        </button>
+                        <button
+                            onClick={handleDelete}
+                            className="px-6 py-3 bg-rose-500 text-white font-black rounded-xl shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
+                        >
+                            <Trash2 size={16} /> Eliminar
                         </button>
                     </div>
                 }
