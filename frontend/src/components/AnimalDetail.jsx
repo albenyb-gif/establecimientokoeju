@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Activity, Syringe, Truck, Edit, HeartPulse, Scale,
     Info, Calendar, Fingerprint, ShieldAlert, TrendingUp, History,
-    LayoutDashboard, Trash2
+    LayoutDashboard, Trash2, FileText
 } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import AnimalCard from './AnimalCard';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus, Trash2, Printer, FileText, X, MapPin, Activity as ActivityIcon, Scale, Calendar as CalendarIcon, User, Package } from 'lucide-react';
+import { List, Search, Download, MoreVertical, Filter, Database, TrendingUp, ChevronRight, Activity, ArrowRight, Plus, Trash2, Printer, FileText, X, MapPin, Activity as ActivityIcon, Scale, Calendar as CalendarIcon, User, Package, Fingerprint } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
