@@ -404,24 +404,17 @@ class AnimalController {
             await connection.beginTransaction();
 
             const [lotes] = await connection.query(`
-                SELECT c.* 
+                SELECT c.*, COUNT(DISTINCT mi.animal_id) as actual_animals
                 FROM compras_lotes c
-                WHERE c.id NOT IN (
-                    SELECT DISTINCT compra_lote_id 
-                    FROM movimientos_ingreso 
-                    WHERE compra_lote_id IS NOT NULL
-                )
-                OR c.cantidad_animales > (
-                    SELECT COUNT(*) FROM movimientos_ingreso mi WHERE mi.compra_lote_id = c.id
-                )
+                LEFT JOIN movimientos_ingreso mi ON mi.compra_lote_id = c.id
+                GROUP BY c.id
+                HAVING actual_animals < c.cantidad_animales
             `);
 
             let generados = 0;
 
             for (const lote of lotes) {
-                // Determine how many are missing
-                const [existingMovs] = await connection.query('SELECT COUNT(*) as c FROM movimientos_ingreso WHERE compra_lote_id = ?', [lote.id]);
-                const existingCount = existingMovs[0].c;
+                const existingCount = lote.actual_animals || 0;
                 const qtyToGenerate = lote.cantidad_animales - existingCount;
 
                 if (qtyToGenerate <= 0) continue;
@@ -666,7 +659,7 @@ class AnimalController {
             }
 
             // ORDER BY id descending to get newest first
-            query += ' ORDER BY a.id DESC';
+            query += ' GROUP BY a.id ORDER BY a.id DESC';
 
             const [rows] = await db.query(query, params);
             res.json(rows);
