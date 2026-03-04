@@ -73,7 +73,8 @@ const AnimalList = () => {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating animal:', error);
-            alert('Error al actualizar animal');
+            const errorMsg = error.response?.data?.error || 'Error al actualizar animal';
+            alert(errorMsg);
         }
     };
 

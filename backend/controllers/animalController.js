@@ -722,18 +722,21 @@ class AnimalController {
         const { peso_actual, rodeo_id, estado_sanitario, categoria_id, caravana_visual, caravana_rfid } = req.body;
 
         try {
-            // Try actual update
+            // Convert empty strings to null for foreign keys
+            const finalRodeoId = rodeo_id === "" ? null : rodeo_id;
+            const finalCategoriaId = categoria_id === "" ? null : categoria_id;
+
             await db.query(
                 `UPDATE animales 
                  SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?, 
                      caravana_visual = ?, caravana_rfid = ? 
                  WHERE id = ?`,
-                [peso_actual, rodeo_id, estado_sanitario, categoria_id, caravana_visual, caravana_rfid, id]
+                [peso_actual, finalRodeoId, estado_sanitario, finalCategoriaId, caravana_visual, caravana_rfid, id]
             );
             res.json({ message: 'Animal actualizado correctamente', id });
         } catch (error) {
             console.error(`Error in updateAnimal(${id}):`, error.message);
-            res.status(500).json({ error: 'Error al actualizar animal' });
+            res.status(500).json({ error: 'Error al actualizar animal: ' + error.message });
         }
     }
 
