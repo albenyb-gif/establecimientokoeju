@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Save, Settings, ShieldAlert, Building2, Bell, ShieldCheck, Database } from 'lucide-react';
 import PageHeader from './common/PageHeader';
 
@@ -43,6 +44,9 @@ const SettingsView = () => {
                     <button className="w-full text-left p-4 rounded-2xl bg-white text-slate-400 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 border border-transparent hover:border-slate-100 transition-all">
                         <Database size={16} /> Backup
                     </button>
+                    <Link to="/importar" className="block w-full text-left p-4 rounded-2xl bg-amber-500/10 text-amber-600 font-black uppercase tracking-widest text-[10px] flex items-center gap-3 border border-amber-200 transition-all hover:bg-amber-500 hover:text-white">
+                        <Settings size={16} /> Sincronización Masiva
+                    </Link>
                 </div>
 
                 {/* Form Area */}

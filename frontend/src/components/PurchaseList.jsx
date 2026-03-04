@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import AnimalService from '../services/animalService';
-import { Trash2, Calendar, ShoppingCart, Info, Pencil } from 'lucide-react';
+import { Trash2, Calendar, ShoppingCart, Info, Pencil, FileText } from 'lucide-react';
 
 const formatCurrency = (value) =>
     new Intl.NumberFormat('es-PY', { style: 'currency', currency: 'PYG', maximumFractionDigits: 0 })
