@@ -694,10 +694,17 @@ class AnimalController {
                     a.*,
                     c.descripcion as categoria, 
                     r.nombre as rodeo,
+                    mi.fecha_ingreso,
+                    DATEDIFF(CURRENT_DATE, COALESCE(mi.fecha_ingreso, a.created_at, CURRENT_DATE)) as dias_en_stock,
                     (SELECT gdp_calculado FROM pesajes WHERE animal_id = a.id ORDER BY fecha DESC LIMIT 1) as ultimo_gdp
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
+                LEFT JOIN (
+                    SELECT animal_id, MIN(fecha_ingreso) as fecha_ingreso 
+                    FROM movimientos_ingreso 
+                    GROUP BY animal_id
+                ) mi ON mi.animal_id = a.id
                 WHERE a.id = ?
             `;
             const [rows] = await db.query(query, [id]);

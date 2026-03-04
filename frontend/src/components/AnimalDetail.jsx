@@ -283,17 +283,23 @@ const AnimalDetail = () => {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Evolución Nominal</p>
-                                    <p className="font-black text-white text-lg tracking-tight">Crecimiento Sostenido</p>
+                                    <p className="font-black text-white text-lg tracking-tight">
+                                        {animal.ultimo_gdp > 0 ? 'Crecimiento Sostenido' :
+                                            animal.ultimo_gdp < 0 ? 'Pérdida de Peso' : 'Sin Variación Reciente'}
+                                    </p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Días en Stock</p>
-                                    <p className="font-black text-white text-xl">142</p>
+                                    <p className="font-black text-white text-xl">{animal.dias_en_stock || 0}</p>
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-2xl border border-white/5">
                                     <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Última GDP</p>
-                                    <p className="font-black text-emerald-400 text-xl">+0.850 <span className="text-[10px]">kg</span></p>
+                                    <p className="font-black text-emerald-400 text-xl">
+                                        {animal.ultimo_gdp ? (animal.ultimo_gdp > 0 ? '+' : '') + parseFloat(animal.ultimo_gdp).toFixed(3) : '0.000'}
+                                        <span className="text-[10px]"> kg</span>
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -311,7 +317,13 @@ const AnimalDetail = () => {
                             <DetailItem icon={<Calendar />} label="Fecha de Nacimiento" value={animal.fecha_nacimiento || 'Registro Desconocido'} />
                             <DetailItem icon={<Activity />} label="Pelaje" value={animal.pelaje || 'SIN ESPECIFICAR'} />
                             <DetailItem icon={<LayoutDashboard />} label="Rodeo / Ubicación" value={animal.rodeo || 'SIN ASIGNAR'} />
-                            <DetailItem icon={<TrendingUp />} label="Precio de Compra" value="-- ₲/Kg" />
+                            <DetailItem
+                                icon={<TrendingUp />}
+                                label="Precio de Compra"
+                                value={animal.precio_compra && animal.peso_inicial ?
+                                    `${(animal.precio_compra / animal.peso_inicial).toLocaleString('es-PY')} ₲/Kg` :
+                                    '-- ₲/Kg'}
+                            />
                             <DetailItem icon={<Scale />} label="Peso de Ingreso" value={`${animal.peso_inicial || 0} kg`} />
                         </div>
                     </div>
