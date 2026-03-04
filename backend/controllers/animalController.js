@@ -627,6 +627,7 @@ class AnimalController {
     }
     /**
      * Listado: Obtener lista completa de animales.
+     */
     static async getAnimals(req, res) {
         try {
             const { estado, lote_id } = req.query;
@@ -651,7 +652,7 @@ class AnimalController {
             `;
 
             const params = [];
-            
+
             if (estado) {
                 query += ' WHERE a.estado_general = ?';
                 params.push(estado);
