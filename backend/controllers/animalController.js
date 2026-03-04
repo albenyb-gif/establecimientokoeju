@@ -396,6 +396,97 @@ class AnimalController {
     }
 
     /**
+     * Sincroniza animales faltantes desde lotes de compras (ej. importados por SQL)
+     */
+    static async syncAnimalesFromCompras(req, res) {
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            const [lotes] = await connection.query(`
+                SELECT c.* 
+                FROM compras_lotes c
+                WHERE c.id NOT IN (
+                    SELECT DISTINCT compra_lote_id 
+                    FROM movimientos_ingreso 
+                    WHERE compra_lote_id IS NOT NULL
+                )
+                OR c.cantidad_animales > (
+                    SELECT COUNT(*) FROM movimientos_ingreso mi WHERE mi.compra_lote_id = c.id
+                )
+            `);
+
+            let generados = 0;
+
+            for (const lote of lotes) {
+                // Determine how many are missing
+                const [existingMovs] = await connection.query('SELECT COUNT(*) as c FROM movimientos_ingreso WHERE compra_lote_id = ?', [lote.id]);
+                const existingCount = existingMovs[0].c;
+                const qtyToGenerate = lote.cantidad_animales - existingCount;
+
+                if (qtyToGenerate <= 0) continue;
+
+                const loteId = lote.id;
+                const numKilosCompra = lote.peso_promedio_compra || 0;
+                const numCostoUnit = lote.costo_unitario || 0;
+
+                let categoriaDefecto = 'VAQUILLONA';
+                if (numKilosCompra > 0 && numKilosCompra < 180) categoriaDefecto = 'TERNERO';
+                else if (numKilosCompra > 0 && numKilosCompra < 250) categoriaDefecto = 'DESMAMANTE_M';
+
+                let defaultCatId = null;
+                const [existingCat] = await connection.query('SELECT id FROM categorias WHERE descripcion = ?', [categoriaDefecto]);
+                if (existingCat.length > 0) {
+                    defaultCatId = existingCat[0].id;
+                } else {
+                    const [createdCat] = await connection.query('INSERT INTO categorias (descripcion) VALUES (?)', [categoriaDefecto]);
+                    defaultCatId = createdCat.insertId;
+                }
+
+                for (let i = existingCount; i < lote.cantidad_animales; i++) {
+                    const caravana = `L${loteId}-${(i + 1).toString().padStart(3, '0')}`;
+                    // Avoid duplicate caravana_visual via UPSERT or check
+                    const [dupCheck] = await connection.query('SELECT id FROM animales WHERE caravana_visual = ?', [caravana]);
+                    let animalId;
+
+                    if (dupCheck.length > 0) {
+                        animalId = dupCheck[0].id;
+                    } else {
+                        const [animResult] = await connection.query(
+                            `INSERT INTO animales (caravana_visual, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_general, estado_sanitario)
+                            VALUES (?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO', 'ACTIVO')`,
+                            [caravana, numKilosCompra, numKilosCompra, numCostoUnit, defaultCatId, lote.pelaje || 'SIN ESPECIFICAR']
+                        );
+                        animalId = animResult.insertId;
+                    }
+
+                    await connection.query(
+                        'INSERT IGNORE INTO pesajes (animal_id, peso_kg, fecha) VALUES (?, ?, ?)',
+                        [animalId, numKilosCompra, lote.fecha]
+                    );
+
+                    const cotReal = lote.nro_cot || `LOTE-${loteId}`;
+                    await connection.query(
+                        `INSERT INTO movimientos_ingreso (compra_lote_id, fecha_ingreso, origen, animal_id, nro_cot, nro_guia_traslado)
+                        VALUES (?, ?, ?, ?, ?, ?)`,
+                        [loteId, lote.fecha, lote.lugar_procedencia, animalId, cotReal, lote.nro_guia]
+                    );
+                    generados++;
+                }
+            }
+
+            await connection.commit();
+            res.json({ message: `Sincronización completada. ${generados} animales generados de ${lotes.length} lotes incompletos.` });
+        } catch (error) {
+            await connection.rollback();
+            console.error('Error in syncAnimalesFromCompras:', error);
+            res.status(500).json({ error: 'Error al sincronizar', details: error.message });
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
      * Importación Masiva (Excel/CSV) con Lógica Upsert
      */
     static async importMasiva(req, res) {
@@ -410,25 +501,13 @@ class AnimalController {
                     // Lógica UPSERT:
                     const [existing] = await db.query('SELECT id, peso_actual FROM animales WHERE caravana_visual = ?', [caravana]);
 
-                    // Resolver IDs for foreign keys (rodeos, categorias) - Simplified: Assuming they exist or passed as IDs
-                    // If names are passed, we'd need to lookup IDs here. For simplicity, assume IDs or simple logic.
-                    // Let's assume input needs to be mapped to IDs if they are names.
-
-                    // Fetch category ID by name if needed, or default
-                    // This part depends on how specific the business logic is. For now, we will handle basic upsert.
-
                     if (existing.length > 0) {
-                        // Si existe: Actualizar
-                        // Calcular ganancia diaria antes de actualizar if needed
-                        // const ganancia = peso - existing[0].peso_actual;
-
                         await db.query(
                             'UPDATE animales SET peso_actual = ?, negocio_destino = ? WHERE id = ?',
                             [peso, negocio, existing[0].id]
                         );
                         resultados.actualizados++;
                     } else {
-                        // Si no existe: Crear
                         await db.query(
                             'INSERT INTO animales (caravana_visual, peso_actual, negocio_destino) VALUES (?, ?, ?)',
                             [caravana, peso, negocio]
@@ -548,7 +627,6 @@ class AnimalController {
     }
     /**
      * Listado: Obtener lista completa de animales.
-     */
     static async getAnimals(req, res) {
         try {
             const { estado, lote_id } = req.query;
@@ -565,29 +643,29 @@ class AnimalController {
                     a.fecha_liberacion_carencia,
                     a.comparador,
                     mi.compra_lote_id as lote_id,
-                    mi.fecha as fecha_ingreso
+                    mi.fecha_ingreso as fecha_ingreso
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
                 LEFT JOIN movimientos_ingreso mi ON mi.animal_id = a.id
-                WHERE 1=1
             `;
 
             const params = [];
+            
             if (estado) {
-                query += ' AND a.estado_general = ?';
+                query += ' WHERE a.estado_general = ?';
                 params.push(estado);
+            } else {
+                query += " WHERE a.estado_general = 'ACTIVO'";
             }
+
             if (lote_id) {
                 query += ' AND mi.compra_lote_id = ?';
                 params.push(lote_id);
             }
 
+            // ORDER BY id descending to get newest first
             query += ' ORDER BY a.id DESC';
-
-            if (!estado) {
-                query += ' LIMIT 50';
-            }
 
             const [rows] = await db.query(query, params);
             res.json(rows);
@@ -596,6 +674,7 @@ class AnimalController {
             res.json([]);
         }
     }
+
     /**
      * Detalle: Obtener un animal por ID.
      */
@@ -668,51 +747,50 @@ class AnimalController {
      */
     static async getCostAnalysis(req, res) {
         try {
-            // 1. Calculate Total Income (Ventas)
-            const [salesRows] = await db.query('SELECT SUM(total_neto) as total FROM ventas_lotes');
-            const totalIncome = parseFloat(salesRows[0].total || 0);
+            // 1. Ingresos Reales (Ventas Liquidadas)
+            const [[salesRows]] = await db.query('SELECT SUM(total_neto) as total FROM ventas_lotes');
+            const totalIncome = parseFloat(salesRows.total || 0);
 
-            // 2. Calculate Total Expenses (Compras)
-            // Note: We calculate total as quantity * unit_cost because we didn't save total_cost in some rows
-            const [purchaseRows] = await db.query('SELECT SUM(cantidad_animales * costo_unitario) as total FROM compras_lotes');
-            const totalPurchases = parseFloat(purchaseRows[0].total || 0);
+            // 2. Egresos por Compra de Hacienda
+            const [[purchaseRows]] = await db.query('SELECT SUM(costo_total) as total FROM compras_lotes');
+            const totalPurchases = parseFloat(purchaseRows.total || 0);
 
-            // 3. Other Expenses (Mock/Placeholder for now, or assume 0 if not tracked)
-            // Ideally we would have an 'expenses' table for salaries, maintenance, etc.
-            // For now, let's include a fixed estimate or relevant calculated costs from 'sanidad_eventos' if we had costs there.
-            // Let's assume 0 for now to keep it "REAL" based on entered data, or maybe a small fixed overhead if requested.
-            // User complained "Nothing appears", so let's show the data we have.
-            const otherExpenses = 0;
+            // 3. Gastos Operativos Reales (desde tabla gastos)
+            const [[expenseRows]] = await db.query('SELECT SUM(monto) as total FROM gastos');
+            const totalOperatingExpenses = parseFloat(expenseRows.total || 0);
 
-            const totalExpenses = totalPurchases + otherExpenses;
+            const totalExpenses = totalPurchases + totalOperatingExpenses;
             const rentabilidad = totalIncome - totalExpenses;
             const margin = totalIncome > 0 ? ((rentabilidad / totalIncome) * 100).toFixed(1) : 0;
 
-            // 4. Breakdown for Charts
-            // Real Purchase Cost vs Others
+            // 4. Desglose de Operativos para Gráfico
+            const [expenseBreakdown] = await db.query(`
+                SELECT categoria as name, SUM(monto) as value 
+                FROM gastos 
+                GROUP BY categoria
+            `);
+
+            // Merge with Purchases for a unified view
             const gastos_por_categoria = [
                 { name: 'Compra Hacienda', value: totalPurchases },
-                { name: 'Sanidad', value: 0 }, // Placeholder
-                { name: 'Alimentación', value: 0 }, // Placeholder
-                { name: 'Operativos', value: 0 } // Placeholder
+                ...expenseBreakdown
             ];
 
-            // 5. Monthly Trend (Mocked for visual, or calculate from sales history)
-            // Let's try to get real sales per month for the chart?
-            // Simple query for sales per month
-            const [monthlySales] = await db.query(`
+            // 5. Histórico de Flujo (Ingresos Mensuales)
+            const [monthlyTrend] = await db.query(`
                 SELECT DATE_FORMAT(fecha, '%b') as mes, SUM(total_neto) as total 
                 FROM ventas_lotes 
+                WHERE fecha >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
                 GROUP BY DATE_FORMAT(fecha, '%Y-%m') 
-                ORDER BY fecha DESC LIMIT 6
+                ORDER BY fecha ASC
             `);
-            // This is Income, not "Cost per Kilo". 
-            // The chart asks for "Costo por Kg Producido". This is hard to calc without more data.
-            // Let's keep the mock trend for that specific chart but labeled "Simulado" or return empty if we want to be strict.
-            // Better to return 0s if no data, or a flat line.
-            const costo_kilo_producido = [
-                { mes: 'Actual', costo: 0 }
-            ];
+
+            // Adapt visualization: return monthlyTrend as 'costo_kilo_producido' for the chart
+            // Note: Frontend LineChart expects { mes, costo }
+            const trendData = monthlyTrend.map(m => ({
+                mes: m.mes,
+                costo: parseFloat(m.total)
+            }));
 
             const analysis = {
                 resumen: {
@@ -722,13 +800,13 @@ class AnimalController {
                     margen: margin
                 },
                 gastos_por_categoria,
-                costo_kilo_producido
+                costo_kilo_producido: trendData.length > 0 ? trendData : [{ mes: 'S/D', costo: 0 }]
             };
             res.json(analysis);
 
         } catch (error) {
             console.error('Error in getCostAnalysis:', error);
-            res.status(500).json({ error: 'Error al calcular costos' });
+            res.status(500).json({ error: 'Error al calcular reporte financiero' });
         }
     }
 

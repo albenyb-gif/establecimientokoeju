@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
-import { Save, DollarSign, Truck, Filter, CheckSquare, Search, Users } from 'lucide-react';
+import ReportGenerator from './ReportGenerator';
+import { Save, DollarSign, Truck, Filter, CheckSquare, Search, Users, FileText, Download, CheckCircle2 } from 'lucide-react';
 
 const SalesSheet = () => {
     const [formData, setFormData] = useState({
@@ -22,6 +23,7 @@ const SalesSheet = () => {
     const [selectedIds, setSelectedIds] = useState([]);
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState({ type: '', message: '' });
+    const [lastSale, setLastSale] = useState(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
 
     useEffect(() => {
@@ -48,12 +50,14 @@ const SalesSheet = () => {
     };
 
     const toggleSelect = (id) => {
+        if (lastSale) setLastSale(null); // Clear success state on new interaction
         setSelectedIds(prev =>
             prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
         );
     };
 
     const toggleSelectAll = () => {
+        if (lastSale) setLastSale(null);
         if (selectedIds.length === animals.length) {
             setSelectedIds([]);
         } else {
@@ -79,6 +83,12 @@ const SalesSheet = () => {
         }));
     }, [selectedIds, formData.precio_promedio, formData.descuentos, animals]);
 
+    const handleDownloadVoucher = () => {
+        if (lastSale) {
+            ReportGenerator.generateSalesVoucher(lastSale.data, lastSale.animals);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (selectedIds.length === 0) {
@@ -88,12 +98,23 @@ const SalesSheet = () => {
 
         setLoading(true);
         try {
+            const selectedAnimals = animals.filter(a => selectedIds.includes(a.id));
             const payload = {
                 ...formData,
                 animales_ids: selectedIds
             };
+
             await AnimalService.registrarVenta(payload);
+
+            // Store for PDF generation before clearing
+            setLastSale({
+                data: { ...formData },
+                animals: selectedAnimals
+            });
+
             setStatus({ type: 'success', message: 'Venta registrada exitosamente.' });
+
+            // Reset form
             setFormData({
                 fecha: new Date().toISOString().split('T')[0],
                 cliente: '',
@@ -124,8 +145,27 @@ const SalesSheet = () => {
             />
 
             {status.message && (
-                <div className={`p-4 mb-6 rounded-2xl font-medium flex items-center gap-2 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-                    <span className="font-bold">{status.message}</span>
+                <div className={`p-6 mb-8 rounded-[2rem] font-medium flex flex-col md:flex-row items-center justify-between gap-4 animate-in zoom-in duration-300 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-2 border-emerald-100' : 'bg-red-50 text-red-700 border-2 border-red-100'}`}>
+                    <div className="flex items-center gap-4">
+                        <div className={`p-3 rounded-2xl ${status.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`}>
+                            {status.type === 'success' ? <CheckCircle2 size={24} className="text-white" /> : <Save size={24} className="text-white" />}
+                        </div>
+                        <div>
+                            <p className="text-lg font-black tracking-tight">{status.message}</p>
+                            {status.type === 'success' && <p className="text-sm font-bold opacity-70 uppercase tracking-widest">El inventario ha sido actualizado correctamente.</p>}
+                        </div>
+                    </div>
+
+                    {status.type === 'success' && lastSale && (
+                        <button
+                            type="button"
+                            onClick={handleDownloadVoucher}
+                            className="flex items-center gap-3 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black transition-all shadow-lg shadow-emerald-200 active:scale-95 group"
+                        >
+                            <Download size={20} className="group-hover:bounce" />
+                            DESCARGAR COMPROBANTE
+                        </button>
+                    )}
                 </div>
             )}
 

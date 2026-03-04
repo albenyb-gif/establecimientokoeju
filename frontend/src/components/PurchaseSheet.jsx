@@ -1145,6 +1145,10 @@ const PurchaseSheet = () => {
                                         </span>
                                     </div>
                                 </div>
+                                <div className="md:col-span-12 space-y-2 mt-4">
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-2"><StickyNote size={14} /> Observaciones</label>
+                                    <textarea placeholder="Detalles adicionales sobre el lote, transportista, condiciones de compra, etc." rows="3" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none resize-none font-medium text-slate-600 text-sm" value={formData.observaciones} onChange={e => setFormData({ ...formData, observaciones: e.target.value })}></textarea>
+                                </div>
                             </div>
                         </div>
 

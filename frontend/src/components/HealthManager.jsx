@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Syringe, Package, Plus, Calendar, CheckSquare, Search, AlertOctagon, Droplet, X, Save, Activity } from 'lucide-react';
-import PageHeader from './common/PageHeader';
 import HealthService from '../services/healthService';
 import AnimalService from '../services/animalService';
+import ReportGenerator from './ReportGenerator';
+import { Syringe, Package, Plus, Calendar, CheckSquare, Search, AlertOctagon, Droplet, X, Save, Activity, Printer } from 'lucide-react';
 
 const HealthManager = () => {
     const [view, setView] = useState('inventory'); // inventory, events
@@ -274,12 +273,20 @@ const HealthManager = () => {
                 <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
                     <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/30">
                         <h3 className="font-black text-slate-800 uppercase tracking-widest text-xs">Registro Cronológico de Eventos</h3>
-                        <button
-                            onClick={() => setShowEventModal(true)}
-                            className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 uppercase tracking-widest text-xs"
-                        >
-                            <Plus size={18} /> Registrar Aplicación
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => ReportGenerator.generateHealthReport(events)}
+                                className="flex items-center gap-3 px-6 py-3 bg-white text-slate-700 rounded-2xl font-black border-2 border-slate-100 hover:border-slate-300 transition-all uppercase tracking-widest text-xs"
+                            >
+                                <Printer size={18} /> Imprimir Historial
+                            </button>
+                            <button
+                                onClick={() => setShowEventModal(true)}
+                                className="flex items-center gap-3 px-6 py-3 bg-slate-900 text-white rounded-2xl font-black hover:bg-emerald-600 transition-all shadow-xl shadow-slate-900/10 uppercase tracking-widest text-xs"
+                            >
+                                <Plus size={18} /> Registrar Aplicación
+                            </button>
+                        </div>
                     </div>
                     {isMobile ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">

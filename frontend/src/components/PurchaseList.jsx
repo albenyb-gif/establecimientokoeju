@@ -103,6 +103,13 @@ const PurchaseList = ({ onSelectPurchase }) => {
                                     </div>
                                 </div>
 
+                                {purchase.observaciones && (
+                                    <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-100 mt-2">
+                                        <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1"><Info size={10} /> Observación</p>
+                                        <p className="font-bold text-slate-700 text-xs mt-1 line-clamp-2 leading-snug">{purchase.observaciones}</p>
+                                    </div>
+                                )}
+
                                 <div className="flex justify-between items-end pt-2">
                                     <div>
                                         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Inversión Final</p>

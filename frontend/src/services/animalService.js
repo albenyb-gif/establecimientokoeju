@@ -130,6 +130,10 @@ const AnimalService = {
     deleteAnimal: async (id) => {
         const response = await api.delete(`/animales/${id}`);
         return response.data;
+    },
+    syncCompras: async () => {
+        const response = await api.post('/animales/sync-compras');
+        return response.data;
     }
 };
 

@@ -137,6 +137,40 @@ const ImportView = () => {
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Al iniciar, el sistema validará la integridad de cada registro antes de persistirlos.</p>
                     </div>
                 </div>
+
+                {/* Herramientas de Reparación */}
+                <div className="lg:col-span-12 mt-4 bg-slate-50 border border-slate-200 rounded-[2rem] p-8 shadow-inner">
+                    <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                        <div>
+                            <h4 className="font-black text-slate-800 text-lg flex items-center gap-2 mb-2">
+                                <AlertTriangle size={20} className="text-amber-500" />
+                                Reparación de Lotes Importados
+                            </h4>
+                            <p className="text-sm text-slate-500 font-medium max-w-2xl">
+                                Si importó o cargó Lotes de Compra manualmente en la base de datos y no visualiza los animales en la sección de Hacienda, esta herramienta generará automáticamente los animales faltantes según la cantidad de cada lote.
+                            </p>
+                        </div>
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm('¿Desea iniciar la sincronización de animales faltantes en las compras?')) return;
+                                try {
+                                    setLoading(true);
+                                    const res = await AnimalService.syncCompras();
+                                    alert(res.message);
+                                } catch (e) {
+                                    alert('Error al sincronizar: ' + (e.response?.data?.error || e.message));
+                                } finally {
+                                    setLoading(false);
+                                }
+                            }}
+                            disabled={loading}
+                            className="shrink-0 px-8 py-4 bg-amber-500 text-white rounded-2xl font-black shadow-lg shadow-amber-500/20 hover:bg-amber-600 transition-all uppercase tracking-widest text-xs flex items-center gap-2"
+                        >
+                            <Server size={18} /> Sincronizar Lotes
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
