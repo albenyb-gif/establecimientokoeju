@@ -13,6 +13,17 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
     });
     const [categories, setCategories] = useState([]);
     const [rodeos, setRodeos] = useState([]);
+    const [loadingData, setLoadingData] = useState(true);
+
+    const fallbackCategories = [
+        { id: 1, descripcion: 'DESMAMANTE MACHO' },
+        { id: 2, descripcion: 'DESMAMANTE HEMBRA' },
+        { id: 3, descripcion: 'TERNERO MACHO' },
+        { id: 4, descripcion: 'TERNERO HEMBRA' },
+        { id: 5, descripcion: 'VAQUILLA' },
+        { id: 6, descripcion: 'TORO' },
+        { id: 21, descripcion: 'VAQUILLONA' }
+    ];
 
     useEffect(() => {
         const loadInitialData = async () => {
@@ -21,10 +32,16 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                     AnimalService.getCategories(),
                     AnimalService.getRodeos()
                 ]);
-                setCategories(cats);
-                setRodeos(rods);
+
+                // Add hardcoded items if API returns empty
+                const finalCats = cats && cats.length > 0 ? cats : fallbackCategories;
+                setCategories(finalCats);
+                setRodeos(rods || []);
             } catch (e) {
                 console.error('Error loading initial data:', e);
+                setCategories(fallbackCategories);
+            } finally {
+                setLoadingData(false);
             }
         };
         loadInitialData();
@@ -97,7 +114,7 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer pr-10"
                             >
-                                <option value="">Sin Categoría</option>
+                                <option value="">{loadingData ? 'Cargando Categorías...' : 'Sin Categoría'}</option>
                                 {categories.map(cat => (
                                     <option key={cat.id} value={cat.id}>{cat.descripcion}</option>
                                 ))}
@@ -118,7 +135,7 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                                 onChange={handleChange}
                                 className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer pr-10"
                             >
-                                <option value="">Seleccionar Rodeo...</option>
+                                <option value="">{loadingData ? 'Cargando Rodeos...' : 'Seleccionar Rodeo...'}</option>
                                 {rodeos.map(r => (
                                     <option key={r.id} value={r.id}>{r.nombre}</option>
                                 ))}
