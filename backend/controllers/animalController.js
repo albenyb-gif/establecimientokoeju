@@ -403,6 +403,20 @@ class AnimalController {
         try {
             await connection.beginTransaction();
 
+            // 1. DATA CLEANUP: Identify and decouple animals shared across multiple lots/movements
+            // This ensures sync can generate unique animals for each lot slot.
+            await connection.query(`
+                UPDATE movimientos_ingreso 
+                SET animal_id = NULL 
+                WHERE id IN (
+                    SELECT id FROM (
+                        SELECT id, ROW_NUMBER() OVER(PARTITION BY animal_id ORDER BY id ASC) as rn
+                        FROM movimientos_ingreso
+                        WHERE animal_id IS NOT NULL
+                    ) t WHERE rn > 1
+                )
+            `);
+
             const [lotes] = await connection.query(`
                 SELECT c.*, COUNT(DISTINCT mi.animal_id) as actual_animals
                 FROM compras_lotes c
