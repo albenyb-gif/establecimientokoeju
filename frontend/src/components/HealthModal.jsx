@@ -8,7 +8,9 @@ const HealthModal = ({ animal, onClose, onSave }) => {
         detalle: '',
         producto: '',
         costo: '',
-        dias_carencia: 0
+        dias_carencia: 0,
+        nro_acta: '',
+        lote_vencimiento: ''
     });
 
     const handleChange = (e) => {
@@ -98,16 +100,29 @@ const HealthModal = ({ animal, onClose, onSave }) => {
                         </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Costo Estimado (₲)</label>
-                        <input
-                            type="number"
-                            name="costo"
-                            value={formData.costo}
-                            onChange={handleChange}
-                            placeholder="0"
-                            className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Costo Estimado (₲)</label>
+                            <input
+                                type="number"
+                                name="costo"
+                                value={formData.costo}
+                                onChange={handleChange}
+                                placeholder="0"
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Nro Acta / Lote</label>
+                            <input
+                                type="text"
+                                name="nro_acta"
+                                value={formData.nro_acta}
+                                onChange={handleChange}
+                                placeholder="Ref."
+                                className="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-red-500 outline-none"
+                            />
+                        </div>
                     </div>
 
                     <div className="pt-4 flex gap-3">

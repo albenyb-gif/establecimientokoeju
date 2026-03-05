@@ -85,7 +85,9 @@ const AnimalDetail = () => {
                 tipo_evento: healthData.tipo,
                 producto: healthData.producto,
                 dias_carencia: healthData.dias_carencia,
-                detalles: healthData.detalle
+                detalles: healthData.detalle,
+                nro_acta: healthData.nro_acta,
+                lote_vencimiento: healthData.lote_vencimiento
             };
             const response = await AnimalService.registerHealthEvent(id, apiPayload);
             const [updatedAnimalData, updatedHistory] = await Promise.all([

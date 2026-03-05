@@ -305,11 +305,22 @@ class AnimalController {
      */
     static async updatePurchaseLote(req, res) {
         const { id } = req.params;
-        const { fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones } = req.body;
+        const {
+            fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones,
+            cantidad_animales, peso_promedio_compra, comision_feria, flete, tasas, nro_cot
+        } = req.body;
         try {
             await db.query(
-                'UPDATE compras_lotes SET fecha=?, vendedor=?, lugar_procedencia=?, nro_guia=?, costo_unitario=?, observaciones=? WHERE id=?',
-                [fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones, id]
+                `UPDATE compras_lotes SET 
+                    fecha=?, vendedor=?, lugar_procedencia=?, nro_guia=?, costo_unitario=?, 
+                    observaciones=?, cantidad_animales=?, peso_promedio_compra=?, 
+                    comision_feria=?, flete=?, tasas=?, nro_cot=? 
+                 WHERE id=?`,
+                [
+                    fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario,
+                    observaciones, cantidad_animales, peso_promedio_compra,
+                    comision_feria, flete, tasas, nro_cot, id
+                ]
             );
             res.json({ message: 'Lote actualizado correctamente' });
         } catch (error) {

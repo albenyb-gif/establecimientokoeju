@@ -116,7 +116,7 @@ class HealthController {
 
     static async registerGroupEvent(req, res) {
         // Register event for multiple animals (e.g. Lote Terneros)
-        const { fecha_aplicacion, tipo_evento, producto_id, animales_ids, nro_acta, responsable } = req.body;
+        const { fecha_aplicacion, tipo_evento, producto_id, animales_ids, nro_acta, responsable, lote_vencimiento } = req.body;
 
         const connection = await db.getConnection();
         await connection.beginTransaction();
@@ -148,9 +148,9 @@ class HealthController {
             for (const animalId of animales_ids) {
                 await connection.query(
                     `INSERT INTO sanidad_eventos 
-                    (tipo_evento, animal_id, producto_id, fecha_aplicacion, fecha_fin_carencia, nro_acta) 
-                    VALUES (?, ?, ?, ?, ?, ?)`,
-                    [tipo_evento, animalId, producto_id, fecha_aplicacion, fecha_fin_carencia, nro_acta]
+                    (tipo_evento, animal_id, producto_id, fecha_aplicacion, fecha_fin_carencia, nro_acta, lote_vencimiento) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                    [tipo_evento, animalId, producto_id, fecha_aplicacion, fecha_fin_carencia, nro_acta, lote_vencimiento || nro_acta]
                 );
 
                 // 4. Update Animal Status if Carencia

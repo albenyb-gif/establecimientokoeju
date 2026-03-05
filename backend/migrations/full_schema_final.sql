@@ -95,6 +95,8 @@ CREATE TABLE IF NOT EXISTS compras_lotes (
     flete DECIMAL(15,2),
     tasas DECIMAL(15,2),
     porcentaje_ganancia DECIMAL(5,2),
+    comparador VARCHAR(20),
+    tipo_ingreso VARCHAR(20) DEFAULT 'masivo',
     observaciones TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

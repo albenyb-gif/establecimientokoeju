@@ -126,10 +126,15 @@ class OvineController {
                 }
 
                 // Buscar ID de categoría
-                const [catRows] = await connection.query(
+                let [catRows] = await connection.query(
                     'SELECT id FROM categorias WHERE descripcion = ?', [categoria]
                 );
-                const catId = catRows.length > 0 ? catRows[0].id : null;
+
+                if (catRows.length === 0) {
+                    const [newCat] = await connection.query('INSERT INTO categorias (descripcion) VALUES (?)', [categoria]);
+                    catRows = [{ id: newCat.insertId }];
+                }
+                const catId = catRows[0].id;
 
                 // Caravana temporal
                 const caravana = `PAR-${paricionId}-${(i + 1).toString().padStart(2, '0')}`;

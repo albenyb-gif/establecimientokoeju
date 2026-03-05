@@ -30,7 +30,8 @@ const HealthManager = () => {
         producto_id: '',
         animales_ids: [],
         nro_acta: '',
-        responsable: ''
+        responsable: '',
+        lote_vencimiento: ''
     });
 
     useEffect(() => {
@@ -73,7 +74,15 @@ const HealthManager = () => {
         try {
             await HealthService.registerGroupEvent(eventForm);
             setShowEventModal(false);
-            setEventForm({ fecha_aplicacion: new Date().toISOString().split('T')[0], tipo_evento: 'Vacunación', producto_id: '', animales_ids: [], nro_acta: '', responsable: '' });
+            setEventForm({
+                fecha_aplicacion: new Date().toISOString().split('T')[0],
+                tipo_evento: 'Vacunación',
+                producto_id: '',
+                animales_ids: [],
+                nro_acta: '',
+                responsable: '',
+                lote_vencimiento: ''
+            });
             loadData();
         } catch (error) {
             console.error(error);
@@ -445,6 +454,10 @@ const HealthManager = () => {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Nro Acta</label>
                                         <input className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none font-mono font-bold" placeholder="000-000" value={eventForm.nro_acta} onChange={e => setEventForm({ ...eventForm, nro_acta: e.target.value })} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Lote Insumo</label>
+                                        <input className="w-full p-4 bg-slate-50 border-2 border-slate-50 rounded-2xl focus:border-indigo-500 focus:bg-white outline-none font-mono font-bold" placeholder="LOTE-123" value={eventForm.lote_vencimiento} onChange={e => setEventForm({ ...eventForm, lote_vencimiento: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="space-y-2">
