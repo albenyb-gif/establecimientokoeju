@@ -60,6 +60,11 @@ const PurchaseSheet = () => {
                 nro_guia: purchase.nro_guia || '',
                 nro_cot: purchase.nro_cot || '',
                 costo_unitario: purchase.costo_unitario || '',
+                cantidad_animales: purchase.cantidad_animales || '',
+                peso_promedio_compra: purchase.peso_promedio_compra || '',
+                comision_feria: purchase.comision_feria || '',
+                flete: purchase.flete || '',
+                tasas: purchase.tasas || '',
                 observaciones: purchase.observaciones || '',
             });
             setIsEditingPurchase(true);
@@ -89,6 +94,11 @@ const PurchaseSheet = () => {
             nro_guia: selectedPurchase.nro_guia || '',
             nro_cot: selectedPurchase.nro_cot || '',
             costo_unitario: selectedPurchase.costo_unitario || '',
+            cantidad_animales: selectedPurchase.cantidad_animales || '',
+            peso_promedio_compra: selectedPurchase.peso_promedio_compra || '',
+            comision_feria: selectedPurchase.comision_feria || '',
+            flete: selectedPurchase.flete || '',
+            tasas: selectedPurchase.tasas || '',
             observaciones: selectedPurchase.observaciones || '',
         });
         setIsEditingPurchase(true);
@@ -430,9 +440,14 @@ const PurchaseSheet = () => {
                                         { label: 'Fecha', key: 'fecha', type: 'date' },
                                         { label: 'Vendedor', key: 'vendedor', type: 'text' },
                                         { label: 'Lugar de Procedencia', key: 'lugar_procedencia', type: 'text' },
+                                        { label: 'Cantidad', key: 'cantidad_animales', type: 'number' },
+                                        { label: 'Peso Promedio Compra (Kg)', key: 'peso_promedio_compra', type: 'number' },
                                         { label: 'N° Guía de Traslado', key: 'nro_guia', type: 'text' },
                                         { label: 'N° Cotización', key: 'nro_cot', type: 'text' },
                                         { label: 'Costo Unitario (₲)', key: 'costo_unitario', type: 'number' },
+                                        { label: 'Comisión Feria (₲)', key: 'comision_feria', type: 'number' },
+                                        { label: 'Flete (₲)', key: 'flete', type: 'number' },
+                                        { label: 'Tasas (₲)', key: 'tasas', type: 'number' },
                                     ].map(f => (
                                         <div key={f.key} className="space-y-1">
                                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{f.label}</label>
