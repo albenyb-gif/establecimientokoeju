@@ -52,6 +52,19 @@ const PurchaseSheet = () => {
 
     const handleOpenPurchaseDetail = async (purchase, editMode = false) => {
         setSelectedPurchase(purchase);
+
+        // Always load lot animals
+        setLoadingLotAnimals(true);
+        try {
+            const anims = await AnimalService.getAnimals({ lote_id: purchase.id });
+            setLotAnimals(anims || []);
+        } catch (err) {
+            console.error('Error fetching lot animals:', err);
+            setLotAnimals([]);
+        } finally {
+            setLoadingLotAnimals(false);
+        }
+
         if (editMode) {
             setEditForm({
                 fecha: purchase.fecha ? purchase.fecha.split('T')[0] : '',
@@ -66,23 +79,11 @@ const PurchaseSheet = () => {
                 flete: purchase.flete || '',
                 tasas: purchase.tasas || '',
                 observaciones: purchase.observaciones || '',
+                comparador: purchase.comparador || '',
             });
             setIsEditingPurchase(true);
         } else {
             setIsEditingPurchase(false);
-            if (purchase.tipo_ingreso === 'detallado') {
-                setLoadingLotAnimals(true);
-                try {
-                    const anims = await AnimalService.getAnimals({ lote_id: purchase.id });
-                    setLotAnimals(anims);
-                } catch (err) {
-                    console.error('Error fetching lot animals:', err);
-                } finally {
-                    setLoadingLotAnimals(false);
-                }
-            } else {
-                setLotAnimals([]);
-            }
         }
     };
 
@@ -100,6 +101,7 @@ const PurchaseSheet = () => {
             flete: selectedPurchase.flete || '',
             tasas: selectedPurchase.tasas || '',
             observaciones: selectedPurchase.observaciones || '',
+            comparador: selectedPurchase.comparador || '',
         });
         setIsEditingPurchase(true);
     };
@@ -379,12 +381,14 @@ const PurchaseSheet = () => {
                                     {[
                                         { label: 'Fecha', value: fmtDate(selectedPurchase.fecha) },
                                         { label: 'Vendedor', value: selectedPurchase.vendedor },
+                                        { label: 'Comprador', value: selectedPurchase.comparador === 'M' ? 'M — Martina' : selectedPurchase.comparador === 'MF' ? 'MF — Leli' : selectedPurchase.comparador },
                                         { label: 'Procedencia', value: selectedPurchase.lugar_procedencia },
                                         { label: 'Cantidad', value: `${selectedPurchase.cantidad_animales} cabezas` },
                                         { label: 'N° Guía', value: selectedPurchase.nro_guia },
                                         { label: 'N° Cotización', value: selectedPurchase.nro_cot },
                                         { label: 'Comisión Feria', value: selectedPurchase.comision_feria > 0 ? formatGs(selectedPurchase.comision_feria) : null },
                                         { label: 'Flete', value: selectedPurchase.flete > 0 ? formatGs(selectedPurchase.flete) : null },
+                                        { label: 'Tasas', value: selectedPurchase.tasas > 0 ? formatGs(selectedPurchase.tasas) : null },
                                         { label: 'Observaciones', value: selectedPurchase.observaciones },
                                     ].map(row => row.value ? (
                                         <div key={row.label} className="flex justify-between items-center py-3 border-b border-slate-50 last:border-0">
@@ -393,37 +397,47 @@ const PurchaseSheet = () => {
                                         </div>
                                     ) : null)}
 
-                                    {selectedPurchase.tipo_ingreso === 'detallado' && (
-                                        <div className="mt-6 pt-4 border-t border-slate-50">
-                                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-3 flex items-center gap-2">
-                                                <FileText size={14} /> Animales Registrados Individualmente
-                                            </p>
-                                            <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
-                                                {loadingLotAnimals ? (
-                                                    <div className="p-4 text-center text-slate-400 text-xs animate-pulse">Cargando animales...</div>
-                                                ) : (
-                                                    <table className="w-full text-left text-[11px]">
-                                                        <thead>
-                                                            <tr className="bg-slate-100 text-slate-500 font-black uppercase tracking-tighter">
-                                                                <th className="px-3 py-2">ID</th>
-                                                                <th className="px-3 py-2">Categoría</th>
-                                                                <th className="px-3 py-2 text-right">Peso</th>
+                                    {/* Animales del Lote - Siempre visible */}
+                                    <div className="mt-6 pt-4 border-t border-slate-50">
+                                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                            <Package size={14} /> Animales del Lote ({lotAnimals.length})
+                                        </p>
+                                        <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100">
+                                            {loadingLotAnimals ? (
+                                                <div className="p-4 text-center text-slate-400 text-xs animate-pulse">Cargando animales...</div>
+                                            ) : lotAnimals.length > 0 ? (
+                                                <table className="w-full text-left text-[11px]">
+                                                    <thead>
+                                                        <tr className="bg-slate-100 text-slate-500 font-black uppercase tracking-tighter">
+                                                            <th className="px-3 py-2">Caravana</th>
+                                                            <th className="px-3 py-2">Categoría</th>
+                                                            <th className="px-3 py-2 text-right">Peso</th>
+                                                            <th className="px-3 py-2 text-center">Comp.</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100">
+                                                        {lotAnimals.map(anim => (
+                                                            <tr key={anim.id} className="text-slate-700 font-bold hover:bg-white transition-colors">
+                                                                <td className="px-3 py-2 font-mono">{anim.caravana_visual}</td>
+                                                                <td className="px-3 py-2 truncate max-w-[100px]">{anim.categoria}</td>
+                                                                <td className="px-3 py-2 text-right">{anim.peso_actual} Kg</td>
+                                                                <td className="px-3 py-2 text-center">
+                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black ${anim.comparador === 'M' ? 'bg-rose-50 text-rose-600' :
+                                                                            anim.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600' :
+                                                                                'bg-slate-100 text-slate-400'
+                                                                        }`}>{anim.comparador || 'N/A'}</span>
+                                                                </td>
                                                             </tr>
-                                                        </thead>
-                                                        <tbody className="divide-y divide-slate-100">
-                                                            {lotAnimals.map(anim => (
-                                                                <tr key={anim.id} className="text-slate-700 font-bold hover:bg-white transition-colors">
-                                                                    <td className="px-3 py-2">{anim.caravana_visual}</td>
-                                                                    <td className="px-3 py-2 truncate max-w-[100px]">{anim.categoria}</td>
-                                                                    <td className="px-3 py-2 text-right">{anim.peso_actual} Kg</td>
-                                                                </tr>
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                )}
-                                            </div>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            ) : (
+                                                <div className="p-4 text-center text-slate-300 text-xs font-bold uppercase tracking-widest">
+                                                    Sin animales vinculados
+                                                </div>
+                                            )}
                                         </div>
-                                    )}
+                                    </div>
 
                                     <div className="flex gap-3 mt-6 pt-4 border-t border-slate-50">
                                         <button onClick={startEditPurchase}
@@ -457,6 +471,23 @@ const PurchaseSheet = () => {
                                                 onChange={e => setEditForm({ ...editForm, [f.key]: e.target.value })} />
                                         </div>
                                     ))}
+
+                                    {/* Comprador / Comparador */}
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest flex items-center gap-1">
+                                            <User size={12} /> Comprador
+                                        </label>
+                                        <select
+                                            className="w-full p-3 bg-amber-50/50 border border-amber-200 rounded-xl outline-none focus:border-amber-500 font-black text-sm appearance-none cursor-pointer"
+                                            value={editForm.comparador || ''}
+                                            onChange={e => setEditForm({ ...editForm, comparador: e.target.value })}
+                                        >
+                                            <option value="">-- Sin asignar --</option>
+                                            <option value="M">M — Martina</option>
+                                            <option value="MF">MF — Leli</option>
+                                        </select>
+                                    </div>
+
                                     <div className="space-y-1">
                                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Observaciones</label>
                                         <textarea rows={3}
@@ -464,6 +495,49 @@ const PurchaseSheet = () => {
                                             value={editForm.observaciones || ''}
                                             onChange={e => setEditForm({ ...editForm, observaciones: e.target.value })} />
                                     </div>
+
+                                    {/* Animales del Lote */}
+                                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                                        <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest flex items-center gap-1">
+                                            <Package size={12} /> Animales del Lote ({lotAnimals.length})
+                                        </p>
+                                        {loadingLotAnimals ? (
+                                            <div className="p-4 text-center text-slate-400 text-xs animate-pulse">Cargando animales...</div>
+                                        ) : lotAnimals.length > 0 ? (
+                                            <div className="bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 max-h-48 overflow-y-auto">
+                                                <table className="w-full text-left text-[11px]">
+                                                    <thead>
+                                                        <tr className="bg-slate-100 text-slate-500 font-black uppercase tracking-tighter">
+                                                            <th className="px-3 py-2">Caravana</th>
+                                                            <th className="px-3 py-2">Categoría</th>
+                                                            <th className="px-3 py-2 text-right">Peso</th>
+                                                            <th className="px-3 py-2 text-center">Comp.</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-slate-100">
+                                                        {lotAnimals.map(anim => (
+                                                            <tr key={anim.id} className="text-slate-700 font-bold hover:bg-white transition-colors">
+                                                                <td className="px-3 py-2 font-mono">{anim.caravana_visual}</td>
+                                                                <td className="px-3 py-2 truncate max-w-[100px]">{anim.categoria}</td>
+                                                                <td className="px-3 py-2 text-right">{anim.peso_actual} Kg</td>
+                                                                <td className="px-3 py-2 text-center">
+                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-black ${anim.comparador === 'M' ? 'bg-rose-50 text-rose-600' :
+                                                                        anim.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600' :
+                                                                            'bg-slate-100 text-slate-400'
+                                                                        }`}>{anim.comparador || 'N/A'}</span>
+                                                                </td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        ) : (
+                                            <div className="p-4 text-center text-slate-300 text-xs font-bold uppercase tracking-widest border-2 border-dashed border-slate-100 rounded-xl">
+                                                Sin animales vinculados a este lote
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="flex gap-3 pt-2">
                                         <button onClick={() => setIsEditingPurchase(false)}
                                             className="flex-1 py-3 border border-slate-200 rounded-xl text-slate-500 font-black text-sm hover:bg-slate-50">

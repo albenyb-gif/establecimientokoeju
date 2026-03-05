@@ -307,21 +307,38 @@ class AnimalController {
         const { id } = req.params;
         const {
             fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario, observaciones,
-            cantidad_animales, peso_promedio_compra, comision_feria, flete, tasas, nro_cot
+            cantidad_animales, peso_promedio_compra, comision_feria, flete, tasas, nro_cot,
+            comparador
         } = req.body;
         try {
             await db.query(
                 `UPDATE compras_lotes SET 
                     fecha=?, vendedor=?, lugar_procedencia=?, nro_guia=?, costo_unitario=?, 
                     observaciones=?, cantidad_animales=?, peso_promedio_compra=?, 
-                    comision_feria=?, flete=?, tasas=?, nro_cot=? 
+                    comision_feria=?, flete=?, tasas=?, nro_cot=?, comparador=?
                  WHERE id=?`,
                 [
                     fecha, vendedor, lugar_procedencia, nro_guia, costo_unitario,
                     observaciones, cantidad_animales, peso_promedio_compra,
-                    comision_feria, flete, tasas, nro_cot, id
+                    comision_feria, flete, tasas, nro_cot, comparador || null, id
                 ]
             );
+
+            // If comparador was set, update all animals in this lot too
+            if (comparador) {
+                try {
+                    await db.query(
+                        `UPDATE animales a
+                         INNER JOIN movimientos_ingreso mi ON mi.animal_id = a.id
+                         SET a.comparador = ?
+                         WHERE mi.compra_lote_id = ?`,
+                        [comparador, id]
+                    );
+                } catch (e) {
+                    console.warn('Could not bulk-update animal comparador:', e.message);
+                }
+            }
+
             res.json({ message: 'Lote actualizado correctamente' });
         } catch (error) {
             console.error('Error updating purchase lote:', error);
