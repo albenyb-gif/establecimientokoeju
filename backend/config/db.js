@@ -58,6 +58,53 @@ async function runMigrations() {
         const connection = await promisePool.getConnection();
         console.log('✅ Connected to Database for Migrations');
 
+        // 0. Infraestructura y Categorías
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS establecimientos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                ruc VARCHAR(20),
+                ubicacion_gps VARCHAR(100),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS potreros (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                establecimiento_id INT,
+                nombre VARCHAR(50) NOT NULL,
+                superficie_ha DECIMAL(10,2),
+                FOREIGN KEY (establecimiento_id) REFERENCES establecimientos(id) ON DELETE CASCADE
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS rodeos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                potrero_id INT,
+                nombre VARCHAR(50) NOT NULL,
+                FOREIGN KEY (potrero_id) REFERENCES potreros(id) ON DELETE CASCADE
+            )
+        `);
+
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS categorias (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                descripcion VARCHAR(50) NOT NULL UNIQUE
+            )
+        `);
+
+        // Insert default categories if empty
+        const [cats] = await connection.query('SELECT COUNT(*) as count FROM categorias');
+        if (cats[0].count === 0) {
+            await connection.query(`
+                INSERT IGNORE INTO categorias (descripcion) VALUES 
+                ('TERNERO MACHO'), ('TERNERO HEMBRA'), ('DESMAMANTE MACHO'), ('DESMAMANTE HEMBRA'),
+                ('VAQUILLA'), ('TORO'), ('NOVILLO'), ('VACA'), ('VAQUILLONA')
+            `);
+        }
+
         // 1. Clientes
         await connection.query(`
             CREATE TABLE IF NOT EXISTS clientes (
@@ -131,7 +178,36 @@ async function runMigrations() {
         ];
         for (const sql of animalsColumns) { try { await connection.query(sql); } catch (e) { } }
 
+        // 4.1 Pesajes (GDP Tracking)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS pesajes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                animal_id INT,
+                peso_kg DECIMAL(10,2) NOT NULL,
+                gdp_calculado DECIMAL(10,3),
+                fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (animal_id) REFERENCES animales(id) ON DELETE CASCADE
+            )
+        `);
+
         // 5. Movimientos Salida (Sales)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS ventas_lotes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                fecha DATE NOT NULL,
+                cliente VARCHAR(100),
+                destino VARCHAR(100),
+                cantidad_animales INT,
+                peso_total DECIMAL(10,2),
+                precio_promedio_kg DECIMAL(15,2),
+                total_bruto DECIMAL(15,2),
+                descuentos_total DECIMAL(15,2),
+                total_neto DECIMAL(15,2),
+                observaciones TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         await connection.query(`
             CREATE TABLE IF NOT EXISTS movimientos_salida (
                 id INT AUTO_INCREMENT PRIMARY KEY,
