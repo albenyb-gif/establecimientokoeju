@@ -24,18 +24,24 @@ const AnimalDetail = () => {
 
     useEffect(() => {
         const loadData = async () => {
+            // Fetch animal data first (critical)
             try {
-                const [animalData, historyData] = await Promise.all([
-                    AnimalService.getById(id),
-                    AnimalService.getHistory(id)
-                ]);
+                const animalData = await AnimalService.getById(id);
                 setAnimal(animalData);
-                setHistory(historyData);
             } catch (error) {
                 console.error('Error fetching animal data:', error);
-            } finally {
-                setLoading(false);
             }
+
+            // Fetch history separately (non-critical - page works without it)
+            try {
+                const historyData = await AnimalService.getHistory(id);
+                setHistory(Array.isArray(historyData) ? historyData : []);
+            } catch (error) {
+                console.error('Error fetching history:', error);
+                setHistory([]);
+            }
+
+            setLoading(false);
         };
         loadData();
     }, [id]);
