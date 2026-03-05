@@ -145,6 +145,20 @@ async function runMigrations() {
             )
         `);
 
+        // 5.1 Movimientos Internos (Traslados)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS movimientos_internos (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                animal_id INT NOT NULL,
+                fecha DATE NOT NULL,
+                origen_rodeo_id INT,
+                destino_rodeo_id INT,
+                motivo TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (animal_id) REFERENCES animales(id) ON DELETE CASCADE
+            )
+        `);
+
         // 6. Ovinos
         await connection.query(`
             CREATE TABLE IF NOT EXISTS produccion_lana (

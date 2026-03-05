@@ -164,6 +164,32 @@ CREATE TABLE IF NOT EXISTS ventas_lotes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS movimientos_salida (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    venta_lote_id INT,
+    animal_id INT,
+    fecha_salida DATE NOT NULL,
+    peso_salida DECIMAL(10,2),
+    precio_kg_real DECIMAL(15,2),
+    motivo_salida ENUM('VENTA', 'MUERTE', 'CONSUMO', 'OTRO') DEFAULT 'VENTA',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (animal_id) REFERENCES animales(id) ON DELETE CASCADE,
+    FOREIGN KEY (venta_lote_id) REFERENCES ventas_lotes(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS movimientos_internos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    animal_id INT NOT NULL,
+    fecha DATE NOT NULL,
+    origen_rodeo_id INT,
+    destino_rodeo_id INT,
+    motivo TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (animal_id) REFERENCES animales(id) ON DELETE CASCADE,
+    FOREIGN KEY (origen_rodeo_id) REFERENCES rodeos(id),
+    FOREIGN KEY (destino_rodeo_id) REFERENCES rodeos(id)
+);
+
 CREATE TABLE IF NOT EXISTS clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,

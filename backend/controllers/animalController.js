@@ -916,11 +916,9 @@ class AnimalController {
             }
 
             // 1. Insertar Evento
-            // Nota: simplificado, 'producto' se guarda como string en mock o ID si existiera tabla productos
-            // Para este MVP usaremos nro_acta como campo genérico de detalle si no hay ID producto
             await db.query(
-                'INSERT INTO sanidad_eventos (tipo_evento, animal_id, fecha_aplicacion, fecha_fin_carencia, lote_vencimiento) VALUES (?, ?, ?, ?, ?)',
-                [tipo_evento, id, fecha_aplicacion, fecha_liberacion, detalles] // detalles = lote/acta
+                'INSERT INTO sanidad_eventos (tipo_evento, animal_id, fecha_aplicacion, fecha_fin_carencia, lote_vencimiento, nro_acta) VALUES (?, ?, ?, ?, ?, ?)',
+                [tipo_evento, id, fecha_aplicacion, fecha_liberacion, detalles, detalles] // Duplicamos detalles en ambos campos por compatibilidad
             );
 
             // 2. Actualizar Estado del Animal si hay carencia
@@ -985,23 +983,35 @@ class AnimalController {
             );
 
             // 2. Sanidad
-            const [sanidad] = await db.query(
-                `SELECT "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date, e.nro_acta, e.fecha_fin_carencia, i.nombre_comercial as producto
-                 FROM sanidad_eventos e
-                 LEFT JOIN insumos_stock i ON e.producto_id = i.id
-                 WHERE e.animal_id = ? ORDER BY e.fecha_aplicacion DESC`,
-                [id]
-            );
+            let sanidad = [];
+            try {
+                [sanidad] = await db.query(
+                    `SELECT "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date, 
+                     COALESCE(e.nro_acta, e.lote_vencimiento) as nro_acta, 
+                     e.fecha_fin_carencia, i.nombre_comercial as producto
+                     FROM sanidad_eventos e
+                     LEFT JOIN insumos_stock i ON e.producto_id = i.id
+                     WHERE e.animal_id = ? ORDER BY e.fecha_aplicacion DESC`,
+                    [id]
+                );
+            } catch (e) { console.warn('Error en query sanidad:', e.message); }
 
             // 3. Movimientos (Ingreso/Salida)
-            const [ingresos] = await db.query(
-                'SELECT "INGRESO" as type, origen, fecha_ingreso as date, nro_cot FROM movimientos_ingreso WHERE animal_id = ?',
-                [id]
-            );
-            const [salidas] = await db.query(
-                'SELECT "SALIDA" as type, motivo_salida, fecha_salida as date FROM movimientos_salida WHERE animal_id = ?',
-                [id]
-            );
+            let ingresos = [];
+            try {
+                [ingresos] = await db.query(
+                    'SELECT "INGRESO" as type, origen, fecha_ingreso as date, nro_cot FROM movimientos_ingreso WHERE animal_id = ?',
+                    [id]
+                );
+            } catch (e) { console.warn('Error en query ingresos:', e.message); }
+
+            let salidas = [];
+            try {
+                [salidas] = await db.query(
+                    'SELECT "SALIDA" as type, motivo_salida, fecha_salida as date FROM movimientos_salida WHERE animal_id = ?',
+                    [id]
+                );
+            } catch (e) { console.warn('Error en query salidas:', e.message); }
 
             // 4. Traslados Internos
             let traslados = [];
@@ -1014,9 +1024,7 @@ class AnimalController {
                      WHERE m.animal_id = ? ORDER BY m.fecha DESC`,
                     [id]
                 );
-            } catch (e) {
-                console.warn('movimientos_internos table might not exist yet');
-            }
+            } catch (e) { console.warn('Error en query traslados:', e.message); }
 
             // Combinar y ordenar por fecha descendente
             const history = [...pesajes, ...sanidad, ...ingresos, ...salidas, ...traslados].sort((a, b) =>
