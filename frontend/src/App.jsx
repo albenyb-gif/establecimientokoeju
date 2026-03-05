@@ -20,7 +20,7 @@ import CalendarManager from './components/CalendarManager';
 import SyncManager from './components/SyncManager';
 import ExpenseManager from './components/ExpenseManager';
 import AnimalService from './services/animalService';
-import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar, Bell } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar, Bell, User } from 'lucide-react';
 
 // Mock data for initial view (keep animal mock for Demo)
 const mockAnimal = {
@@ -210,7 +210,7 @@ function App() {
                     <header className="hidden md:flex bg-white/70 backdrop-blur-md border-b border-slate-100 h-20 items-center justify-between px-8 sticky top-0 z-30">
                         <div>
                             <h1 className="text-xl font-black text-slate-800 tracking-tight">Panel de Gestión</h1>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Sistema de Control Ganadero v2.5</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Sistema de Control Ganadero v2.6</p>
                         </div>
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
