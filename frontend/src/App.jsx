@@ -20,7 +20,7 @@ import CalendarManager from './components/CalendarManager';
 import SyncManager from './components/SyncManager';
 import ExpenseManager from './components/ExpenseManager';
 import AnimalService from './services/animalService';
-import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar, Bell } from 'lucide-react';
 
 // Mock data for initial view (keep animal mock for Demo)
 const mockAnimal = {
@@ -200,7 +200,33 @@ function App() {
                             </div>
                             <span className="font-black text-slate-800 tracking-tight italic">KO'ẼJU</span>
                         </div>
-                        <div className="w-10"></div> {/* Placeholder for symmetry */}
+                        <button className="relative p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                            <Bell size={24} />
+                            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 border-2 border-white rounded-full"></span>
+                        </button>
+                    </header>
+
+                    {/* Desktop Top Header */}
+                    <header className="hidden md:flex bg-white/70 backdrop-blur-md border-b border-slate-100 h-20 items-center justify-between px-8 sticky top-0 z-30">
+                        <div>
+                            <h1 className="text-xl font-black text-slate-800 tracking-tight">Panel de Gestión</h1>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Sistema de Control Ganadero v2.5</p>
+                        </div>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-3 pr-6 border-r border-slate-100">
+                                <div className="text-right">
+                                    <p className="text-xs font-black text-slate-800">Administrador</p>
+                                    <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">En Línea</p>
+                                </div>
+                                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 border border-slate-100">
+                                    <User size={20} />
+                                </div>
+                            </div>
+                            <button className="relative p-2.5 bg-white border border-slate-100 text-slate-400 hover:text-indigo-600 hover:border-indigo-100 rounded-xl transition-all shadow-sm group">
+                                <Bell size={20} className="group-hover:animate-bounce" />
+                                <span className="absolute top-0 right-0 w-3 h-3 bg-rose-500 border-2 border-white rounded-full"></span>
+                            </button>
+                        </div>
                     </header>
 
                     {/* Scrollable Content Container */}

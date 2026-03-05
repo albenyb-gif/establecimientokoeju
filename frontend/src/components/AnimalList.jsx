@@ -79,9 +79,9 @@ const AnimalList = () => {
     };
 
     const filteredAnimals = animals.filter(a => {
-        const matchesSearch = a.caravana_visual.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.categoria.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            a.rodeo.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesSearch = (a.caravana_visual || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.categoria || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (a.rodeo || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === '' || a.categoria === selectedCategory;
         return matchesSearch && matchesCategory;
     });

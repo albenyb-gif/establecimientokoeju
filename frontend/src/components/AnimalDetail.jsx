@@ -255,7 +255,7 @@ const AnimalDetail = () => {
                                     {animal.marcas.map((m, idx) => (
                                         <div key={idx} className="aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 group/img relative">
                                             <img
-                                                src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}${m.foto_path}`}
+                                                src={`${import.meta.env.VITE_API_URL || 'https://establecimientokoeju.com'}${m.foto_path}`}
                                                 alt={`Marca ${idx + 1}`}
                                                 className="w-full h-full object-cover transition-transform group-hover/img:scale-110"
                                             />
