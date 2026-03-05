@@ -732,13 +732,14 @@ class AnimalController {
             // Convert empty strings to null for foreign keys
             const finalRodeoId = rodeo_id === "" ? null : rodeo_id;
             const finalCategoriaId = categoria_id === "" ? null : categoria_id;
+            const finalRfid = caravana_rfid === "" ? null : caravana_rfid;
 
             await db.query(
                 `UPDATE animales 
                  SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?, 
                      caravana_visual = ?, caravana_rfid = ? 
                  WHERE id = ?`,
-                [peso_actual, finalRodeoId, estado_sanitario, finalCategoriaId, caravana_visual, caravana_rfid, id]
+                [peso_actual, finalRodeoId, estado_sanitario, finalCategoriaId, caravana_visual, finalRfid, id]
             );
             res.json({ message: 'Animal actualizado correctamente', id });
         } catch (error) {
