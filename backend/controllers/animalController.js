@@ -739,9 +739,14 @@ class AnimalController {
             if (rows.length === 0) return res.status(404).json({ error: 'Animal no encontrado' });
 
             const animal = rows[0];
-            // Fetch multiple brands
-            const [brands] = await db.query('SELECT foto_path, tipo_marca FROM animales_marcas WHERE animal_id = ?', [id]);
-            animal.marcas = brands || [];
+            // Fetch multiple brands (wrapped in try-catch - table may not exist yet)
+            try {
+                const [brands] = await db.query('SELECT id, foto_path, tipo_marca FROM animales_marcas WHERE animal_id = ?', [id]);
+                animal.marcas = brands || [];
+            } catch (e) {
+                console.warn('animales_marcas table not available:', e.message);
+                animal.marcas = [];
+            }
 
             res.json(animal);
         } catch (error) {
@@ -1253,6 +1258,68 @@ class AnimalController {
         } catch (error) {
             console.error('Error creating category:', error);
             res.status(500).json({ error: 'Error al crear categoría' });
+        }
+    }
+
+    /**
+     * Upload brand photo for an animal
+     */
+    static async uploadMarca(req, res) {
+        const { id } = req.params;
+        const tipo_marca = req.body.tipo_marca || 'PROPIA';
+        try {
+            if (!req.file) return res.status(400).json({ error: 'No se recibió archivo' });
+
+            const fs = require('fs');
+            const path = require('path');
+            const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'marcas');
+            if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+            const filename = `marca_${id}_${Date.now()}.jpg`;
+            const filepath = path.join(uploadDir, filename);
+
+            // Try to compress with sharp, fallback to raw save
+            try {
+                const sharp = require('sharp');
+                await sharp(req.file.buffer)
+                    .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+                    .jpeg({ quality: 80 })
+                    .toFile(filepath);
+            } catch (sharpErr) {
+                fs.writeFileSync(filepath, req.file.buffer);
+            }
+
+            const fotoPath = `/uploads/marcas/${filename}`;
+            const [result] = await db.query(
+                'INSERT INTO animales_marcas (animal_id, foto_path, tipo_marca) VALUES (?, ?, ?)',
+                [id, fotoPath, tipo_marca]
+            );
+
+            res.status(201).json({ id: result.insertId, foto_path: fotoPath, tipo_marca });
+        } catch (error) {
+            console.error('Error uploading marca:', error);
+            res.status(500).json({ error: error.message });
+        }
+    }
+
+    /**
+     * Delete a brand photo
+     */
+    static async deleteMarca(req, res) {
+        const { marcaId } = req.params;
+        try {
+            const [rows] = await db.query('SELECT foto_path FROM animales_marcas WHERE id = ?', [marcaId]);
+            if (rows.length > 0) {
+                const fs = require('fs');
+                const path = require('path');
+                const filepath = path.join(__dirname, '..', 'public', rows[0].foto_path);
+                try { fs.unlinkSync(filepath); } catch (e) { }
+            }
+            await db.query('DELETE FROM animales_marcas WHERE id = ?', [marcaId]);
+            res.json({ message: 'Marca eliminada' });
+        } catch (error) {
+            console.error('Error deleting marca:', error);
+            res.status(500).json({ error: error.message });
         }
     }
 }

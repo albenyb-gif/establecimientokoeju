@@ -253,28 +253,59 @@ const AnimalDetail = () => {
                             </div>
                         </div>
 
-                        {/* Galería de Marcas (Double Brand support) */}
-                        {animal.marcas && animal.marcas.length > 0 && (
-                            <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 mt-6">
-                                <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-4 mb-6">
-                                    <FileText size={14} className="text-emerald-400" /> Galería de Marcas
-                                </h4>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {animal.marcas.map((m, idx) => (
-                                        <div key={idx} className="aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 group/img relative">
-                                            <img
-                                                src={`${import.meta.env.VITE_API_URL || 'https://establecimientokoeju.com'}${m.foto_path}`}
-                                                alt={`Marca ${idx + 1}`}
-                                                className="w-full h-full object-cover transition-transform group-hover/img:scale-110"
-                                            />
-                                            <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-[8px] font-black uppercase rounded-lg">
-                                                {m.tipo_marca}
-                                            </div>
+                        {/* Galería de Marcas - Siempre visible */}
+                        <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 mt-6">
+                            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2 border-b border-slate-50 pb-4 mb-6">
+                                <FileText size={14} className="text-emerald-400" /> Galería de Marcas ({animal.marcas?.length || 0})
+                            </h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                {animal.marcas && animal.marcas.map((m, idx) => (
+                                    <div key={m.id || idx} className="aspect-square bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 group/img relative">
+                                        <img
+                                            src={`${import.meta.env.VITE_API_URL || 'https://establecimientokoeju.com'}${m.foto_path}`}
+                                            alt={`Marca ${idx + 1}`}
+                                            className="w-full h-full object-cover transition-transform group-hover/img:scale-110"
+                                        />
+                                        <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/50 text-white text-[8px] font-black uppercase rounded-lg">
+                                            {m.tipo_marca}
                                         </div>
-                                    ))}
-                                </div>
+                                        <button
+                                            onClick={async () => {
+                                                if (!window.confirm('¿Eliminar esta foto de marca?')) return;
+                                                try {
+                                                    await AnimalService.deleteMarca(m.id);
+                                                    setAnimal({ ...animal, marcas: animal.marcas.filter(x => x.id !== m.id) });
+                                                } catch (err) { alert('Error al eliminar'); }
+                                            }}
+                                            className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-red-600"
+                                        >
+                                            <Trash2 size={12} />
+                                        </button>
+                                    </div>
+                                ))}
+                                {/* Botón subir nueva marca */}
+                                <label className="aspect-square bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center cursor-pointer hover:bg-emerald-50 hover:border-emerald-300 transition-all group/upload">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                            const file = e.target.files[0];
+                                            if (!file) return;
+                                            try {
+                                                const result = await AnimalService.uploadMarca(animal.id, file);
+                                                setAnimal({ ...animal, marcas: [...(animal.marcas || []), result] });
+                                            } catch (err) {
+                                                alert('Error al subir foto: ' + (err.response?.data?.error || err.message));
+                                            }
+                                            e.target.value = '';
+                                        }}
+                                    />
+                                    <FileText size={24} className="text-slate-300 group-hover/upload:text-emerald-500 transition-colors mb-2" />
+                                    <span className="text-[9px] font-black text-slate-300 group-hover/upload:text-emerald-600 uppercase tracking-widest">Subir Marca</span>
+                                </label>
                             </div>
-                        )}
+                        </div>
                     </div>
 
                     <div className="bg-slate-900 p-8 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden">
@@ -380,30 +411,36 @@ const AnimalDetail = () => {
             </div>
 
             {/* Modals remain mostly same but could be stylized later if needed */}
-            {isEditing && (
-                <EditAnimalModal
-                    animal={animal}
-                    onClose={() => setIsEditing(false)}
-                    onSave={handleSave}
-                />
-            )}
+            {
+                isEditing && (
+                    <EditAnimalModal
+                        animal={animal}
+                        onClose={() => setIsEditing(false)}
+                        onSave={handleSave}
+                    />
+                )
+            }
 
-            {isMoving && (
-                <MovementModal
-                    animal={animal}
-                    onClose={() => setIsMoving(false)}
-                    onSave={handleMovement}
-                />
-            )}
+            {
+                isMoving && (
+                    <MovementModal
+                        animal={animal}
+                        onClose={() => setIsMoving(false)}
+                        onSave={handleMovement}
+                    />
+                )
+            }
 
-            {isHealthOpen && (
-                <HealthModal
-                    animal={animal}
-                    onClose={() => setIsHealthOpen(false)}
-                    onSave={handleHealth}
-                />
-            )}
-        </div>
+            {
+                isHealthOpen && (
+                    <HealthModal
+                        animal={animal}
+                        onClose={() => setIsHealthOpen(false)}
+                        onSave={handleHealth}
+                    />
+                )
+            }
+        </div >
     );
 };
 

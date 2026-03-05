@@ -227,6 +227,18 @@ async function runMigrations() {
             )
         `);
 
+        // 9. Animales Marcas (Brand Photos)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS animales_marcas (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                animal_id INT NOT NULL,
+                foto_path VARCHAR(255) NOT NULL,
+                tipo_marca VARCHAR(50) DEFAULT 'PROPIA',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (animal_id) REFERENCES animales(id) ON DELETE CASCADE
+            )
+        `);
+
         // 9. DATA RECOVERY: Fix missing states for dashboard consistency
         console.log('🔄 Verificando integridad de estados...');
         await connection.query("UPDATE animales SET estado_general = 'ACTIVO' WHERE estado_general IS NULL");

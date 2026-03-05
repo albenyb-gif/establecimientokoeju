@@ -134,6 +134,21 @@ const AnimalService = {
     syncCompras: async () => {
         const response = await api.post('/animales/sync-compras');
         return response.data;
+    },
+
+    uploadMarca: async (animalId, file, tipoMarca = 'PROPIA') => {
+        const formData = new FormData();
+        formData.append('foto', file);
+        formData.append('tipo_marca', tipoMarca);
+        const response = await api.post(`/animales/${animalId}/marcas`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    },
+
+    deleteMarca: async (marcaId) => {
+        const response = await api.delete(`/animales/marcas/${marcaId}`);
+        return response.data;
     }
 };
 

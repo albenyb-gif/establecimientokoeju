@@ -7,6 +7,7 @@ const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
+// --- SPECIFIC routes FIRST (before /:id wildcard) ---
 router.post('/ingreso', upload.single('file'), AnimalController.registrarIngreso);
 router.get('/compras', AnimalController.getPurchaseHistory);
 router.post('/compras', upload.any(), AnimalController.registrarCompraLote);
@@ -23,14 +24,20 @@ router.get('/dashboard', AnimalController.getDashboardStats);
 router.get('/panel-stats', AnimalController.getPanelStats);
 router.get('/ranking', AnimalController.getGDPRanking);
 router.get('/costos', AnimalController.getCostAnalysis);
+router.get('/rodeos', AnimalController.getRodeos);
 router.get('/', AnimalController.getAnimals);
+
+// --- WILDCARD /:id routes LAST ---
 router.get('/:id', AnimalController.getAnimalById);
 router.put('/:id', AnimalController.updateAnimal);
 router.delete('/:id', AnimalController.deleteAnimal);
 router.post('/pesaje/:id', AnimalController.registerWeight);
 router.post('/sanidad/:id', AnimalController.registerHealthEvent);
 router.get('/:id/historial', AnimalController.getAnimalHistory);
-router.get('/rodeos', AnimalController.getRodeos);
 router.post('/movimiento/:id', AnimalController.registerMovement);
+
+// --- Marca (Brand photo) routes ---
+router.post('/:id/marcas', upload.single('foto'), AnimalController.uploadMarca);
+router.delete('/marcas/:marcaId', AnimalController.deleteMarca);
 
 module.exports = router;
