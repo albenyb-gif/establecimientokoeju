@@ -8,7 +8,9 @@ const formatCurrency = (value) =>
 
 const formatDate = (dateStr) => {
     if (!dateStr) return 'S/F';
-    return new Date(dateStr).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return 'S/F';
+    return date.toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
 const PurchaseList = ({ onSelectPurchase }) => {
