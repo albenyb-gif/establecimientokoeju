@@ -309,10 +309,12 @@ const PurchaseSheet = () => {
         }
 
         try {
-            await AnimalService.registrarCompraLote(submitData);
+            const response = await AnimalService.registrarCompraLote(submitData);
             const count = parseInt(formData.cantidad) || 0;
-            setSavedCount(count);
-            setStatus({ type: 'success', message: `Planilla Guardada. ${count} animales registrados.` });
+            const loteId = response.id || response.compra_lote_id || response.lote_id || 'Generado'; // Usamos el ID devuelto por el backend
+
+            setSavedCount({ count, loteId });
+            setStatus({ type: 'success', message: `Planilla Guardada. ${count} animales registrados en Lote #${loteId}.` });
             if (isMobile) setShowSuccessModal(true);
             setFormData(prev => ({
                 ...prev,
@@ -423,8 +425,8 @@ const PurchaseSheet = () => {
                                                                 <td className="px-3 py-2 text-right">{anim.peso_actual} Kg</td>
                                                                 <td className="px-3 py-2 text-center">
                                                                     <span className={`px-2 py-0.5 rounded text-[9px] font-black ${anim.comparador === 'M' ? 'bg-rose-50 text-rose-600' :
-                                                                            anim.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600' :
-                                                                                'bg-slate-100 text-slate-400'
+                                                                        anim.comparador === 'MF' ? 'bg-indigo-50 text-indigo-600' :
+                                                                            'bg-slate-100 text-slate-400'
                                                                         }`}>{anim.comparador || 'N/A'}</span>
                                                                 </td>
                                                             </tr>
@@ -558,20 +560,29 @@ const PurchaseSheet = () => {
 
             {showSuccessModal && (
                 <div className="fixed inset-0 z-[200] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-300">
-                        <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-5">
-                            <CheckCircle size={44} className="text-emerald-500" />
+                    <div className="bg-white rounded-[2.5rem] p-8 w-full max-w-sm text-center shadow-2xl animate-in zoom-in-95 duration-300 relative overflow-hidden">
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-emerald-50 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+                        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-emerald-100 rounded-full mix-blend-multiply filter blur-xl opacity-70"></div>
+
+                        <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 relative z-10 border-4 border-white shadow-inner">
+                            <CheckCircle size={48} className="text-emerald-500" />
                         </div>
-                        <h2 className="font-black text-2xl text-slate-900 tracking-tight mb-2">¡Guardado!</h2>
-                        <p className="text-slate-500 font-bold text-sm mb-1">
-                            {savedCount} animal{savedCount !== 1 ? 'es' : ''} registrado{savedCount !== 1 ? 's' : ''} con éxito
+
+                        <h2 className="font-black text-3xl text-slate-800 tracking-tight mb-2 relative z-10">¡Guardado!</h2>
+
+                        <div className="bg-emerald-500 text-white py-2 px-4 rounded-xl mx-auto inline-block mb-4 shadow-md shadow-emerald-500/20 relative z-10">
+                            <p className="font-black text-sm tracking-widest uppercase">Lote #{savedCount.loteId || 'OK'}</p>
+                        </div>
+
+                        <p className="text-slate-600 font-medium text-sm mb-8 relative z-10 px-4">
+                            Se ingresaron correctamente <strong className="text-slate-800">{savedCount.count} animales</strong> al sistema.
                         </p>
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">Lote de compra confirmado</p>
+
                         <button
                             onClick={() => setShowSuccessModal(false)}
-                            className="w-full py-4 bg-emerald-500 text-white font-black rounded-2xl text-sm uppercase tracking-widest hover:bg-emerald-600 transition-colors"
+                            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:bg-emerald-600 hover:shadow-emerald-600/20 transition-all relative z-10 flex items-center justify-center gap-2"
                         >
-                            Continuar
+                            Continuar <ChevronDown size={16} className="-rotate-90" />
                         </button>
                     </div>
                 </div>
@@ -759,8 +770,34 @@ const PurchaseSheet = () => {
                                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Lugar de Procedencia</label>
                                     <input type="text" placeholder="Ej. Santa Rosa" className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.lugar} onChange={e => setFormData({ ...formData, lugar: e.target.value })} />
                                 </div>
+                                <div className="md:col-span-3 space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 cursor-help flex items-center gap-1" title="Gastos adicionales por animal (Ej. comisiones, guías)">
+                                        <Calculator size={10} /> Tasas/Otros
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₲</span>
+                                        <input type="number" placeholder="0" className="w-full p-4 pl-8 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none font-mono" value={formData.tasas} onChange={e => setFormData({ ...formData, tasas: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="md:col-span-3 space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 cursor-help flex items-center gap-1" title="Margen de ganancia esperado para proyectar la venta">
+                                        <Percent size={10} /> Margen %
+                                    </label>
+                                    <div className="relative">
+                                        <input type="number" placeholder="0" className="w-full p-4 pr-8 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none font-mono" value={formData.porcentaje_ganancia} onChange={e => setFormData({ ...formData, porcentaje_ganancia: e.target.value })} />
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
+                                    </div>
+                                </div>
+
+                                <div className="md:col-span-6 space-y-2">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 cursor-help flex items-center gap-1" title="Persona responsable de la compra">
+                                        <User size={10} /> Comprador / Encargado
+                                    </label>
+                                    <input type="text" placeholder="Ej. Juan Pérez" className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-emerald-500 outline-none" value={formData.comparador || ''} onChange={e => setFormData({ ...formData, comparador: e.target.value.toUpperCase() })} />
+                                </div>
+
                                 <div className="md:col-span-12 space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Categoría General</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 cursor-help flex items-center gap-1">Clasificación Automática <span className="text-[9px] bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-bold">Opcional</span></label>
                                     <div className="flex gap-3">
                                         <div className="flex-1">
                                             {formData.categoria_id === 'MANUAL' ? (
