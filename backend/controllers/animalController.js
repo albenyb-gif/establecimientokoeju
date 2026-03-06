@@ -281,8 +281,8 @@ class AnimalController {
             const [rows] = await db.query('SELECT * FROM compras_lotes ORDER BY fecha DESC');
             res.json(rows);
         } catch (error) {
-            console.error('Error fetching purchase history:', error);
-            res.status(500).json({ error: 'Error al obtener historial de compras' });
+            console.error('Error fetching purchase history:', error.message || error);
+            res.status(500).json({ error: 'Error al obtener historial de compras', details: error.message });
         }
     }
 
@@ -592,17 +592,17 @@ class AnimalController {
         try {
             const [[totales]] = await db.query(`
                 SELECT
-                    COUNT(*) as total_animales,
-                    SUM(CASE WHEN estado_sanitario = 'ACTIVO' THEN 1 ELSE 0 END) as sanitario_activo,
-                    SUM(CASE WHEN estado_sanitario = 'BLOQUEADO' THEN 1 ELSE 0 END) as sanitario_bloqueado,
-                    SUM(CASE WHEN estado_sanitario = 'CUARENTENA' THEN 1 ELSE 0 END) as sanitario_cuarentena,
-                    SUM(CASE WHEN negocio_destino = 'ENGORDE' THEN 1 ELSE 0 END) as negocio_engorde,
-                    SUM(CASE WHEN negocio_destino = 'CRIA' THEN 1 ELSE 0 END) as negocio_cria,
-                    SUM(CASE WHEN negocio_destino = 'CABAÑA' THEN 1 ELSE 0 END) as negocio_cabana,
-                    ROUND(AVG(peso_actual), 1) as peso_promedio,
-                    ROUND(SUM(precio_compra), 0) as inversion_total,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' THEN 1 ELSE 0 END) as total_animales,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND estado_sanitario = 'ACTIVO' THEN 1 ELSE 0 END) as sanitario_activo,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND estado_sanitario = 'BLOQUEADO' THEN 1 ELSE 0 END) as sanitario_bloqueado,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND estado_sanitario = 'CUARENTENA' THEN 1 ELSE 0 END) as sanitario_cuarentena,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND negocio_destino = 'ENGORDE' THEN 1 ELSE 0 END) as negocio_engorde,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND negocio_destino = 'CRIA' THEN 1 ELSE 0 END) as negocio_cria,
+                    SUM(CASE WHEN estado_general = 'ACTIVO' AND negocio_destino = 'CABAÑA' THEN 1 ELSE 0 END) as negocio_cabana,
+                    ROUND(AVG(CASE WHEN estado_general = 'ACTIVO' THEN peso_actual ELSE NULL END), 1) as peso_promedio,
+                    ROUND(SUM(CASE WHEN estado_general = 'ACTIVO' THEN COALESCE(precio_compra, 0) ELSE 0 END), 0) as inversion_total,
                     SUM(CASE WHEN estado_general = 'VENDIDO' THEN 1 ELSE 0 END) as total_vendidos
-                FROM animales WHERE estado_general = 'ACTIVO'
+                FROM animales
             `);
 
             const [porCategoria] = await db.query(`
@@ -620,7 +620,7 @@ class AnimalController {
                 INNER JOIN rodeos r ON r.id = a.rodeo_id
                 LEFT JOIN potreros p ON p.id = r.potrero_id
                 WHERE a.estado_general = 'ACTIVO'
-                GROUP BY r.id
+                GROUP BY r.id, r.nombre, p.nombre, p.superficie_ha
                 ORDER BY total DESC
                 LIMIT 10
             `);
@@ -629,7 +629,7 @@ class AnimalController {
                 SELECT
                     COUNT(*) as total_lotes,
                     SUM(cantidad_animales) as total_cabezas_compradas,
-                    ROUND(SUM(costo_total), 0) as total_invertido,
+                    ROUND(SUM(COALESCE(costo_total, 0)), 0) as total_invertido,
                     MAX(fecha) as ultima_compra
                 FROM compras_lotes
             `);
@@ -648,16 +648,27 @@ class AnimalController {
             `);
 
             res.json({
-                totales,
+                totales: totales || {
+                    total_animales: 0,
+                    sanitario_activo: 0,
+                    sanitario_bloqueado: 0,
+                    sanitario_cuarentena: 0,
+                    negocio_engorde: 0,
+                    negocio_cria: 0,
+                    negocio_cabana: 0,
+                    peso_promedio: 0,
+                    inversion_total: 0,
+                    total_vendidos: 0
+                },
                 porCategoria,
                 porRodeo,
-                comprasStats,
+                comprasStats: comprasStats || { total_lotes: 0, total_cabezas_compradas: 0, total_invertido: 0, ultima_compra: null },
                 ultimasCompras,
-                gdpStats
+                gdpStats: gdpStats || { gdp_promedio: 0 }
             });
         } catch (error) {
-            console.error('Error in getPanelStats:', error.message);
-            res.status(500).json({ error: error.message });
+            console.error('Error in getPanelStats:', error.message || error);
+            res.status(500).json({ error: error.message, details: 'Error al procesar estadísticas del panel' });
         }
     }
     /**

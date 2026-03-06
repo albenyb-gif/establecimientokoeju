@@ -58,6 +58,19 @@ async function runMigrations() {
         const connection = await promisePool.getConnection();
         console.log('✅ Connected to Database for Migrations');
 
+        // Helper para agregar columnas de forma segura sin "IF NOT EXISTS"
+        const addColumnSafe = async (table, column, definition) => {
+            try {
+                const [cols] = await connection.query(`SHOW COLUMNS FROM ${table} LIKE ?`, [column]);
+                if (cols.length === 0) {
+                    console.log(`➕ Agregando columna ${column} a ${table}...`);
+                    await connection.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+                }
+            } catch (err) {
+                console.error(`❌ Error asegurando columna ${column} en ${table}:`, err.message);
+            }
+        };
+
         // 0. Infraestructura y Categorías
         await connection.query(`
             CREATE TABLE IF NOT EXISTS establecimientos (
@@ -95,13 +108,14 @@ async function runMigrations() {
             )
         `);
 
-        // Insert default categories if empty
+        // Insert default categories if empty (Using SENACSA style from full_schema.sql)
         const [cats] = await connection.query('SELECT COUNT(*) as count FROM categorias');
         if (cats[0].count === 0) {
             await connection.query(`
                 INSERT IGNORE INTO categorias (descripcion) VALUES 
-                ('TERNERO MACHO'), ('TERNERO HEMBRA'), ('DESMAMANTE MACHO'), ('DESMAMANTE HEMBRA'),
-                ('VAQUILLA'), ('TORO'), ('NOVILLO'), ('VACA'), ('VAQUILLONA')
+                ('TERNERO'), ('DESMAMANTE_M'), ('DESMAMANTE_H'), ('NOVILLO_1_2'), 
+                ('NOVILLO_2_3'), ('NOVILLO_3_MAS'), ('VAQUILLONA'), ('VACA'), ('TORO'),
+                ('CORDERO'), ('CORDERA'), ('BORREGO'), ('BORREGA'), ('OVEJA'), ('CARNERO'), ('CAPON')
             `);
         }
 
@@ -132,25 +146,22 @@ async function runMigrations() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        const comprasColumns = [
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS costo_total DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_guia VARCHAR(50)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comision_feria DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS flete DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tasas DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS porcentaje_ganancia DECIMAL(5,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS ganancia_estimada DECIMAL(15,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS peso_promedio_compra DECIMAL(10,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS peso_total DECIMAL(10,2)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS lugar_procedencia VARCHAR(100)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tipo_documento VARCHAR(50)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS nro_cot VARCHAR(50)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS observaciones TEXT',
-            'ALTER TABLE compras_lotes MODIFY COLUMN comparador VARCHAR(100)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS comparador VARCHAR(100)',
-            'ALTER TABLE compras_lotes ADD COLUMN IF NOT EXISTS tipo_ingreso VARCHAR(20) DEFAULT "masivo"'
-        ];
-        for (const sql of comprasColumns) { try { await connection.query(sql); } catch (e) { } }
+
+        await addColumnSafe('compras_lotes', 'costo_total', 'DECIMAL(15,2)');
+        await addColumnSafe('compras_lotes', 'nro_guia', 'VARCHAR(50)');
+        await addColumnSafe('compras_lotes', 'comision_feria', 'DECIMAL(15,2)');
+        await addColumnSafe('compras_lotes', 'flete', 'DECIMAL(15,2)');
+        await addColumnSafe('compras_lotes', 'tasas', 'DECIMAL(15,2)');
+        await addColumnSafe('compras_lotes', 'porcentaje_ganancia', 'DECIMAL(5,2)');
+        await addColumnSafe('compras_lotes', 'ganancia_estimada', 'DECIMAL(15,2)');
+        await addColumnSafe('compras_lotes', 'peso_promedio_compra', 'DECIMAL(10,2)');
+        await addColumnSafe('compras_lotes', 'peso_total', 'DECIMAL(10,2)');
+        await addColumnSafe('compras_lotes', 'lugar_procedencia', 'VARCHAR(100)');
+        await addColumnSafe('compras_lotes', 'tipo_documento', 'VARCHAR(50)');
+        await addColumnSafe('compras_lotes', 'nro_cot', 'VARCHAR(50)');
+        await addColumnSafe('compras_lotes', 'observaciones', 'TEXT');
+        await addColumnSafe('compras_lotes', 'comparador', 'VARCHAR(100)');
+        await addColumnSafe('compras_lotes', 'tipo_ingreso', 'VARCHAR(20) DEFAULT "masivo"');
 
         // 3. Gastos
         await connection.query(`
@@ -164,20 +175,36 @@ async function runMigrations() {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         `);
-        try { await connection.query('ALTER TABLE gastos ADD COLUMN IF NOT EXISTS comprobante_nro VARCHAR(50)'); } catch (e) { }
+        await addColumnSafe('gastos', 'comprobante_nro', 'VARCHAR(50)');
 
         // 4. Animales (Ensure new columns exist)
-        const animalsColumns = [
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS caravana_rfid VARCHAR(50)',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS pelaje VARCHAR(50)',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS negocio_destino ENUM("CRIA", "ENGORDE", "CABAÑA") DEFAULT "ENGORDE"',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS estado_sanitario ENUM("ACTIVO", "BLOQUEADO", "CUARENTENA") DEFAULT "ACTIVO"',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS precio_compra DECIMAL(15,2) DEFAULT 0',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS peso_inicial DECIMAL(10,2)',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS peso_actual DECIMAL(10,2)',
-            'ALTER TABLE animales ADD COLUMN IF NOT EXISTS comparador VARCHAR(20)'
-        ];
-        for (const sql of animalsColumns) { try { await connection.query(sql); } catch (e) { } }
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS animales (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                caravana_visual VARCHAR(20) UNIQUE NOT NULL, 
+                caravana_rfid VARCHAR(50) UNIQUE,
+                categoria_id INT,
+                rodeo_id INT,
+                peso_actual DECIMAL(10,2),
+                fecha_nacimiento DATE,
+                negocio_destino ENUM('CRIA', 'ENGORDE', 'CABAÑA') DEFAULT 'ENGORDE',
+                estado_general ENUM('ACTIVO', 'VENDIDO', 'MUERTO', 'CONSUMO') DEFAULT 'ACTIVO',
+                estado_sanitario ENUM('ACTIVO', 'BLOQUEADO', 'CUARENTENA') DEFAULT 'ACTIVO',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (categoria_id) REFERENCES categorias(id),
+                FOREIGN KEY (rodeo_id) REFERENCES rodeos(id)
+            )
+        `);
+
+        await addColumnSafe('animales', 'pelaje', 'VARCHAR(50)');
+        await addColumnSafe('animales', 'precio_compra', 'DECIMAL(15,2) DEFAULT 0');
+        await addColumnSafe('animales', 'peso_inicial', 'DECIMAL(10,2)');
+        await addColumnSafe('animales', 'peso_actual', 'DECIMAL(10,2)'); // De reserva
+        await addColumnSafe('animales', 'comparador', 'VARCHAR(100)');
+        await addColumnSafe('animales', 'fecha_liberacion_carencia', 'DATE');
+        await addColumnSafe('animales', 'raza', 'VARCHAR(50)');
+        await addColumnSafe('animales', 'especie', "ENUM('BOVINO', 'OVINO', 'EQUINO', 'CAPRINO') DEFAULT 'BOVINO'");
+
 
         // 4.1 Pesajes (GDP Tracking)
         await connection.query(`
