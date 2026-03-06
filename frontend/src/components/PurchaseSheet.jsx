@@ -4,7 +4,7 @@ import AnimalService from '../services/animalService';
 import ClientService from '../services/clientService';
 import PageHeader from './common/PageHeader';
 import PurchaseList from './PurchaseList';
-import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown, Pencil, Trash2, MapPin, User, FileCheck, Hash, Package, StickyNote, Calendar, Camera } from 'lucide-react';
+import { Save, Calculator, AlertCircle, CheckCircle, FileText, Upload, DollarSign, List, X, Plus, ChevronDown, Pencil, Trash2, MapPin, User, FileCheck, Hash, Package, StickyNote, Calendar, Camera, Percent } from 'lucide-react';
 
 const PurchaseSheet = () => {
     const [formData, setFormData] = useState({
