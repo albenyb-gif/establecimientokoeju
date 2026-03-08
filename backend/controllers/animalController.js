@@ -605,6 +605,19 @@ class AnimalController {
                 FROM animales
             `);
 
+            const safeTotales = totales || {
+                total_animales: 0,
+                sanitario_activo: 0,
+                sanitario_bloqueado: 0,
+                sanitario_cuarentena: 0,
+                negocio_engorde: 0,
+                negocio_cria: 0,
+                negocio_cabana: 0,
+                peso_promedio: 0,
+                inversion_total: 0,
+                total_vendidos: 0
+            };
+
             const [porCategoria] = await db.query(`
                 SELECT c.descripcion as categoria, COUNT(a.id) as total
                 FROM animales a
@@ -612,7 +625,7 @@ class AnimalController {
                 WHERE a.estado_general = 'ACTIVO'
                 GROUP BY c.descripcion
                 ORDER BY total DESC
-            `);
+                `);
 
             const [porRodeo] = await db.query(`
                 SELECT r.nombre as rodeo, p.nombre as potrero, COUNT(a.id) as total, p.superficie_ha
@@ -623,47 +636,36 @@ class AnimalController {
                 GROUP BY r.id, r.nombre, p.nombre, p.superficie_ha
                 ORDER BY total DESC
                 LIMIT 10
-            `);
+                `);
 
             const [[comprasStats]] = await db.query(`
-                SELECT
-                    COUNT(*) as total_lotes,
-                    SUM(cantidad_animales) as total_cabezas_compradas,
-                    ROUND(SUM(COALESCE(costo_total, 0)), 0) as total_invertido,
-                    MAX(fecha) as ultima_compra
+            SELECT
+            COUNT(*) as total_lotes,
+                SUM(cantidad_animales) as total_cabezas_compradas,
+                ROUND(SUM(COALESCE(costo_total, 0)), 0) as total_invertido,
+                MAX(fecha) as ultima_compra
                 FROM compras_lotes
-            `);
+                `);
 
             const [ultimasCompras] = await db.query(`
                 SELECT id, fecha, cantidad_animales, vendedor, costo_total, lugar_procedencia
                 FROM compras_lotes
                 ORDER BY fecha DESC
                 LIMIT 3
-            `);
+                `);
 
             const [[gdpStats]] = await db.query(`
                 SELECT ROUND(AVG(gdp_calculado), 3) as gdp_promedio
                 FROM pesajes
                 WHERE gdp_calculado > 0
-            `);
+                `);
 
             res.json({
-                totales: totales || {
-                    total_animales: 0,
-                    sanitario_activo: 0,
-                    sanitario_bloqueado: 0,
-                    sanitario_cuarentena: 0,
-                    negocio_engorde: 0,
-                    negocio_cria: 0,
-                    negocio_cabana: 0,
-                    peso_promedio: 0,
-                    inversion_total: 0,
-                    total_vendidos: 0
-                },
-                porCategoria,
-                porRodeo,
+                totales: safeTotales,
+                porCategoria: porCategoria || [],
+                porRodeo: porRodeo || [],
                 comprasStats: comprasStats || { total_lotes: 0, total_cabezas_compradas: 0, total_invertido: 0, ultima_compra: null },
-                ultimasCompras,
+                ultimasCompras: ultimasCompras || [],
                 gdpStats: gdpStats || { gdp_promedio: 0 }
             });
         } catch (error) {
@@ -678,24 +680,24 @@ class AnimalController {
         try {
             const { estado, lote_id } = req.query;
             let query = `
-                SELECT 
-                    a.id, 
-                    a.caravana_visual, 
-                    c.descripcion as categoria, 
-                    r.nombre as rodeo, 
-                    a.peso_actual, 
-                    a.negocio_destino as negocio,
-                    a.estado_sanitario,
-                    a.estado_general,
-                    a.fecha_liberacion_carencia,
-                    a.comparador,
-                    mi.compra_lote_id as lote_id,
-                    mi.fecha_ingreso as fecha_ingreso
+            SELECT
+            a.id,
+                a.caravana_visual,
+                c.descripcion as categoria,
+                r.nombre as rodeo,
+                a.peso_actual,
+                a.negocio_destino as negocio,
+                a.estado_sanitario,
+                a.estado_general,
+                a.fecha_liberacion_carencia,
+                a.comparador,
+                mi.compra_lote_id as lote_id,
+                mi.fecha_ingreso as fecha_ingreso
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
                 LEFT JOIN movimientos_ingreso mi ON mi.animal_id = a.id
-            `;
+                `;
 
             const params = [];
 
@@ -729,23 +731,23 @@ class AnimalController {
         const { id } = req.params;
         try {
             const query = `
-                SELECT 
-                    a.*,
-                    c.descripcion as categoria, 
-                    r.nombre as rodeo,
-                    mi.fecha_ingreso,
-                    DATEDIFF(CURRENT_DATE, COALESCE(mi.fecha_ingreso, a.created_at, CURRENT_DATE)) as dias_en_stock,
-                    (SELECT gdp_calculado FROM pesajes WHERE animal_id = a.id ORDER BY fecha DESC LIMIT 1) as ultimo_gdp
+            SELECT
+            a.*,
+                c.descripcion as categoria,
+                r.nombre as rodeo,
+                mi.fecha_ingreso,
+                DATEDIFF(CURRENT_DATE, COALESCE(mi.fecha_ingreso, a.created_at, CURRENT_DATE)) as dias_en_stock,
+                (SELECT gdp_calculado FROM pesajes WHERE animal_id = a.id ORDER BY fecha DESC LIMIT 1) as ultimo_gdp
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
-                LEFT JOIN (
+                LEFT JOIN(
                     SELECT animal_id, MIN(fecha_ingreso) as fecha_ingreso 
                     FROM movimientos_ingreso 
                     GROUP BY animal_id
                 ) mi ON mi.animal_id = a.id
                 WHERE a.id = ?
-            `;
+                `;
             const [rows] = await db.query(query, [id]);
             if (rows.length === 0) return res.status(404).json({ error: 'Animal no encontrado' });
 
@@ -761,7 +763,7 @@ class AnimalController {
 
             res.json(animal);
         } catch (error) {
-            console.error(`Error in getAnimalById(${id}):`, error.message);
+            console.error(`Error in getAnimalById(${id}): `, error.message);
             res.status(500).json({ error: 'Error al obtener animal' });
         }
     }
@@ -780,14 +782,14 @@ class AnimalController {
 
             await db.query(
                 `UPDATE animales 
-                 SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?, 
-                     caravana_visual = ?, caravana_rfid = ? 
-                 WHERE id = ?`,
+                 SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?,
+                caravana_visual = ?, caravana_rfid = ?
+                    WHERE id = ? `,
                 [peso_actual, finalRodeoId, estado_sanitario, finalCategoriaId, caravana_visual, finalRfid, id]
             );
             res.json({ message: 'Animal actualizado correctamente', id });
         } catch (error) {
-            console.error(`Error in updateAnimal(${id}):`, error.message);
+            console.error(`Error in updateAnimal(${id}): `, error.message);
             res.status(500).json({ error: 'Error al actualizar animal: ' + error.message });
         }
     }
@@ -801,7 +803,7 @@ class AnimalController {
             await db.query('DELETE FROM animales WHERE id = ?', [id]);
             res.json({ message: `Animal ${rows[0].caravana_visual} eliminado del inventario` });
         } catch (error) {
-            console.error(`Error in deleteAnimal(${id}):`, error.message);
+            console.error(`Error in deleteAnimal(${id}): `, error.message);
             res.status(500).json({ error: error.message });
         }
     }
@@ -831,7 +833,7 @@ class AnimalController {
                 SELECT categoria as name, SUM(monto) as value 
                 FROM gastos 
                 GROUP BY categoria
-            `);
+                `);
 
             // Merge with Purchases for a unified view
             const gastos_por_categoria = [
@@ -975,7 +977,7 @@ class AnimalController {
 
             res.json({
                 message: 'Evento sanitario registrado',
-                bloqueo: fecha_liberacion ? `Animal bloqueado hasta ${fecha_liberacion}` : 'Sin restricciones'
+                bloqueo: fecha_liberacion ? `Animal bloqueado hasta ${fecha_liberacion} ` : 'Sin restricciones'
             });
 
         } catch (error) {
@@ -994,7 +996,7 @@ class AnimalController {
                 WHERE p.gdp_calculado > 0
                 ORDER BY p.gdp_calculado DESC
                 LIMIT 5
-            `);
+                `);
 
             // Ranking Cola (Bottom 5)
             const [bottom] = await db.query(`
@@ -1030,9 +1032,9 @@ class AnimalController {
             let sanidad = [];
             try {
                 [sanidad] = await db.query(
-                    `SELECT "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date, 
-                     COALESCE(e.nro_acta, e.lote_vencimiento) as nro_acta, 
-                     e.fecha_fin_carencia, i.nombre_comercial as producto
+                    `SELECT "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date,
+                COALESCE(e.nro_acta, e.lote_vencimiento) as nro_acta,
+                e.fecha_fin_carencia, i.nombre_comercial as producto
                      FROM sanidad_eventos e
                      LEFT JOIN insumos_stock i ON e.producto_id = i.id
                      WHERE e.animal_id = ? ORDER BY e.fecha_aplicacion DESC`,
@@ -1108,8 +1110,8 @@ class AnimalController {
 
             // 1. Registrar el movimiento
             await connection.query(
-                `INSERT INTO movimientos_internos (animal_id, fecha, origen_rodeo_id, destino_rodeo_id, motivo)
-                 VALUES (?, ?, ?, ?, ?)`,
+                `INSERT INTO movimientos_internos(animal_id, fecha, origen_rodeo_id, destino_rodeo_id, motivo)
+            VALUES(?, ?, ?, ?, ?)`,
                 [id, fecha, origen_rodeo_id, destino_rodeo_id, motivo]
             );
 
@@ -1160,9 +1162,9 @@ class AnimalController {
             // For now, let's accept totals from frontend to support "Boleto" logic where maybe weight is agreed upon differently.
 
             const [ventaResult] = await connection.query(
-                `INSERT INTO ventas_lotes 
+                `INSERT INTO ventas_lotes
                 (fecha, cliente, destino, cantidad_animales, precio_promedio_kg, total_bruto, descuentos_total, total_neto, observaciones)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [fecha, cliente, destino, cant, numPrecio, numBruto, numDesc, numNeto, observaciones]
             );
             const ventaId = ventaResult.insertId;
@@ -1175,8 +1177,8 @@ class AnimalController {
 
                 // Insert Generic Movement
                 await connection.query(
-                    `INSERT INTO movimientos_salida (venta_lote_id, animal_id, fecha_salida, peso_salida, precio_kg_real, motivo_salida)
-                    VALUES (?, ?, ?, ?, ?, 'VENTA')`,
+                    `INSERT INTO movimientos_salida(venta_lote_id, animal_id, fecha_salida, peso_salida, precio_kg_real, motivo_salida)
+            VALUES(?, ?, ?, ?, ?, 'VENTA')`,
                     [ventaId, animalId, fecha, peso, numPrecio]
                 );
 
@@ -1212,12 +1214,12 @@ class AnimalController {
             // Asegurar que la tabla existe (opcional, pero útil para persistencia)
             try {
                 await db.query(`
-                    CREATE TABLE IF NOT EXISTS categorias (
-                        id INT AUTO_INCREMENT PRIMARY KEY,
-                        descripcion VARCHAR(255) UNIQUE NOT NULL,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-                `);
+                    CREATE TABLE IF NOT EXISTS categorias(
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                descripcion VARCHAR(255) UNIQUE NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+            `);
 
                 // Sembrar si está vacía
                 const [countRows] = await db.query('SELECT COUNT(*) as count FROM categorias');
@@ -1300,7 +1302,7 @@ class AnimalController {
                 fs.writeFileSync(filepath, req.file.buffer);
             }
 
-            const fotoPath = `/uploads/marcas/${filename}`;
+            const fotoPath = `/ uploads / marcas / ${filename} `;
             const [result] = await db.query(
                 'INSERT INTO animales_marcas (animal_id, foto_path, tipo_marca) VALUES (?, ?, ?)',
                 [id, fotoPath, tipo_marca]
