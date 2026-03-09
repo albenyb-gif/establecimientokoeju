@@ -402,7 +402,7 @@ const AnimalDetail = () => {
                             {animal.comparador && (
                                 <DetailItem
                                     icon={<User />}
-                                    label="De:"
+                                    label="Propietario"
                                     value={animal.comparador === 'M' ? 'Martina' : animal.comparador === 'MF' ? 'Leli' : animal.comparador}
                                 />
                             )}

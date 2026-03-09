@@ -428,7 +428,7 @@ const AnimalList = () => {
                                                 <span className="font-bold text-emerald-700 uppercase text-xs">#{selectedAnimal.lote_id || 'S/L'}</span>
                                             </div>
                                             <div className="flex justify-between items-center">
-                                                <span className="text-xs font-bold text-emerald-600/60">De:</span>
+                                                <span className="text-xs font-bold text-emerald-600/60">Propietario</span>
                                                 <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-black">{selectedAnimal.comparador || 'NO ASIGNADO'}</span>
                                             </div>
                                         </div>
