@@ -63,3 +63,14 @@ En producción, el servidor de Node sirve tanto la API como los archivos estáti
    pm2 start server.js --name "gestion-ganadera"
    ```
 2. **Proxy Inverso**: Se recomienda usar Nginx como proxy inverso si vas a usar un dominio (SSL).
+
+## 🚀 Notas Específicas para Hostinger
+- **Estructura de Servidor**: 
+  - Hostinger separa el proyecto en dos directorios clave: `nodejs/` (donde vive el backend) y `public_html/` (donde se sirve el frontend estático por defecto si no es redirigido).
+- **Variables de Entorno (.env)**:
+  - **No subas el `.env` por Git**, ni crees archivos manuales en otras carpetas.
+  - La forma correcta y segura de configurar credenciales es a través del **Panel de Hostinger**:
+    1. Dirígete a **Despliegues > Ajustes y reimplementación**.
+    2. Baja hasta **Variables de entorno** y haz clic en **Añadir**.
+    3. Añade tus variables (`DB_HOST` siempre debe ser `localhost` dentro de Hostinger, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `NODE_ENV='production'`).
+    4. Clic en **Guardar y reimplementar**. Esto reiniciará el backend y le inyectará las credenciales correctamente.
