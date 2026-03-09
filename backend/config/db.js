@@ -16,6 +16,14 @@ const poolConfig = {
     keepAliveInitialDelay: 10000
 };
 
+// Log de variables presentes (sin mostrar la clave completa por seguridad)
+console.log('--- VARIABLES DE ENTORNO DETECTADAS ---');
+console.log('USER:', poolConfig.user ? '✅ OK' : '❌ FALTANTE');
+console.log('DB:', poolConfig.database ? '✅ OK' : '❌ FALTANTE');
+console.log('PASS:', poolConfig.password ? '✅ OK' : '❌ FALTANTE');
+console.log('HOST_ENV:', process.env.DB_HOST || 'No definido');
+console.log('---------------------------------------');
+
 // Detectar el socket Unix disponible en el servidor
 const socketPaths = [
     '/tmp/mysql.sock',
