@@ -233,6 +233,7 @@ const PurchaseSheet = () => {
                         costo: formData.costo_unitario || '',
                         categoria_id: formData.categoria_id || '',
                         pelaje: formData.pelaje || '',
+                        comparador: formData.comparador || '',
                         marcas: [] // Local preview/file info
                     });
                 }
@@ -288,7 +289,8 @@ const PurchaseSheet = () => {
                     peso: a.peso,
                     costo: a.costo,
                     categoria_id: a.categoria_id,
-                    pelaje: a.pelaje
+                    pelaje: a.pelaje,
+                    comparador: a.comparador
                 }));
                 submitData.append(key, JSON.stringify(animalsClean));
 
@@ -1008,6 +1010,22 @@ const PurchaseSheet = () => {
                                                                 }}
                                                             />
                                                         </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Comparador</label>
+                                                            <select
+                                                                className="w-full p-3 bg-amber-50/50 border border-amber-200 rounded-xl text-sm font-black outline-none appearance-none cursor-pointer"
+                                                                value={anim.comparador}
+                                                                onChange={e => {
+                                                                    const newAnims = [...formData.animales];
+                                                                    newAnims[idx].comparador = e.target.value;
+                                                                    setFormData({ ...formData, animales: newAnims });
+                                                                }}
+                                                            >
+                                                                <option value="">-- Sel. --</option>
+                                                                <option value="M">M — Martina</option>
+                                                                <option value="MF">MF — Leli</option>
+                                                            </select>
+                                                        </div>
                                                     </div>
 
                                                     <div className="space-y-2 pt-2 border-t border-slate-50">
@@ -1089,6 +1107,7 @@ const PurchaseSheet = () => {
                                                         <th className="pb-3 px-2">Costo (₲)</th>
                                                         <th className="pb-3 px-2">Categoría</th>
                                                         <th className="pb-3 px-2">Pelaje</th>
+                                                        <th className="pb-3 px-2">Comp.</th>
                                                         <th className="pb-3 text-right pr-2">Marcas</th>
                                                     </tr>
                                                 </thead>
@@ -1205,6 +1224,21 @@ const PurchaseSheet = () => {
                                                                         setFormData({ ...formData, animales: newAnims });
                                                                     }}
                                                                 />
+                                                            </td>
+                                                            <td className="py-3 pr-2">
+                                                                <select
+                                                                    className="w-16 p-2 bg-amber-50/50 border border-amber-200 rounded-xl text-[10px] font-black outline-none appearance-none cursor-pointer"
+                                                                    value={anim.comparador}
+                                                                    onChange={e => {
+                                                                        const newAnims = [...formData.animales];
+                                                                        newAnims[idx].comparador = e.target.value;
+                                                                        setFormData({ ...formData, animales: newAnims });
+                                                                    }}
+                                                                >
+                                                                    <option value="">-</option>
+                                                                    <option value="M">M</option>
+                                                                    <option value="MF">MF</option>
+                                                                </select>
                                                             </td>
                                                             <td className="py-3 text-right">
                                                                 <div className="flex flex-wrap gap-1 items-center justify-end">

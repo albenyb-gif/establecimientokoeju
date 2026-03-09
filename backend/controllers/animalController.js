@@ -205,6 +205,7 @@ class AnimalController {
                     }
                 }
                 let pelajeIndividual = det.pelaje || pelaje || 'SIN ESPECIFICAR';
+                let comparadorIndividual = det.comparador || comparador || null;
 
                 // Check for duplicate caravan to avoid crash
                 const [dup] = await connection.query('SELECT id FROM animales WHERE caravana_visual = ?', [caravana]);
@@ -215,14 +216,14 @@ class AnimalController {
                     // For now, let's just update its state and weight as it's coming back "into" the system.
                     await connection.query(
                         "UPDATE animales SET estado_general = 'ACTIVO', peso_actual = ?, peso_inicial = ?, precio_compra = ?, categoria_id = ?, pelaje = ?, comparador = ? WHERE id = ?",
-                        [pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparador, animalId]
+                        [pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparadorIndividual, animalId]
                     );
                 } else {
                     // Insert New Animal
                     const [animResult] = await connection.query(
                         `INSERT INTO animales (caravana_visual, caravana_rfid, peso_actual, peso_inicial, precio_compra, categoria_id, pelaje, negocio_destino, estado_general, estado_sanitario, comparador)
                         VALUES (?, ?, ?, ?, ?, ?, ?, 'ENGORDE', 'ACTIVO', 'ACTIVO', ?)`,
-                        [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparador]
+                        [caravana, rfid, pesoIndividual, pesoIndividual, costoIndividual, catIndividual, pelajeIndividual, comparadorIndividual]
                     );
                     animalId = animResult.insertId;
                 }
