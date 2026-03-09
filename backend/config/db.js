@@ -18,9 +18,14 @@ const poolConfig = {
 
 // Log de variables presentes (sin mostrar la clave completa por seguridad)
 console.log('--- VARIABLES DE ENTORNO DETECTADAS ---');
-console.log('USER:', poolConfig.user, '| Len:', poolConfig.user.length);
-console.log('DB:', poolConfig.database, '| Len:', poolConfig.database.length);
+console.log('USER: [' + poolConfig.user + '] | Len:', poolConfig.user.length);
+console.log('DB: [' + poolConfig.database + '] | Len:', poolConfig.database.length);
 console.log('PASS_LEN:', poolConfig.password.length);
+// Mostrar primer y último caracter para detectar espacios accidentales
+if (poolConfig.password.length > 0) {
+    console.log('PASS_START:', poolConfig.password[0]);
+    console.log('PASS_END: [' + poolConfig.password[poolConfig.password.length - 1] + ']');
+}
 console.log('HOST_ENV:', process.env.DB_HOST || 'No definido');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('---------------------------------------');
