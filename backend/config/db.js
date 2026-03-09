@@ -18,30 +18,17 @@ const poolConfig = {
 
 // Log de variables presentes (sin mostrar la clave completa por seguridad)
 console.log('--- VARIABLES DE ENTORNO DETECTADAS ---');
-console.log('USER:', poolConfig.user ? '✅ OK' : '❌ FALTANTE');
-console.log('DB:', poolConfig.database ? '✅ OK' : '❌ FALTANTE');
-console.log('PASS:', poolConfig.password ? '✅ OK' : '❌ FALTANTE');
+console.log('USER:', poolConfig.user, '| Len:', poolConfig.user.length);
+console.log('DB:', poolConfig.database, '| Len:', poolConfig.database.length);
+console.log('PASS_LEN:', poolConfig.password.length);
 console.log('HOST_ENV:', process.env.DB_HOST || 'No definido');
+console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('---------------------------------------');
 
-// Detectar el socket Unix disponible en el servidor
-const socketPaths = [
-    '/tmp/mysql.sock',
-    '/tmp/mysqld.sock',
-    '/var/lib/mysql/mysql.sock',
-    '/run/mysqld/mysqld.sock',
-    '/var/run/mysqld/mysqld.sock'
-];
-
-if (process.env.NODE_ENV === 'production') {
-    // Forzar 127.0.0.1 para evitar problemas de permisos con el Socket Unix en Hostinger
-    poolConfig.host = '127.0.0.1';
-    poolConfig.port = 3306;
-    console.log('🌐 Producción: Usando TCP 127.0.0.1:3306');
-} else {
-    poolConfig.host = process.env.DB_HOST || '127.0.0.1';
-    console.log('💻 Modo desarrollo:', poolConfig.host);
-}
+// Simplificar host: Usar lo que diga el env, o localhost por defecto
+poolConfig.host = process.env.DB_HOST || '127.0.0.1';
+poolConfig.port = 3306;
+console.log('🔗 Intentando conectar a:', poolConfig.host);
 
 console.log('--- DIAGNÓSTICO DB ---');
 console.log('👤', poolConfig.user, '| 🗄️', poolConfig.database);
