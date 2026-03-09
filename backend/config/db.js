@@ -21,8 +21,14 @@ console.log('--- VARIABLES DE ENTORNO DETECTADAS ---');
 console.log('USER: [' + poolConfig.user + '] | Len:', poolConfig.user.length);
 console.log('DB: [' + poolConfig.database + '] | Len:', poolConfig.database.length);
 console.log('PASS_LEN:', poolConfig.password.length);
-// Mostrar primer y último caracter para detectar espacios accidentales
+
+// Volcado HEX para encontrar caracteres invisibles (como \r o espacios no estándar)
 if (poolConfig.password.length > 0) {
+    let hex = '';
+    for (let i = 0; i < poolConfig.password.length; i++) {
+        hex += poolConfig.password.charCodeAt(i).toString(16) + ' ';
+    }
+    console.log('PASS_HEX:', hex.trim());
     console.log('PASS_START:', poolConfig.password[0]);
     console.log('PASS_END: [' + poolConfig.password[poolConfig.password.length - 1] + ']');
 }
