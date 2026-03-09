@@ -39,18 +39,16 @@ app.use('/api/gastos', require('./routes/expenseRoutes'));
 app.use('/api/calendar', require('./routes/calendarRoutes'));
 app.use('/api/agenda', require('./routes/agendaRoutes'));
 
-// Database connection check (Optional - removed to prevent crash on offline mode)
-/*
+// Database connection check
 const db = require('./config/db');
 db.getConnection()
     .then(connection => {
-        console.log('Connected to Database');
+        console.log('✅ Conexión a base de datos exitosa');
         connection.release();
     })
     .catch(err => {
-        console.error('Error connecting to Database:', err);
+        console.error('❌ ERROR FATAL DE CONEXIÓN A BD:', err);
     });
-*/
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
