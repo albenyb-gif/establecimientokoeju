@@ -26,18 +26,10 @@ const socketPaths = [
 ];
 
 if (process.env.NODE_ENV === 'production') {
-    const foundSocket = socketPaths.find(p => {
-        try { return fs.existsSync(p); } catch (e) { return false; }
-    });
-    if (foundSocket) {
-        poolConfig.socketPath = foundSocket;
-        console.log('🔌 Socket encontrado:', foundSocket);
-    } else {
-        // Fallback: TCP localhost si no hay socket
-        poolConfig.host = '127.0.0.1';
-        poolConfig.port = 3306;
-        console.log('⚠️ No se encontró socket, usando TCP 127.0.0.1:3306');
-    }
+    // Forzar 127.0.0.1 para evitar problemas de permisos con el Socket Unix en Hostinger
+    poolConfig.host = '127.0.0.1';
+    poolConfig.port = 3306;
+    console.log('🌐 Producción: Usando TCP 127.0.0.1:3306');
 } else {
     poolConfig.host = process.env.DB_HOST || '127.0.0.1';
     console.log('💻 Modo desarrollo:', poolConfig.host);
