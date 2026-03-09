@@ -753,7 +753,7 @@ const PurchaseSheet = () => {
                                 </div>
                                 {/* Fila 2: Comparador, Pelaje */}
                                 <div className="md:col-span-3 space-y-2">
-                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Comparador</label>
+                                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">De:</label>
                                     <select
                                         className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-emerald-500 outline-none cursor-pointer appearance-none font-black text-slate-700"
                                         value={formData.comparador}
@@ -1011,7 +1011,7 @@ const PurchaseSheet = () => {
                                                             />
                                                         </div>
                                                         <div className="space-y-1">
-                                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Comparador</label>
+                                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">De:</label>
                                                             <select
                                                                 className="w-full p-3 bg-amber-50/50 border border-amber-200 rounded-xl text-sm font-black outline-none appearance-none cursor-pointer"
                                                                 value={anim.comparador}
@@ -1107,7 +1107,7 @@ const PurchaseSheet = () => {
                                                         <th className="pb-3 px-2">Costo (₲)</th>
                                                         <th className="pb-3 px-2">Categoría</th>
                                                         <th className="pb-3 px-2">Pelaje</th>
-                                                        <th className="pb-3 px-2">Comp.</th>
+                                                        <th className="pb-3 px-2">De:</th>
                                                         <th className="pb-3 text-right pr-2">Marcas</th>
                                                     </tr>
                                                 </thead>

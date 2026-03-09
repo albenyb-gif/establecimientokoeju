@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Activity, Syringe, Truck, Edit, HeartPulse, Scale,
     Info, Calendar, Fingerprint, ShieldAlert, TrendingUp, History,
-    LayoutDashboard, Trash2, FileText
+    LayoutDashboard, Trash2, FileText, User
 } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import AnimalCard from './AnimalCard';
@@ -399,6 +399,13 @@ const AnimalDetail = () => {
                                     '-- ₲/Kg'}
                             />
                             <DetailItem icon={<Scale />} label="Peso de Ingreso" value={`${animal.peso_inicial || 0} kg`} />
+                            {animal.comparador && (
+                                <DetailItem
+                                    icon={<User />}
+                                    label="De:"
+                                    value={animal.comparador === 'M' ? 'Martina' : animal.comparador === 'MF' ? 'Leli' : animal.comparador}
+                                />
+                            )}
                         </div>
                     </div>
 
