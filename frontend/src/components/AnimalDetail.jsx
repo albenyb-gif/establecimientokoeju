@@ -109,6 +109,26 @@ const AnimalDetail = () => {
         }
     };
 
+    const handleUpdateWeight = async (pesajeId) => {
+        const currentWeightValue = history.find(h => h.id === pesajeId)?.peso_kg;
+        const newWeight = prompt("Actualizar peso (kg):", currentWeightValue);
+        if (!newWeight || isNaN(newWeight)) return;
+
+        try {
+            await AnimalService.updateWeight(pesajeId, newWeight);
+            // Recargar datos
+            const [updatedAnimal, updatedHistory] = await Promise.all([
+                AnimalService.getById(id),
+                AnimalService.getHistory(id)
+            ]);
+            setAnimal(updatedAnimal);
+            setHistory(updatedHistory);
+        } catch (error) {
+            console.error('Error updating weight:', error);
+            alert('Error al actualizar pesaje');
+        }
+    };
+
     const getEventDisplay = (event) => {
         switch (event.type) {
             case 'PESAJE':
@@ -138,6 +158,21 @@ const AnimalDetail = () => {
                     subtitle: event.motivo_salida,
                     icon: <Truck size={18} />,
                     color: 'slate'
+                };
+            case 'MARCA':
+                return {
+                    title: `Registro de Marca: ${event.tipo_marca}`,
+                    subtitle: 'Nueva evidencia fotográfica añadida',
+                    icon: <FileText size={18} />,
+                    color: 'emerald',
+                    image: event.foto_path
+                };
+            case 'TRASLADO':
+                return {
+                    title: `Traslado Interno`,
+                    subtitle: `${event.origen} -> ${event.destino} | ${event.motivo}`,
+                    icon: <Activity size={18} />,
+                    color: 'orange'
                 };
             default:
                 return {
@@ -399,7 +434,24 @@ const AnimalDetail = () => {
                                                 <h4 className="font-black text-slate-800 text-base tracking-tight group-hover/event:text-indigo-600 transition-colors">
                                                     {display.title}
                                                 </h4>
+                                                {event.type === 'PESAJE' && (
+                                                    <button
+                                                        onClick={() => handleUpdateWeight(event.id)}
+                                                        className="mt-1 text-[9px] font-black text-indigo-500 uppercase tracking-widest hover:underline flex items-center gap-1"
+                                                    >
+                                                        <Edit size={10} /> Corregir Pesaje
+                                                    </button>
+                                                )}
                                                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 opacity-70">{display.subtitle}</p>
+                                                {display.image && (
+                                                    <div className="mt-4 w-32 h-32 rounded-xl overflow-hidden border border-slate-100 shadow-inner">
+                                                        <img
+                                                            src={`${import.meta.env.VITE_API_URL || 'https://establecimientokoeju.com'}${display.image}`}
+                                                            className="w-full h-full object-cover"
+                                                            alt="Marca"
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     );

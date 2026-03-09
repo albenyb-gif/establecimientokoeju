@@ -59,6 +59,10 @@ const AnimalService = {
         const response = await api.post(`/animales/pesaje/${id}`, { peso_kg: weight });
         return response.data;
     },
+    updateWeight: async (pesajeId, weight) => {
+        const response = await api.put(`/animales/pesaje/${pesajeId}`, { peso_kg: weight });
+        return response.data;
+    },
 
     registerHealthEvent: async (id, eventData) => {
         if (!navigator.onLine) {

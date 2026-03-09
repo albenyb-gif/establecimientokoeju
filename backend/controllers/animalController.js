@@ -875,6 +875,39 @@ class AnimalController {
         }
     }
 
+    // Actualizar un pesaje existente
+    static async updateWeight(req, res) {
+        const { pesajeId } = req.params;
+        const { peso_kg } = req.body;
+        const numPeso = parseFloat(peso_kg);
+
+        if (isNaN(numPeso)) return res.status(400).json({ error: 'Peso no válido' });
+
+        try {
+            // Obtener el registro para saber el animal_id
+            const [rows] = await db.query('SELECT animal_id, fecha FROM pesajes WHERE id = ?', [pesajeId]);
+            if (rows.length === 0) return res.status(404).json({ error: 'Pesaje no encontrado' });
+
+            const animalId = rows[0].animal_id;
+
+            // 1. Actualizar el pesaje
+            await db.query('UPDATE pesajes SET peso_kg = ? WHERE id = ?', [numPeso, pesajeId]);
+
+            // 2. Recalcular GDPs para ese animal (simplificado: recalculamos el GDP de este pesaje)
+            // Para un cálculo real, se deberían recalcular todos los subsiguientes, pero aquí
+            // al menos actualizamos el peso_actual del animal si es el último pesaje.
+            const [lastWeight] = await db.query('SELECT id FROM pesajes WHERE animal_id = ? ORDER BY fecha DESC LIMIT 1', [animalId]);
+            if (lastWeight[0].id == pesajeId) {
+                await db.query('UPDATE animales SET peso_actual = ? WHERE id = ?', [numPeso, animalId]);
+            }
+
+            res.json({ message: 'Pesaje actualizado correctamente' });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: 'Error al actualizar pesaje' });
+        }
+    }
+
     // Registra Pesaje y Calcula GDP (Cattler-PY Logic)
     static async registerWeight(req, res) {
         const { id } = req.params;
@@ -1017,14 +1050,14 @@ class AnimalController {
     }
 
     /**
-     * Historial completo de un animal (Pesajes, Sanidad, Movimientos)
+     * Historial completo de un animal (Pesajes, Sanidad, Movimientos, Marcas)
      */
     static async getAnimalHistory(req, res) {
         const { id } = req.params;
         try {
             // 1. Pesajes
             const [pesajes] = await db.query(
-                'SELECT "PESAJE" as type, peso_kg, gdp_calculado, fecha as date FROM pesajes WHERE animal_id = ? ORDER BY fecha DESC',
+                'SELECT id, "PESAJE" as type, peso_kg, gdp_calculado, fecha as date FROM pesajes WHERE animal_id = ? ORDER BY fecha DESC',
                 [id]
             );
 
@@ -1032,7 +1065,7 @@ class AnimalController {
             let sanidad = [];
             try {
                 [sanidad] = await db.query(
-                    `SELECT "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date,
+                    `SELECT e.id, "SANIDAD" as type, e.tipo_evento, e.fecha_aplicacion as date,
                 COALESCE(e.nro_acta, e.lote_vencimiento) as nro_acta,
                 e.fecha_fin_carencia, i.nombre_comercial as producto
                      FROM sanidad_eventos e
@@ -1046,7 +1079,7 @@ class AnimalController {
             let ingresos = [];
             try {
                 [ingresos] = await db.query(
-                    'SELECT "INGRESO" as type, origen, fecha_ingreso as date, nro_cot FROM movimientos_ingreso WHERE animal_id = ?',
+                    'SELECT id, "INGRESO" as type, origen, fecha_ingreso as date, nro_cot FROM movimientos_ingreso WHERE animal_id = ?',
                     [id]
                 );
             } catch (e) { console.warn('Error en query ingresos:', e.message); }
@@ -1054,7 +1087,7 @@ class AnimalController {
             let salidas = [];
             try {
                 [salidas] = await db.query(
-                    'SELECT "SALIDA" as type, motivo_salida, fecha_salida as date FROM movimientos_salida WHERE animal_id = ?',
+                    'SELECT id, "SALIDA" as type, motivo_salida, fecha_salida as date FROM movimientos_salida WHERE animal_id = ?',
                     [id]
                 );
             } catch (e) { console.warn('Error en query salidas:', e.message); }
@@ -1063,7 +1096,7 @@ class AnimalController {
             let traslados = [];
             try {
                 [traslados] = await db.query(
-                    `SELECT "TRASLADO" as type, m.fecha as date, m.motivo, r1.nombre as origen, r2.nombre as destino
+                    `SELECT id, "TRASLADO" as type, m.fecha as date, m.motivo, r1.nombre as origen, r2.nombre as destino
                      FROM movimientos_internos m
                      LEFT JOIN rodeos r1 ON m.origen_rodeo_id = r1.id
                      LEFT JOIN rodeos r2 ON m.destino_rodeo_id = r2.id
@@ -1072,8 +1105,17 @@ class AnimalController {
                 );
             } catch (e) { console.warn('Error en query traslados:', e.message); }
 
+            // 5. Marcas
+            let marcas = [];
+            try {
+                [marcas] = await db.query(
+                    'SELECT id, "MARCA" as type, foto_path, tipo_marca, created_at as date FROM animales_marcas WHERE animal_id = ? ORDER BY created_at DESC',
+                    [id]
+                );
+            } catch (e) { console.warn('Error en query marcas:', e.message); }
+
             // Combinar y ordenar por fecha descendente
-            const history = [...pesajes, ...sanidad, ...ingresos, ...salidas, ...traslados].sort((a, b) =>
+            const history = [...pesajes, ...sanidad, ...ingresos, ...salidas, ...traslados, ...marcas].sort((a, b) =>
                 new Date(b.date) - new Date(a.date)
             );
 

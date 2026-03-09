@@ -32,6 +32,7 @@ router.get('/:id', AnimalController.getAnimalById);
 router.put('/:id', AnimalController.updateAnimal);
 router.delete('/:id', AnimalController.deleteAnimal);
 router.post('/pesaje/:id', AnimalController.registerWeight);
+router.put('/pesaje/:pesajeId', AnimalController.updateWeight);
 router.post('/sanidad/:id', AnimalController.registerHealthEvent);
 router.get('/:id/historial', AnimalController.getAnimalHistory);
 router.post('/movimiento/:id', AnimalController.registerMovement);
