@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS animales (
     apto_ue BOOLEAN DEFAULT FALSE,
     especie ENUM('BOVINO', 'OVINO', 'EQUINO', 'CAPRINO') DEFAULT 'BOVINO',
     raza VARCHAR(50) DEFAULT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (categoria_id) REFERENCES categorias(id),
     FOREIGN KEY (rodeo_id) REFERENCES rodeos(id)
 );
