@@ -17,20 +17,16 @@ Esta aplicación se compone de un frontend en React (Vite) y un backend en Node.
    npm install
    ```
 2. Crea un archivo `.env` basado en el ejemplo (asegúrate de incluir tus credenciales de BD y Google).
-3. Importa la base de datos:
-   - Usa el archivo `backend/migrations/full_schema.sql` para crear la estructura inicial en MySQL.
-   - **NUEVO**: Ejecuta el script SQL para la agenda:
-     ```sql
-     CREATE TABLE IF NOT EXISTS agenda (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         titulo VARCHAR(255) NOT NULL,
-         descripcion TEXT,
-         tipo ENUM('REUNION', 'VENTA', 'COMPRA', 'SANIDAD', 'OTRO') DEFAULT 'OTRO',
-         fecha_hora DATETIME NOT NULL,
-         ubicacion VARCHAR(255),
-         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-     );
+3. **Sincronización de Datos (Local a Hostinger)**:
+   - Si ya tienes datos localmente y quieres verlos en Hostinger, ejecuta:
+     ```bash
+     node scripts/export_data.js
      ```
+   - Esto generará un archivo `backend/migrations/data_sync_export.sql`.
+   - Entra al **phpMyAdmin** de Hostinger e **Importa** ese archivo.
+   
+4. **Esquema Inicial (Solo si es nuevo)**:
+   - Usa el archivo `backend/migrations/full_schema_final.sql` para crear la estructura inicial.
 
 ### 2. Construir el Frontend
 1. Entra a la carpeta `frontend`:
