@@ -25,8 +25,12 @@ console.log('HOST_ENV:', process.env.DB_HOST || 'No definido');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('---------------------------------------');
 
-// Simplificar host: Usar lo que diga el env, o localhost por defecto
-poolConfig.host = process.env.DB_HOST || '127.0.0.1';
+// Simplificar host: Forzar 127.0.0.1 en producción para evitar errores de IPv6 (::1)
+let dbHost = process.env.DB_HOST || '127.0.0.1';
+if (process.env.NODE_ENV === 'production' || dbHost === 'localhost') {
+    dbHost = '127.0.0.1';
+}
+poolConfig.host = dbHost;
 poolConfig.port = 3306;
 console.log('🔗 Intentando conectar a:', poolConfig.host);
 
