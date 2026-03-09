@@ -16,25 +16,8 @@ const poolConfig = {
     keepAliveInitialDelay: 10000
 };
 
-// Log de variables presentes (sin mostrar la clave completa por seguridad)
-console.log('--- VARIABLES DE ENTORNO DETECTADAS ---');
-console.log('USER: [' + poolConfig.user + '] | Len:', poolConfig.user.length);
-console.log('DB: [' + poolConfig.database + '] | Len:', poolConfig.database.length);
-console.log('PASS_LEN:', poolConfig.password.length);
-
-// Volcado HEX para encontrar caracteres invisibles (como \r o espacios no estándar)
-if (poolConfig.password.length > 0) {
-    let hex = '';
-    for (let i = 0; i < poolConfig.password.length; i++) {
-        hex += poolConfig.password.charCodeAt(i).toString(16) + ' ';
-    }
-    console.log('PASS_HEX:', hex.trim());
-    console.log('PASS_START:', poolConfig.password[0]);
-    console.log('PASS_END: [' + poolConfig.password[poolConfig.password.length - 1] + ']');
-}
-console.log('HOST_ENV:', process.env.DB_HOST || 'No definido');
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('---------------------------------------');
+// Log simple de conexión exitosa
+console.log('✅ Conexión a Base de Datos establecida correctamente.');
 
 // Simplificar host: Forzar 127.0.0.1 en producción para evitar errores de IPv6 (::1)
 let dbHost = process.env.DB_HOST || '127.0.0.1';
