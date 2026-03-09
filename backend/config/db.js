@@ -7,7 +7,7 @@ const fs = require('fs');
 // Configuración base del pool
 const poolConfig = {
     user: (process.env.DB_USER || 'root').trim(),
-    password: (process.env.DB_PASSWORD || ''),
+    password: (process.env.DB_PASSWORD || '').trim(),
     database: (process.env.DB_NAME || 'gestion_ganadera').trim(),
     waitForConnections: true,
     connectionLimit: 10,
