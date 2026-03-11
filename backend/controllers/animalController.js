@@ -981,7 +981,7 @@ class AnimalController {
     // Registrar Evento Sanitario (Vacunación/Tratamiento)
     static async registerHealthEvent(req, res) {
         const { id } = req.params;
-        const { tipo_evento, fecha_aplicacion, producto, dias_carencia, detalles } = req.body;
+        const { tipo_evento, fecha_aplicacion, producto, producto_id, dias_carencia, detalles, nro_acta, lote_vencimiento } = req.body;
 
         try {
             // Calcular Fecha Liberación si hay carencia
@@ -997,8 +997,8 @@ class AnimalController {
 
             // 1. Insertar Evento
             await db.query(
-                'INSERT INTO sanidad_eventos (tipo_evento, animal_id, fecha_aplicacion, fecha_fin_carencia, lote_vencimiento, nro_acta) VALUES (?, ?, ?, ?, ?, ?)',
-                [tipo_evento, id, fecha_aplicacion, fecha_liberacion, detalles, detalles] // Duplicamos detalles en ambos campos por compatibilidad
+                'INSERT INTO sanidad_eventos (tipo_evento, animal_id, fecha_aplicacion, fecha_fin_carencia, nro_acta, lote_vencimiento, producto_id, responsable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [tipo_evento, id, fecha_aplicacion, fecha_liberacion, nro_acta || detalles, lote_vencimiento || detalles, producto_id || null, req.body.responsable || 'Administración']
             );
 
             // 2. Actualizar Estado del Animal si hay carencia
@@ -1328,7 +1328,7 @@ class AnimalController {
 
             const fs = require('fs');
             const path = require('path');
-            const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'marcas');
+            const uploadDir = uploadsDir || path.join(__dirname, '../../uploads/marcas');
             if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
             const filename = `marca_${id}_${Date.now()}.jpg`;
@@ -1345,7 +1345,7 @@ class AnimalController {
                 fs.writeFileSync(filepath, req.file.buffer);
             }
 
-            const fotoPath = `/ uploads / marcas / ${filename} `;
+            const fotoPath = `/uploads/marcas/${filename}`;
             const [result] = await db.query(
                 'INSERT INTO animales_marcas (animal_id, foto_path, tipo_marca) VALUES (?, ?, ?)',
                 [id, fotoPath, tipo_marca]
