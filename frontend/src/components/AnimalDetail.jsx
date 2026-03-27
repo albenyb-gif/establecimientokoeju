@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, Activity, Syringe, Truck, Edit, HeartPulse, Scale,
     Info, Calendar, Fingerprint, ShieldAlert, TrendingUp, History,
-    LayoutDashboard, Trash2, FileText, User
+    LayoutDashboard, Trash2, FileText, User, Printer
 } from 'lucide-react';
 import AnimalService from '../services/animalService';
 import AnimalCard from './AnimalCard';
@@ -11,6 +11,8 @@ import EditAnimalModal from './EditAnimalModal';
 import MovementModal from './MovementModal';
 import HealthModal from './HealthModal';
 import PageHeader from './common/PageHeader';
+import ReportGenerator from './ReportGenerator';
+import PrintPreviewModal from './PrintPreviewModal';
 
 const AnimalDetail = () => {
     const { id } = useParams();
@@ -21,6 +23,7 @@ const AnimalDetail = () => {
     const [isMoving, setIsMoving] = useState(false);
     const [isHealthOpen, setIsHealthOpen] = useState(false);
     const [history, setHistory] = useState([]);
+    const [printPreviewUri, setPrintPreviewUri] = useState(null);
 
     useEffect(() => {
         const loadData = async () => {
@@ -66,6 +69,11 @@ const AnimalDetail = () => {
         } catch (err) {
             alert('Error al eliminar: ' + (err.response?.data?.error || err.message));
         }
+    };
+
+    const handlePrintAnimal = () => {
+        const dataUri = ReportGenerator.generateAnimalReport(animal, history);
+        if (dataUri) setPrintPreviewUri(dataUri);
     };
 
     const handleMovement = async (moveData) => {
@@ -215,6 +223,12 @@ const AnimalDetail = () => {
                         <Link to="/lista" className="p-3 bg-white text-slate-600 rounded-xl shadow-sm border border-slate-100 hover:bg-slate-50 transition-all flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
                             <ArrowLeft size={16} /> Volver
                         </Link>
+                        <button
+                            onClick={handlePrintAnimal}
+                            className="px-6 py-3 bg-indigo-600 text-white font-black rounded-xl shadow-xl shadow-indigo-500/20 hover:bg-indigo-700 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
+                        >
+                            <Printer size={16} /> Imprimir Ficha
+                        </button>
                         <button
                             onClick={() => navigate(`/pesaje/${animal.id}`)}
                             className="px-6 py-3 bg-blue-600 text-white font-black rounded-xl shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition flex items-center gap-2 uppercase tracking-widest text-[10px]"
@@ -499,6 +513,15 @@ const AnimalDetail = () => {
                     />
                 )
             }
+
+            {/* Vista previa planilla individual */}
+            {printPreviewUri && (
+                <PrintPreviewModal
+                    pdfDataUri={printPreviewUri}
+                    filename={`ficha_${animal.caravana_visual}_${new Date().toISOString().split('T')[0]}.pdf`}
+                    onClose={() => setPrintPreviewUri(null)}
+                />
+            )}
         </div >
     );
 };

@@ -692,12 +692,16 @@ class AnimalController {
                 a.estado_general,
                 a.fecha_liberacion_carencia,
                 a.comparador,
+                a.peso_inicial,
                 mi.compra_lote_id as lote_id,
-                mi.fecha_ingreso as fecha_ingreso
+                mi.fecha_ingreso as fecha_ingreso,
+                mi.origen,
+                cl.vendedor
                 FROM animales a
                 LEFT JOIN categorias c ON c.id = a.categoria_id
                 LEFT JOIN rodeos r ON r.id = a.rodeo_id
                 LEFT JOIN movimientos_ingreso mi ON mi.animal_id = a.id
+                LEFT JOIN compras_lotes cl ON cl.id = mi.compra_lote_id
                 `;
 
             const params = [];

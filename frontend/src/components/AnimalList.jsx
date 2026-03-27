@@ -5,6 +5,7 @@ import AnimalService from '../services/animalService';
 import PageHeader from './common/PageHeader';
 import ReportGenerator from './ReportGenerator';
 import EditAnimalModal from './EditAnimalModal';
+import SenacsaReportModal from './SenacsaReportModal';
 import { Edit } from 'lucide-react';
 
 const AnimalList = () => {
@@ -17,6 +18,7 @@ const AnimalList = () => {
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
+    const [isSenacsaModalOpen, setIsSenacsaModalOpen] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -103,6 +105,12 @@ const AnimalList = () => {
                 icon={Database}
                 actions={
                     <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+                        <button
+                            onClick={() => setIsSenacsaModalOpen(true)}
+                            className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
+                        >
+                            <FileText size={16} /> Reporte SENACSA
+                        </button>
                         <div className="relative flex-1 lg:w-72">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                             <input
@@ -135,7 +143,7 @@ const AnimalList = () => {
                         </button>
                         <button
                             onClick={handleExport}
-                            className="p-3 bg-slate-900 text-white rounded-2xl hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
+                            className="p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
                         >
                             <Download size={16} /> Exportar PDF
                         </button>
@@ -516,6 +524,13 @@ const AnimalList = () => {
                     animal={selectedAnimal}
                     onClose={() => setIsEditing(false)}
                     onSave={handleSave}
+                />
+            )}
+            {isSenacsaModalOpen && (
+                <SenacsaReportModal
+                    animals={animals}
+                    onClose={() => setIsSenacsaModalOpen(false)}
+                    onGenerate={ReportGenerator.generateSenacsaReport}
                 />
             )}
         </div>
