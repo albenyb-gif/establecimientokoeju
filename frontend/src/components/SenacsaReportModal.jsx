@@ -21,11 +21,20 @@ const SenacsaReportModal = ({ animals, onClose, onGenerate }) => {
         setRanchData({ ...ranchData, [e.target.name]: e.target.value });
     };
 
+    const [error, setError] = useState(null);
+
     const handleGenerate = () => {
-        const dataUri = onGenerate(animals, ranchData, { incluirFirmas });
-        if (dataUri) setPreviewUri(dataUri);
-        else onClose();
+        setError(null);
+        try {
+            const dataUri = onGenerate(animals, ranchData, { incluirFirmas });
+            if (dataUri) setPreviewUri(dataUri);
+            else onClose();
+        } catch (err) {
+            console.error('Error generando reporte SENACSA:', err);
+            setError(err.message || 'Error desconocido al generar el PDF.');
+        }
     };
+
 
     if (previewUri) {
         return (
@@ -206,6 +215,14 @@ const SenacsaReportModal = ({ animals, onClose, onGenerate }) => {
                             </span>
                         )}
                     </label>
+
+                    {/* Mensaje de error */}
+                    {error && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-bold break-all">
+                            ⚠️ {error}
+                        </div>
+                    )}
+
                     <div className="flex gap-4">
                         <button
                             onClick={onClose}
