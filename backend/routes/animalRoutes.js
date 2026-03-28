@@ -14,6 +14,7 @@ router.post('/compras', upload.any(), AnimalController.registrarCompraLote);
 router.delete('/compras/:id', AnimalController.deletePurchaseLote);
 router.put('/compras/:id', AnimalController.updatePurchaseLote);
 router.post('/ventas', AnimalController.registrarVenta);
+router.get('/ventas', AnimalController.getSalesHistory);
 router.post('/batch-update', AnimalController.batchUpdateIds);
 router.post('/import', AnimalController.importMasiva);
 router.post('/sync-compras', AnimalController.syncAnimalesFromCompras);

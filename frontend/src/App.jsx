@@ -20,7 +20,8 @@ import CalendarManager from './components/CalendarManager';
 import SyncManager from './components/SyncManager';
 import ExpenseManager from './components/ExpenseManager';
 import AnimalService from './services/animalService';
-import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar, Bell, User } from 'lucide-react';
+import SalesHistory from './components/SalesHistory';
+import { LayoutDashboard, PlusCircle, Dog, List, DollarSign, FileSpreadsheet, Settings, Calculator, Tag, Truck, Menu, X, Users, Scissors, Syringe, Receipt, Calendar, Bell, User, History } from 'lucide-react';
 
 // Mock data for initial view (keep animal mock for Demo)
 const mockAnimal = {
@@ -240,7 +241,8 @@ function App() {
                                 <Route path="/lista" element={<AnimalList />} />
                                 <Route path="/ingreso" element={<IngresoForm />} />
                                 <Route path="/compras" element={<PurchaseSheet />} />
-                                <Route path="/ventas" element={<SalesSheet />} />
+                                 <Route path="/ventas" element={<SalesSheet />} />
+                                <Route path="/ventas/historial" element={<SalesHistory />} />
                                 <Route path="/clientes" element={<ClientManager />} />
                                 <Route path="/ovinos" element={<OvineDashboard />} />
                                 <Route path="/sanidad" element={<HealthManager />} />

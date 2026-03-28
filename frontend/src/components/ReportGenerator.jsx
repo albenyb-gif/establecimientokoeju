@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -32,15 +32,15 @@ const ReportGenerator = {
         doc.setTextColor(0);
         doc.text(`Total Cabezas: ${animals.length}`, 14, 45);
         doc.text(`Kilos Totales: ${totalKilos.toLocaleString()} kg`, 80, 45);
-        doc.autoTable(
-            ["Lote", "Caravana", "Categoría", "Raza", "Peso (kg)", "Rodeo", "Comp."],
-            animals.map(a => [
+        autoTable(doc, {
+            head: [["Lote", "Caravana", "Categoría", "Raza", "Peso (kg)", "Rodeo", "Comp."]],
+            body: animals.map(a => [
                 a.lote_id ? `#${a.lote_id}` : 'S/L', a.caravana_visual,
                 a.categoria || 'N/A', a.raza || 'N/A', a.peso_actual,
                 a.rodeo || 'S/N', a.comparador || 'N/A'
             ]),
-            { startY: 50 }
-        );
+            startY: 50
+        });
         doc.save(`stock_report_${new Date().toISOString().split('T')[0]}.pdf`);
     },
 
@@ -53,11 +53,11 @@ const ReportGenerator = {
         doc.text(`Conductor: ${conductor}`, 14, 48);
         doc.text(`Chapa/Patente: ${chapa}`, 14, 56);
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 140, 40);
-        doc.autoTable(
-            ["Caravana", "Categoría", "Peso Origen (Kg)", "Observaciones"],
-            animals.map(a => [a.caravana_visual, a.categoria || a.categoria_id, a.peso_actual, '']),
-            { startY: 70 }
-        );
+        autoTable(doc, {
+            head: [["Caravana", "Categoría", "Peso Origen (Kg)", "Observaciones"]],
+            body: animals.map(a => [a.caravana_visual, a.categoria || a.categoria_id, a.peso_actual, '']),
+            startY: 70
+        });
         const ph = doc.internal.pageSize.height;
         doc.line(20, ph - 40, 80, ph - 40); doc.text('Firma Responsable Estancia', 25, ph - 35);
         doc.line(130, ph - 40, 190, ph - 40); doc.text('Firma Transportista', 145, ph - 35);
@@ -88,7 +88,7 @@ const ReportGenerator = {
         doc.setFontSize(14); doc.setFont('helvetica', 'bold'); doc.setTextColor(...COLOR_DARK);
         doc.text(`${selectedAnimals.length}`, 190, 58, null, null, 'right');
         doc.text(`${saleData.peso_total.toLocaleString()} kg`, 190, 68, null, null, 'right');
-        doc.autoTable({
+        autoTable(doc, {
             head: [["Caravana", "Categoría", "Rodeo de Origen", "Peso Actual (Kg)"]],
             body: selectedAnimals.map(a => [a.caravana_visual, a.categoria || 'N/A', a.rodeo || 'N/A', a.peso_actual.toLocaleString()]),
             startY: 95, theme: 'grid',
@@ -97,7 +97,7 @@ const ReportGenerator = {
         const finalY = doc.lastAutoTable.finalY + 15;
         doc.setFontSize(11); doc.setFont('helvetica', 'bold');
         doc.text('LIQUIDACIÓN COMERCIAL', 14, finalY); doc.line(14, finalY + 2, 100, finalY + 2);
-        doc.autoTable({
+        autoTable(doc, {
             body: [
                 ['Subtotal Bruto:', formatCurrency(saleData.total_bruto)],
                 ['Descuentos / Gastos:', `(-) ${formatCurrency(saleData.descuentos)}`],
@@ -121,14 +121,14 @@ const ReportGenerator = {
         doc.setFontSize(18); doc.text(establecimiento, 14, 22);
         doc.setFontSize(14); doc.setTextColor(100);
         doc.text('Historial Sanitario y de Tratamientos', 14, 30);
-        doc.autoTable(
-            ["Fecha", "Evento", "Animal", "Producto", "Acta/Ref"],
-            events.map(e => [
+        autoTable(doc, {
+            head: [["Fecha", "Evento", "Animal", "Producto", "Acta/Ref"]],
+            body: events.map(e => [
                 e.fecha_aplicacion ? e.fecha_aplicacion.split('T')[0] : 'S/F',
                 e.tipo_evento, e.animal, e.producto, e.nro_acta || '---'
             ]),
-            { startY: 40 }
-        );
+            startY: 40
+        });
         doc.save(`reporte_sanidad_${new Date().toISOString().split('T')[0]}.pdf`);
     },
 
@@ -271,7 +271,7 @@ const ReportGenerator = {
         doc.text('MOVIMIENTOS DEL PER\u00cdODO', 10, movY);
         doc.setTextColor(0);
 
-        doc.autoTable({
+        autoTable(doc, {
             head: [['Concepto', 'Cabezas', 'Kilos']],
             body: [
                 ['Existencia Inicial (estimada)', existIni, (totalKIni - kgEntradas).toLocaleString('es-PY', { maximumFractionDigits: 0 }) + ' kg'],
@@ -355,7 +355,7 @@ const ReportGenerator = {
             totVacas, totVaqu, totNovi, totToros, totDM, totDH, totTM, totTH, animals.length
         ];
 
-        doc.autoTable({
+        autoTable(doc, {
             head: [colHeaders],
             body: tableRows,
             startY: tableStartY + 3,
@@ -512,7 +512,7 @@ const ReportGenerator = {
                 }
                 return [fmtDate(ev.date || ev.fecha_aplicacion), tipo, desc];
             });
-            doc.autoTable({
+            autoTable(doc, {
                 head: [['Fecha', 'Tipo de Evento', 'Descripci\u00f3n']],
                 body: histRows,
                 startY: y,

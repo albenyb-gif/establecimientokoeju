@@ -773,29 +773,75 @@ class AnimalController {
         }
     }
     /**
-     * Edición: Actualizar datos de un animal.
+     * Edición Total: Actualizar absolutamente todos los datos de la ficha.
      */
     static async updateAnimal(req, res) {
         const { id } = req.params;
-        const { peso_actual, rodeo_id, estado_sanitario, categoria_id, caravana_visual, caravana_rfid } = req.body;
+        const { 
+            peso_actual, peso_inicial, precio_compra, rodeo_id, 
+            estado_sanitario, estado_general, categoria_id, pelaje, raza, especie, 
+            negocio_destino, comparador, caravana_visual, caravana_rfid,
+            fecha_ingreso, origen, vendedor
+        } = req.body;
 
+        const connection = await db.getConnection();
         try {
-            // Convert empty strings to null for foreign keys
+            await connection.beginTransaction();
+
             const finalRodeoId = rodeo_id === "" ? null : rodeo_id;
             const finalCategoriaId = categoria_id === "" ? null : categoria_id;
-            const finalRfid = caravana_rfid === "" ? null : caravana_rfid;
+            const finalRfid = caravana_rfid === "" ? null : (caravana_rfid || null);
 
-            await db.query(
+            // 1. Actualizar tabla principal 'animales'
+            await connection.query(
                 `UPDATE animales 
-                 SET peso_actual = ?, rodeo_id = ?, estado_sanitario = ?, categoria_id = ?,
-                caravana_visual = ?, caravana_rfid = ?
-                    WHERE id = ? `,
-                [peso_actual, finalRodeoId, estado_sanitario, finalCategoriaId, caravana_visual, finalRfid, id]
+                 SET peso_actual = ?, peso_inicial = ?, precio_compra = ?, rodeo_id = ?, 
+                     estado_sanitario = ?, estado_general = ?, categoria_id = ?, 
+                     pelaje = ?, raza = ?, especie = ?, negocio_destino = ?, 
+                     comparador = ?, caravana_visual = ?, caravana_rfid = ?
+                 WHERE id = ?`,
+                [
+                    peso_actual, peso_inicial, precio_compra, finalRodeoId, 
+                    estado_sanitario, estado_general, finalCategoriaId, 
+                    pelaje, raza, especie, negocio_destino, 
+                    comparador, caravana_visual, finalRfid, id
+                ]
             );
+
+            // 2. Actualizar datos de ingreso vinculados (si existen)
+            // Solo actuamos sobre el primer movimiento de ingreso (el origen)
+            if (fecha_ingreso || origen || vendedor) {
+                // Primero ver si existe el registro en movimientos_ingreso
+                const [movs] = await connection.query('SELECT id FROM movimientos_ingreso WHERE animal_id = ? ORDER BY id ASC LIMIT 1', [id]);
+                if (movs.length > 0) {
+                    await connection.query(
+                        'UPDATE movimientos_ingreso SET fecha_ingreso = ?, origen = ? WHERE id = ?',
+                        [fecha_ingreso, origen, movs[0].id]
+                    );
+                }
+
+                // Si hay vendedor, también podemos actualizar el lote de compra vinculado
+                const [loteLink] = await connection.query('SELECT compra_lote_id FROM movimientos_ingreso WHERE animal_id = ? LIMIT 1', [id]);
+                if (loteLink.length > 0 && loteLink[0].compra_lote_id && vendedor) {
+                    await connection.query('UPDATE compras_lotes SET vendedor = ? WHERE id = ?', [vendedor, loteLink[0].compra_lote_id]);
+                }
+            }
+
+            // 3. Si se cambió el peso actual o inicial y no hay pesajes previos, crear el inicial
+            const [pesajes] = await connection.query('SELECT id FROM pesajes WHERE animal_id = ?', [id]);
+            if (pesajes.length === 0 && peso_inicial) {
+                await connection.query('INSERT INTO pesajes (animal_id, peso_kg, fecha) VALUES (?, ?, ?)', [id, peso_inicial, fecha_ingreso || new Date()]);
+            }
+
+            await connection.commit();
             res.json({ message: 'Animal actualizado correctamente', id });
+
         } catch (error) {
+            await connection.rollback();
             console.error(`Error in updateAnimal(${id}): `, error.message);
             res.status(500).json({ error: 'Error al actualizar animal: ' + error.message });
+        } finally {
+            connection.release();
         }
     }
 
@@ -1380,6 +1426,32 @@ class AnimalController {
         } catch (error) {
             console.error('Error deleting marca:', error);
             res.status(500).json({ error: error.message });
+        }
+    }
+    /**
+     * Obtener historial de ventas (lotes vendidos)
+     */
+    static async getSalesHistory(req, res) {
+        try {
+            const [ventas] = await db.query('SELECT * FROM ventas_lotes ORDER BY fecha DESC');
+            
+            // Para cada venta, obtener los animales vinculados
+            const ventasConDetalle = await Promise.all(ventas.map(async (v) => {
+                const [animales] = await db.query(
+                    `SELECT a.caravana_visual, c.descripcion as categoria, ms.peso_salida, ms.precio_kg_real 
+                     FROM movimientos_salida ms
+                     JOIN animales a ON ms.animal_id = a.id
+                     LEFT JOIN categorias c ON a.categoria_id = c.id
+                     WHERE ms.venta_lote_id = ?`,
+                    [v.id]
+                );
+                return { ...v, animales };
+            }));
+
+            res.json(ventasConDetalle);
+        } catch (error) {
+            console.error('Error in getSalesHistory: ', error.message);
+            res.status(500).json({ error: 'Error al obtener historial de ventas' });
         }
     }
 }

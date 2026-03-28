@@ -15,7 +15,8 @@ import {
     Calculator,
     Settings,
     X,
-    LogOut
+    LogOut,
+    History
 } from 'lucide-react';
 
 const Sidebar = ({ onLogout, onClose }) => {
@@ -28,6 +29,7 @@ const Sidebar = ({ onLogout, onClose }) => {
         { to: "/ingreso", icon: PlusCircle, label: "Ingreso Hacienda" },
         { to: "/compras", icon: FileSpreadsheet, label: "Registro Compras" },
         { to: "/ventas", icon: DollarSign, label: "Planilla Ventas" },
+        { to: "/ventas/historial", icon: History, label: "Historial de Ventas" },
         { to: "/clientes", icon: Users, label: "Contactos/Clientes" },
         { to: "/siap", icon: Tag, label: "Etiquetas SIAP" },
         { to: "/ovinos", icon: Scissors, label: "Módulo Ovino" },

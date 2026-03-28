@@ -86,6 +86,10 @@ const AnimalService = {
         const response = await api.get('/animales/compras');
         return response.data;
     },
+    getSalesHistory: async () => {
+        const response = await api.get('/animales/ventas');
+        return response.data;
+    },
     deletePurchaseLote: async (id) => {
         const response = await api.delete(`/animales/compras/${id}`);
         return response.data;

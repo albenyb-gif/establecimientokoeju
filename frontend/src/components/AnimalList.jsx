@@ -14,6 +14,7 @@ const AnimalList = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedStatus, setSelectedStatus] = useState('ACTIVO');
     const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
     const [selectedAnimal, setSelectedAnimal] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -85,7 +86,8 @@ const AnimalList = () => {
             (a.categoria || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
             (a.rodeo || "").toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === '' || a.categoria === selectedCategory;
-        return matchesSearch && matchesCategory;
+        const matchesStatus = selectedStatus === 'TODOS' || a.estado_general === selectedStatus;
+        return matchesSearch && matchesCategory && matchesStatus;
     });
 
     const getStatusStyle = (status) => {
@@ -101,7 +103,19 @@ const AnimalList = () => {
         <div className="space-y-6 pb-20 animate-in fade-in duration-500">
             <PageHeader
                 title="Centro de Inventarios"
-                subtitle="Monitoreo en tiempo real del stock ganadero y trazabilidad individual."
+                subtitle={
+                    <div className="flex flex-col gap-1">
+                        <span>Monitoreo en tiempo real del stock ganadero y trazabilidad individual.</span>
+                        <div className="flex gap-4 mt-2">
+                            <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                                En Stock: {animals.filter(a => a.estado_general === 'ACTIVO').length} cabezas
+                            </span>
+                            <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">
+                                Total Histórico: {animals.length} cabezas
+                            </span>
+                        </div>
+                    </div>
+                }
                 icon={Database}
                 actions={
                     <div className="flex flex-wrap gap-3 w-full lg:w-auto">
@@ -122,16 +136,16 @@ const AnimalList = () => {
                             />
                         </div>
                         <div className="relative flex-1 lg:w-48">
-                            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <TrendingUp className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                             <select
-                                className="w-full pl-10 pr-10 py-3 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none text-[13px] font-bold text-slate-800 bg-white shadow-sm transition-all appearance-none cursor-pointer"
-                                value={selectedCategory}
-                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="w-full pl-10 pr-10 py-3 rounded-2xl border-2 border-slate-50 focus:border-indigo-600 outline-none text-[13px] font-black text-slate-800 bg-white shadow-sm transition-all appearance-none cursor-pointer"
+                                value={selectedStatus}
+                                onChange={(e) => setSelectedStatus(e.target.value)}
                             >
-                                <option value="">Todas las Categorías</option>
-                                {categories.map(cat => (
-                                    <option key={cat.id} value={cat.descripcion}>{cat.descripcion}</option>
-                                ))}
+                                <option value="ACTIVO">Solo Activos</option>
+                                <option value="VENDIDO">Vendidos</option>
+                                <option value="MUERTO">Muertos/Consumo</option>
+                                <option value="TODOS">Ver Todo (Histórico)</option>
                             </select>
                             <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 rotate-90" size={16} />
                         </div>
