@@ -41,7 +41,7 @@ const NavLink = ({ to, icon: Icon, label, onClick }) => {
             to={to}
             onClick={onClick}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors font-medium text-sm
-            ${isActive ? 'bg-yellow-400 text-slate-900 font-bold' : 'text-slate-200 hover:text-white hover:bg-slate-800'}`}
+            ${isActive ? 'bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/20' : 'text-slate-200 hover:text-white hover:bg-slate-800'}`}
         >
             <Icon size={18} />
             {label}
@@ -72,7 +72,7 @@ const MobileBottomNav = () => {
                             key={item.to}
                             to={item.to}
                             className={`flex flex-col items-center justify-center w-full h-full space-y-1
-                                ${isActive ? 'text-yellow-400' : 'text-slate-400 hover:text-slate-200'}
+                                ${isActive ? 'text-emerald-400' : 'text-slate-400 hover:text-slate-200'}
                                 ${item.highlight ? 'bg-slate-800/50' : ''}`}
                         >
                             <item.icon size={isActive ? 24 : 20} className={item.highlight ? "text-emerald-400" : ""} />

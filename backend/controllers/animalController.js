@@ -2,6 +2,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 const db = require('../config/db');
+const BusinessLogic = require('../utils/businessLogic');
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../../uploads/marcas');
@@ -105,10 +106,7 @@ class AnimalController {
             await connection.beginTransaction();
 
             const numPorcentaje = parseSafely(porcentaje_ganancia);
-
-            // Calculation Logic (Matches Frontend and CostService)
-            // Comisiones y fletes con IVA 10%
-            const totalCostCalculated = (numCantidad * numCostoUnit) + (numComision * 1.10) + (numFlete * 1.10) + numTasas;
+            const totalCostCalculated = BusinessLogic.calculateTotalPurchaseCost(numCantidad, numCostoUnit, numComision, numFlete, numTasas);
 
             // 1. Insertar Lote de Compra
             const [loteResult] = await connection.query(
@@ -184,9 +182,7 @@ class AnimalController {
             }
 
             if (!defaultCatId) {
-                let categoriaDefecto = 'VAQUILLA';
-                if (kilos_compra < 180) categoriaDefecto = 'TERNERO MACHO';
-                else if (kilos_compra < 250) categoriaDefecto = 'DESMAMANTE MACHO';
+                const categoriaDefecto = BusinessLogic.getDefaultCategoryByWeight(numKilosCompra);
                 defaultCatId = await getOrCreateCategory(categoriaDefecto);
             }
 

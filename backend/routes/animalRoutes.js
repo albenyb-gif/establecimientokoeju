@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const AnimalController = require('../controllers/animalController');
+const authMiddleware = require('../middleware/authMiddleware');
 const multer = require('multer');
+
+// Proteger todas las rutas con el middleware de API Key
+router.use(authMiddleware);
 
 // Configure multer storage (memory storage for processing with sharp)
 const storage = multer.memoryStorage();

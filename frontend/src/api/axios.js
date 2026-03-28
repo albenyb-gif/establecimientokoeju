@@ -6,7 +6,8 @@ const api = axios.create({
     baseURL: import.meta.env.DEV ? 'http://localhost:5000/api' : '/api',
     timeout: 15000,
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-api-key': 'kg92jK_dev_secret_2024'
     }
 });
 
