@@ -172,6 +172,7 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                                 <option value="BOVINO">BOVINO</option>
                                 <option value="OVINO">OVINO</option>
                                 <option value="EQUINO">EQUINO</option>
+                                <option value="CAPRINO">CAPRINO</option>
                             </select>
                         </div>
                         <div className="space-y-1.5">
@@ -205,7 +206,7 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                     </div>
 
                     <SectionTitle title="4. Estado Actual y Ubicación" />
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pb-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                         <div className="space-y-1.5">
                             <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Rodeo Actual</label>
                             <select
@@ -229,37 +230,37 @@ const EditAnimalModal = ({ animal, onClose, onSave }) => {
                                 <option value="CABAÑA">CABAÑA</option>
                             </select>
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Est. Sanitario</label>
-                            <select
-                                name="estado_sanitario" value={formData.estado_sanitario} onChange={handleChange}
-                                className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none text-sm font-black bg-white"
+                        <div className="space-y-1.5 text-center">
+                             <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Existencia</label>
+                             <select
+                                name="estado_general" value={formData.estado_general} onChange={handleChange}
+                                className="w-full px-3 py-3 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 outline-none text-[10px] font-black bg-white"
                             >
-                                <option value="ACTIVO">ACTIVO ✅</option>
-                                <option value="BLOQUEADO">BLOQUEADO ⛔</option>
-                                <option value="CUARENTENA">CUARENTENA ⚠️</option>
+                                <option value="ACTIVO">ACTIVO (Stock)</option>
+                                <option value="VENDIDO">VENDIDO</option>
+                                <option value="MUERTO">MUERTO</option>
+                                <option value="CONSUMO">CONSUMO</option>
                             </select>
                         </div>
-                        <div className="space-y-1.5">
-                            <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Est. Existencia</label>
-                            <select
-                                name="estado_general" value={formData.estado_general} onChange={handleChange}
-                                className="w-full px-5 py-3 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none text-sm font-black bg-white"
+                        <div className="space-y-1.5 text-center">
+                             <label className="text-[11px] font-black text-slate-500 uppercase tracking-wider ml-1">Sanidad</label>
+                             <select
+                                name="estado_sanitario" value={formData.estado_sanitario} onChange={handleChange}
+                                className="w-full px-3 py-3 rounded-2xl border-2 border-slate-100 focus:border-indigo-500 outline-none text-[10px] font-black bg-white"
                             >
-                                <option value="ACTIVO">ACTIVO (En Stock)</option>
-                                <option value="VENDIDO">VENDIDO (Salida)</option>
-                                <option value="MUERTO">MUERTO (Baja)</option>
-                                <option value="CONSUMO">CONSUMO (Baja)</option>
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="BLOQUEADO">BLOQUEADO</option>
+                                <option value="CUARENTENA">CUARENTENA</option>
                             </select>
                         </div>
                     </div>
 
-                    <div className="pt-4 flex gap-4 sticky bottom-0 bg-white">
-                        <button type="button" onClick={onClose} className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 hover:text-slate-600 transition-all">
+                    <div className="pt-4 flex gap-4 sticky bottom-0 bg-white shadow-[0_-20px_20px_-10px_rgba(255,255,255,0.9)] mt-10">
+                        <button type="button" onClick={onClose} className="flex-1 py-4 bg-white border-2 border-slate-100 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all">
                             Cancelar
                         </button>
-                        <button type="submit" className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3">
-                            <Save size={18} /> Guardar Cambios
+                        <button type="submit" className="flex-[2] py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-600 transition-all shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3">
+                            <Save size={18} /> Guardar Ficha Completa
                         </button>
                     </div>
                 </form>

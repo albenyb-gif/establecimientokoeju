@@ -346,7 +346,12 @@ class AnimalController {
         const connection = await db.getConnection();
         await connection.beginTransaction();
         try {
-            const { nro_cot, nro_guia, fecha, origen, cantidad, categoria_id, especie } = req.body;
+            const { 
+                caravana_visual, caravana_rfid, nro_cot, nro_guia, fecha, origen_establecimiento, 
+                tipo_propiedad, cantidad, categoria_id, especie, peso_inicial, precio_valuacion, 
+                pelaje, raza, rodeo_id, negocio_destino, observaciones 
+            } = req.body;
+            
             let foto_marca_path = null;
 
             // 1. Procesamiento de Imagen
@@ -358,7 +363,7 @@ class AnimalController {
             }
 
             // 2. Generar Animales y Movimientos
-            const qty = parseInt(cantidad) || 0;
+            const qty = parseInt(cantidad) || 1;
             let catId = null;
             if (categoria_id) {
                 if (!isNaN(categoria_id)) {
@@ -370,45 +375,40 @@ class AnimalController {
             const createdIds = [];
 
             // Si quantity > 0, creamos fichas individuales
-            if (qty > 0) {
-                for (let i = 0; i < qty; i++) {
-                    const tempCaravana = `ING-${Date.now()}-${i}`;
+            for (let i = 0; i < qty; i++) {
+                // Si qty es 1 y hay caravana_visual, la usamos. Si no, generamos temporal.
+                const finalCaravana = (qty === 1 && caravana_visual) ? caravana_visual : `ING-${Date.now()}-${i}`;
 
-                    // Insert Animal
-                    const [animResult] = await connection.query(
-                        'INSERT INTO animales (caravana_visual, categoria_id, especie, estado_general) VALUES (?, ?, ?, ?)',
-                        [tempCaravana, catId, especie || 'BOVINO', 'ACTIVO']
-                    );
-                    // Actually, let's double check schema for `fecha_ingreso` in `animales`.
-                    // Schema: 
-                    // 38: CREATE TABLE IF NOT EXISTS animales (
-                    // ... 
-                    // 45: fecha_nacimiento DATE,
-                    // ...
-                    // 9: created_at TIMESTAMP
+                // Insert Animal
+                const [animResult] = await connection.query(
+                    `INSERT INTO animales (
+                        caravana_visual, caravana_rfid, categoria_id, especie, 
+                        estado_general, peso_inicial, peso_actual, precio_compra, 
+                        pelaje, raza, comparador, rodeo_id, negocio_destino, observaciones
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                    [
+                        finalCaravana, caravana_rfid || null, catId, especie || 'BOVINO', 
+                        'ACTIVO', peso_inicial || null, peso_inicial || null, precio_valuacion || null, 
+                        pelaje || null, raza || null, tipo_propiedad || 'PROPIO', rodeo_id || null, 
+                        negocio_destino || 'REPOSICIÓN', observaciones || null
+                    ]
+                );
 
-                    // It does NOT have fecha_ingreso. The movement holds the date.
+                const animalId = animResult.insertId;
+                createdIds.push(animalId);
 
-                    const animalId = animResult.insertId;
-                    createdIds.push(animalId);
-
-                    // Insert Movement
-                    await connection.query(
-                        'INSERT INTO movimientos_ingreso (nro_cot, nro_guia_traslado, fecha_ingreso, origen, foto_marca_path, animal_id) VALUES (?, ?, ?, ?, ?, ?)',
-                        [nro_cot, nro_guia, fecha, origen, foto_marca_path, animalId]
-                    );
-                }
-            } else {
-                // If qty 0 (just document logging?), insert one movement with null animal?
-                // Or error? IngresoForm requires quantity > 0.
-                // We'll assuming qty > 0.
+                // Insert Movement
+                await connection.query(
+                    'INSERT INTO movimientos_ingreso (nro_cot, nro_guia_traslado, fecha_ingreso, origen, foto_marca_path, animal_id) VALUES (?, ?, ?, ?, ?, ?)',
+                    [nro_cot || null, nro_guia || null, fecha, origen_establecimiento || null, foto_marca_path, animalId]
+                );
             }
 
             await connection.commit();
             res.status(201).json({
-                message: `Ingreso registrado. ${qty} animales creados.`,
+                message: `Ingreso registrado correctamente.`,
                 count: qty,
-                cot: nro_cot
+                caravana: (qty === 1 && caravana_visual) ? caravana_visual : null
             });
 
         } catch (error) {
@@ -565,14 +565,15 @@ class AnimalController {
         try {
             const query = `
                 SELECT 
-                    p.id, 
-                    p.nombre, 
-                    p.superficie_ha, 
+                    COALESCE(p.id, 0) as id, 
+                    COALESCE(p.nombre, 'Sin Asignar') as nombre, 
+                    COALESCE(p.superficie_ha, 0) as superficie_ha, 
                     COUNT(a.id) as animales_total 
-                FROM potreros p 
-                LEFT JOIN rodeos r ON r.potrero_id = p.id 
-                LEFT JOIN animales a ON a.rodeo_id = r.id 
-                GROUP BY p.id
+                FROM animales a
+                LEFT JOIN rodeos r ON r.id = a.rodeo_id
+                LEFT JOIN potreros p ON p.id = r.potrero_id
+                WHERE a.estado_general = 'ACTIVO'
+                GROUP BY p.id, p.nombre, p.superficie_ha
             `;
             const [rows] = await db.query(query);
             res.json(rows);

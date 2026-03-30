@@ -68,6 +68,27 @@ const Dashboard = () => {
                     </div>
                 }
             />
+            
+            {/* Banner de Discrepancia */}
+            {Number(comprasStats?.total_cabezas_compradas) > Number(totales?.total_animales) && (
+                <div className="bg-amber-50 border-2 border-amber-100 p-5 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                    <div className="flex items-center gap-4 text-amber-800">
+                        <div className="p-3 bg-amber-100 rounded-2xl text-amber-600">
+                            <AlertTriangle size={24} />
+                        </div>
+                        <div>
+                            <p className="font-black text-sm uppercase tracking-tight">Discrepancia de Stock Detectada</p>
+                            <p className="text-xs font-bold text-amber-600/80">Has comprado {comprasStats.total_cabezas_compradas} animales, pero solo {totales?.total_animales} figuran en Hacienda.</p>
+                        </div>
+                    </div>
+                    <button 
+                        onClick={() => navigate('/lista')} 
+                        className="w-full md:w-auto bg-amber-100 text-amber-700 px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest hover:bg-amber-200 transition-all border border-amber-200"
+                    >
+                        Sincronizar Hacienda
+                    </button>
+                </div>
+            )}
 
             {/* Banner Principal */}
             <div

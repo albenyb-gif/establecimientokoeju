@@ -57,6 +57,20 @@ const AnimalList = () => {
         ReportGenerator.generateStockReport(animals);
     };
 
+    const handleSync = async () => {
+        if (!window.confirm('¿Deseas sincronizar los lotes de compra? Esto generará los animales faltantes si la cantidad en el lote es mayor a los registros individuales.')) return;
+        setLoading(true);
+        try {
+            const res = await AnimalService.syncCompras();
+            alert(res.message);
+            await fetchAnimals();
+        } catch (err) {
+            alert('Error al sincronizar: ' + (err.response?.data?.error || err.message));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleDelete = async (e, animal) => {
         e.stopPropagation(); // Evitar navegar al detalle
         if (!window.confirm(`¿Eliminar el animal "${animal.caravana_visual}" del inventario? Esta acción no se puede deshacer.`)) return;
@@ -71,9 +85,9 @@ const AnimalList = () => {
     const handleSave = async (updatedData) => {
         try {
             await AnimalService.update(selectedAnimal.id, updatedData);
-            setAnimals(prev => prev.map(a => a.id === selectedAnimal.id ? { ...a, ...updatedData } : a));
-            setSelectedAnimal(prev => ({ ...prev, ...updatedData }));
+            await fetchAnimals();
             setIsEditing(false);
+            setIsModalOpen(false);
         } catch (error) {
             console.error('Error updating animal:', error);
             const errorMsg = error.response?.data?.error || 'Error al actualizar animal';
@@ -160,6 +174,13 @@ const AnimalList = () => {
                             className="p-3 bg-white border border-slate-200 text-slate-700 rounded-2xl hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
                         >
                             <Download size={16} /> Exportar PDF
+                        </button>
+                        <button
+                            onClick={handleSync}
+                            className="p-3 bg-amber-500 text-white rounded-2xl hover:bg-amber-600 transition-all shadow-xl shadow-amber-500/10 flex items-center justify-center gap-2 px-8 font-black uppercase tracking-widest text-[10px]"
+                            title="Sincronizar animales faltantes desde lotes de compra"
+                        >
+                            <Database size={16} /> Sincronizar Lotes
                         </button>
                         <button
                             onClick={() => navigate('/ingreso')}
@@ -351,6 +372,17 @@ const AnimalList = () => {
                                             </td>
                                             <td className="p-6 text-center">
                                                 <div className="flex items-center justify-center gap-2">
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedAnimal(animal);
+                                                            setIsEditing(true);
+                                                        }}
+                                                        className="p-2 rounded-xl text-slate-200 hover:text-indigo-500 hover:bg-indigo-50 transition-all"
+                                                        title="Editar ficha completa"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
                                                     <button
                                                         onClick={(e) => handleDelete(e, animal)}
                                                         className="p-2 rounded-xl text-slate-200 hover:text-rose-500 hover:bg-rose-50 transition-all"
